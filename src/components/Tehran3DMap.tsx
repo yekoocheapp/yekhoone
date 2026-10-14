@@ -24,7 +24,6 @@ import {
   Camera,
   Ruler,
   ShieldCheck,
-  Check,
   Box
 } from "lucide-react";
 
@@ -39,12 +38,8 @@ interface Tehran3DMapProps {
   onOpen3DFront?: () => void;
 }
 
-// Middle-ground architectural styles (balanced between dark and light, with crystal-clear street typography)
-const MAP_STYLES = {
-  brightDark: "/styles/bright-dark-style.json",
-  voyager: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
-  cartoDark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-};
+// Middle-ground slate architectural style (balanced between dark and light, with crystal-clear street typography)
+const MAP_STYLE_URL = "/styles/bright-dark-style.json";
 
 export default function Tehran3DMap({
   onSelectBuilding,
@@ -59,7 +54,6 @@ export default function Tehran3DMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
-  const [styleMode, setStyleMode] = useState<"brightDark" | "voyager" | "cartoDark">("brightDark");
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const [compassBearing, setCompassBearing] = useState<number>(0);
   const [isStreetLevel, setIsStreetLevel] = useState<boolean>(false);
@@ -154,7 +148,7 @@ export default function Tehran3DMap({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    let styleUrl = MAP_STYLES[styleMode];
+    let styleUrl = MAP_STYLE_URL;
     if (typeof window !== "undefined") {
       const origin = window.location.origin;
       const workerUrl = `${origin}/maplibre-gl-worker.js`;
@@ -429,22 +423,6 @@ export default function Tehran3DMap({
     });
   }, [activeDistrictId]);
 
-  // Style change handler
-  const handleStyleChange = (mode: "brightDark" | "voyager" | "cartoDark") => {
-    if (!mapRef.current) return;
-    setStyleMode(mode);
-    let target = MAP_STYLES[mode];
-    if (typeof window !== "undefined" && target.startsWith("/")) {
-      target = `${window.location.origin}${target}`;
-    }
-    mapRef.current.setStyle(target);
-    mapRef.current.once("style.load", () => {
-      if (mapRef.current) {
-        configureBuildingLayers(mapRef.current);
-      }
-    });
-  };
-
   // Switch between 2D Top-Down & 3D Street Level Camera
   const toggleCamera2D3D = () => {
     if (!mapRef.current) return;
@@ -540,43 +518,6 @@ export default function Tehran3DMap({
             </>
           )}
         </button>
-
-        {/* Theme Selector (Middle-Ground Slate Default) */}
-        <div className="hidden sm:flex bg-slate-950/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl pointer-events-auto">
-          <button
-            onClick={() => handleStyleChange("brightDark")}
-            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              styleMode === "brightDark"
-                ? "bg-amber-500 text-slate-950 shadow-md font-black"
-                : "text-slate-400 hover:text-white"
-            }`}
-            title="تم اسلیت متعادل بین تیره و روشن با نام‌های فوق‌العاده خوانا"
-          >
-            اسلیت متعادل
-          </button>
-          <button
-            onClick={() => handleStyleChange("voyager")}
-            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              styleMode === "voyager"
-                ? "bg-amber-500 text-slate-950 shadow-md font-black"
-                : "text-slate-400 hover:text-white"
-            }`}
-            title="تم کارتو وویجر شهری"
-          >
-            کارتو وویجر
-          </button>
-          <button
-            onClick={() => handleStyleChange("cartoDark")}
-            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              styleMode === "cartoDark"
-                ? "bg-amber-500 text-slate-950 shadow-md font-black"
-                : "text-slate-400 hover:text-white"
-            }`}
-            title="نقشه مشکی کاداستر"
-          >
-            کاداستر مشکی
-          </button>
-        </div>
       </div>
 
       {/* Prominent Floating Pill: "مشاهده نمای ۳ بعدی روبروی ساختمان" */}
