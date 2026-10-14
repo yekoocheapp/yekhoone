@@ -129,6 +129,25 @@ export default function Tehran3DMap({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
+    // Explicitly configure Worker URL & RTL plugin for Next.js Turbopack
+    if (typeof window !== "undefined") {
+      const origin = window.location.origin;
+      const workerUrl = `${origin}/maplibre-gl-worker.js`;
+      try {
+        maplibregl.setWorkerUrl(workerUrl);
+      } catch (e) {
+        console.warn("setWorkerUrl fallback:", e);
+      }
+      try {
+        (maplibregl as any).workerUrl = workerUrl;
+      } catch {}
+      try {
+        if (maplibregl.getRTLTextPluginStatus() === "unavailable") {
+          maplibregl.setRTLTextPlugin(`${origin}/mapbox-gl-rtl-text.min.js`, true);
+        }
+      } catch {}
+    }
+
     // Center on Sa'adat Abad / Tehran
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
