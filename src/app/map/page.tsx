@@ -6,8 +6,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Tehran3DMap from "@/components/Tehran3DMap";
 import BuildingInspectorDrawer from "@/components/BuildingInspectorDrawer";
+import BuildingManagementModal from "@/components/BuildingManagementModal";
 import {
   TehranBuilding,
+  BuildingFloor,
+  BuildingUnit,
   TEHRAN_BUILDINGS,
   TEHRAN_DISTRICTS,
   getBuildingById,
@@ -26,29 +29,28 @@ import {
   ShieldCheck,
   Compass,
   Layers,
-  ChevronLeft
+  ChevronLeft,
+  UserCheck,
+  Eye,
+  Key,
+  Ruler
 } from "lucide-react";
 
 function MapPageContent() {
   const searchParams = useSearchParams();
+  const [buildingsList, setBuildingsList] = useState<TehranBuilding[]>(TEHRAN_BUILDINGS);
   const [selectedBuilding, setSelectedBuilding] = useState<TehranBuilding | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<string>("saadat-abad");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterOnlyActive, setFilterOnlyActive] = useState<boolean>(false);
-  const [registerModalOpen, setRegisterModalOpen] = useState<boolean>(false);
-  const [registerContext, setRegisterContext] = useState<{
-    building?: TehranBuilding;
-    floorNumber?: number;
-    unitName?: string;
-  }>({});
 
-  // Registration form state
-  const [regOwnerPhone, setRegOwnerPhone] = useState<string>("");
-  const [regDealType, setRegDealType] = useState<"rent" | "sale">("rent");
-  const [regDeposit, setRegDeposit] = useState<string>("");
-  const [regRent, setRegRent] = useState<string>("");
-  const [regPrice, setRegPrice] = useState<string>("");
-  const [regSuccess, setRegSuccess] = useState<boolean>(false);
+  // Strict Role-Based Permissions: 'home_seeker' (view-only) vs 'seller_agent' (management)
+  const [userRole, setUserRole] = useState<"home_seeker" | "seller_agent">("home_seeker");
+
+  // Building Management & Unit Pricing Modal State (for Sellers/Agents)
+  const [manageModalOpen, setManageModalOpen] = useState<boolean>(false);
+  const [editingUnit, setEditingUnit] = useState<BuildingUnit | null>(null);
+  const [editingFloor, setEditingFloor] = useState<BuildingFloor | null>(null);
 
   // Parse query params for initial building or property focus
   useEffect(() => {
@@ -72,56 +74,64 @@ function MapPageContent() {
   }, [searchParams]);
 
   // Search filtered buildings
-  const searchResults = searchQuery.trim() === ""
-    ? []
-    : TEHRAN_BUILDINGS.filter((b) => {
-        const q = searchQuery.toLowerCase();
-        return (
-          b.name.toLowerCase().includes(q) ||
-          b.district.toLowerCase().includes(q) ||
-          b.street.toLowerCase().includes(q) ||
-          b.plaque.toLowerCase().includes(q)
-        );
-      });
+  const searchResults =
+    searchQuery.trim() === ""
+      ? []
+      : buildingsList.filter((b) => {
+          const q = searchQuery.toLowerCase();
+          return (
+            b.name.toLowerCase().includes(q) ||
+            b.district.toLowerCase().includes(q) ||
+            b.street.toLowerCase().includes(q) ||
+            b.plaque.toLowerCase().includes(q)
+          );
+        });
 
   const handleSelectBuildingFromSearch = (building: TehranBuilding) => {
     setSelectedBuilding(building);
     setSearchQuery("");
   };
 
-  const handleRegisterUnit = (building: TehranBuilding, floorNumber: number, unitName: string) => {
-    setRegisterContext({ building, floorNumber, unitName });
-    setRegSuccess(false);
-    setRegisterModalOpen(true);
+  // Agent/Seller edits building or unit
+  const handleSaveBuildingUpdates = (updatedBuilding: TehranBuilding) => {
+    setBuildingsList((prev) =>
+      prev.map((b) => (b.id === updatedBuilding.id ? updatedBuilding : b))
+    );
+    setSelectedBuilding(updatedBuilding);
   };
 
-  const handleRegistrationSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setRegSuccess(true);
-    setTimeout(() => {
-      setRegisterModalOpen(false);
-      setRegSuccess(false);
-      setRegOwnerPhone("");
-    }, 2500);
+  const handleOpenEditBuilding = () => {
+    setEditingUnit(null);
+    setEditingFloor(null);
+    setManageModalOpen(true);
+  };
+
+  const handleOpenEditUnit = (unit: BuildingUnit, floor: BuildingFloor) => {
+    setEditingUnit(unit);
+    setEditingFloor(floor);
+    setManageModalOpen(true);
   };
 
   return (
-    <div className="relative w-screen h-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden font-sans">
+    <div className="relative w-screen h-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden font-sans select-none">
       {/* ==================== TOP NAVIGATION OVERLAY ==================== */}
       <header className="absolute top-0 inset-x-0 z-30 pointer-events-none p-3 sm:p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           {/* Logo & Back Link */}
-          <div className="flex items-center gap-2.5 pointer-events-auto">
+          <div className="flex items-center gap-2 pointer-events-auto">
             <Link
               href="/"
-              className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-slate-950/85 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-all backdrop-blur-md shadow-xl group"
+              className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-all backdrop-blur-md shadow-xl group"
               title="بازگشت به صفحه اصلی یه خونه"
             >
               <ArrowRight className="w-4 h-4 text-amber-400 group-hover:-translate-x-0.5 transition-transform" />
               <span className="text-xs font-bold hidden sm:inline">صفحه اصلی</span>
             </Link>
 
-            <Link href="/" className="flex items-center gap-2.5 bg-slate-950/85 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 shadow-xl">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 shadow-xl"
+            >
               <div className="relative w-7 h-7 rounded-xl overflow-hidden border border-amber-500/30">
                 <Image src="/logo.jpg" alt="یه خونه" fill className="object-cover" />
               </div>
@@ -130,14 +140,14 @@ function MapPageContent() {
                   یه خونه
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold hidden md:inline">
-                  نقشه ۳ بعدی تهران
+                  کاداستر ۲ بعدی و نمای خیابانی
                 </span>
               </div>
             </Link>
           </div>
 
           {/* District Quick Switcher Bar (Desktop) */}
-          <div className="hidden lg:flex items-center gap-1.5 bg-slate-950/85 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl pointer-events-auto">
+          <div className="hidden xl:flex items-center gap-1.5 bg-slate-950/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl pointer-events-auto">
             {TEHRAN_DISTRICTS.map((dist) => (
               <button
                 key={dist.id}
@@ -147,7 +157,7 @@ function MapPageContent() {
                 }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeDistrictId === dist.id
-                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
+                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black"
                     : "text-slate-400 hover:text-white hover:bg-slate-900"
                 }`}
               >
@@ -156,15 +166,46 @@ function MapPageContent() {
             ))}
           </div>
 
-          {/* Search & Actions */}
+          {/* User Role Switcher & Search (Desktop & Mobile) */}
           <div className="flex items-center gap-2 pointer-events-auto">
+            {/* Strict Role Switcher: Home Seeker vs Seller/Agent */}
+            <div className="flex items-center bg-slate-950/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl">
+              <button
+                onClick={() => setUserRole("home_seeker")}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  userRole === "home_seeker"
+                    ? "bg-slate-800 text-white shadow-sm border border-slate-700"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="حالت بازدید و جستجوی ملک برای خریداران و مستاجران"
+              >
+                <Eye className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">متقاضی مسکن</span>
+                <span className="sm:hidden">خریدار</span>
+              </button>
+
+              <button
+                onClick={() => setUserRole("seller_agent")}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  userRole === "seller_agent"
+                    ? "bg-amber-500 text-slate-950 shadow-md font-black shadow-amber-500/20"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="حالت مشاور املاک و مالک جهت تعیین بر ساختمان و قیمت‌گذاری واحدها"
+              >
+                <Key className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">مالک و مشاور</span>
+                <span className="sm:hidden">مشاور</span>
+              </button>
+            </div>
+
             {/* Search Box */}
             <div className="relative">
-              <div className="flex items-center bg-slate-950/85 backdrop-blur-md rounded-2xl border border-slate-800 px-3 py-1.5 shadow-xl w-48 sm:w-64 focus-within:w-72 focus-within:border-amber-500/50 transition-all">
-                <Search className="w-4 h-4 text-slate-400 shrink-0 ml-2" />
+              <div className="flex items-center bg-slate-950/90 backdrop-blur-md rounded-2xl border border-slate-800 px-3 py-1.5 shadow-xl w-36 sm:w-56 focus-within:w-64 focus-within:border-amber-500/50 transition-all">
+                <Search className="w-4 h-4 text-slate-400 shrink-0 ml-1.5" />
                 <input
                   type="text"
-                  placeholder="جستجوی پلاک، کوچه یا محله..."
+                  placeholder="جستجوی پلاک یا کوچه..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-full"
@@ -198,7 +239,7 @@ function MapPageContent() {
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                          {b.street} • {b.plaque}
+                          {b.street} • {b.plaque} • بر: {b.dimensions?.width || 18}م
                         </p>
                       </div>
                       <ChevronLeft className="w-4 h-4 text-slate-600 group-hover:text-amber-400 shrink-0" />
@@ -207,23 +248,11 @@ function MapPageContent() {
                 </div>
               )}
             </div>
-
-            {/* Quick Listing Claim CTA */}
-            <button
-              onClick={() => {
-                setRegisterContext({});
-                setRegisterModalOpen(true);
-              }}
-              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-bold shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>ثبت رایگان ملک</span>
-            </button>
           </div>
         </div>
 
         {/* District Quick Switcher Bar (Mobile Carousel) */}
-        <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 pointer-events-auto">
+        <div className="xl:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 pointer-events-auto">
           {TEHRAN_DISTRICTS.map((dist) => (
             <button
               key={dist.id}
@@ -233,8 +262,8 @@ function MapPageContent() {
               }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all ${
                 activeDistrictId === dist.id
-                  ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
-                  : "bg-slate-950/85 backdrop-blur-md text-slate-400 border border-slate-800"
+                  ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black"
+                  : "bg-slate-950/90 backdrop-blur-md text-slate-400 border border-slate-800"
               }`}
             >
               {dist.name}
@@ -243,164 +272,44 @@ function MapPageContent() {
         </div>
       </header>
 
-      {/* ==================== 3D MAP ENGINE ==================== */}
+      {/* ==================== 2D CADASTRAL & STREET LEVEL MAP ==================== */}
       <main className="flex-1 w-full h-full relative">
         <Tehran3DMap
           onSelectBuilding={(bldg) => setSelectedBuilding(bldg)}
           selectedBuildingId={selectedBuilding?.id}
           activeDistrictId={activeDistrictId}
+          buildings={buildingsList}
+          userRole={userRole}
         />
       </main>
 
-      {/* ==================== BUILDING DIGITAL TWIN INSPECTOR ==================== */}
+      {/* ==================== BUILDING FACADE & TWIN INSPECTOR ==================== */}
       <BuildingInspectorDrawer
         building={selectedBuilding}
         onClose={() => setSelectedBuilding(null)}
-        onRegisterUnit={handleRegisterUnit}
+        userRole={userRole}
+        onEditBuilding={handleOpenEditBuilding}
+        onEditUnit={handleOpenEditUnit}
+        onRequestAgentMode={() => {
+          setUserRole("seller_agent");
+          setManageModalOpen(true);
+        }}
       />
 
-      {/* ==================== FREE UNIT REGISTRATION MODAL ==================== */}
-      {registerModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 relative">
-            <button
-              onClick={() => setRegisterModalOpen(false)}
-              className="absolute top-6 left-6 p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {regSuccess ? (
-              <div className="text-center py-8 space-y-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-black text-white">
-                  واحد با موفقیت روی نقشه ۳ بعدی ثبت شد!
-                </h3>
-                <p className="text-sm text-slate-300">
-                  شناسنامه این واحد برای بررسی و فعال‌سازی در سامانه «یه خونه» ارسال گردید. نردبان خودکار هر ۴ ساعت برای این ملک فعال شد.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleRegistrationSubmit} className="space-y-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-white">
-                      ثبت ۱۰۰٪ رایگان واحد روی نقشه ۳ بعدی
-                    </h3>
-                    <p className="text-xs text-slate-400">
-                      بدون هزینه آگهی و با الگوریتم عادلانه نردبان خودکار
-                    </p>
-                  </div>
-                </div>
-
-                {registerContext.building && (
-                  <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300 space-y-1">
-                    <div className="font-bold text-white flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                      {registerContext.building.name} ({registerContext.building.district})
-                    </div>
-                    <div className="text-slate-400">
-                      طبقه {registerContext.floorNumber || 1} • {registerContext.unitName || "واحد جدید"}
-                    </div>
-                  </div>
-                )}
-
-                {/* Deal Type Switcher */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRegDealType("rent")}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border ${
-                      regDealType === "rent"
-                        ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
-                        : "bg-slate-950 border-slate-800 text-slate-400"
-                    }`}
-                  >
-                    رهن و اجاره
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRegDealType("sale")}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border ${
-                      regDealType === "sale"
-                        ? "bg-amber-500/20 border-amber-500 text-amber-400"
-                        : "bg-slate-950 border-slate-800 text-slate-400"
-                    }`}
-                  >
-                    فروش نقدی
-                  </button>
-                </div>
-
-                {/* Pricing Fields */}
-                {regDealType === "rent" ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-slate-400 block mb-1">ودیعه (میلیون تومان)</label>
-                      <input
-                        type="number"
-                        placeholder="مثال: ۵۰۰"
-                        value={regDeposit}
-                        onChange={(e) => setRegDeposit(e.target.value)}
-                        required
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-slate-400 block mb-1">اجاره ماهیانه (میلیون تومان)</label>
-                      <input
-                        type="number"
-                        placeholder="مثال: ۲۰"
-                        value={regRent}
-                        onChange={(e) => setRegRent(e.target.value)}
-                        required
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="text-xs text-slate-400 block mb-1">قیمت کل (میلیارد تومان)</label>
-                    <input
-                      type="number"
-                      placeholder="مثال: ۱۲"
-                      value={regPrice}
-                      onChange={(e) => setRegPrice(e.target.value)}
-                      required
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                )}
-
-                {/* Mobile Phone */}
-                <div>
-                  <label className="text-xs text-slate-400 block mb-1">شماره تماس مالک یا مشاور</label>
-                  <input
-                    type="tel"
-                    placeholder="۰۹۱۲..."
-                    dir="ltr"
-                    value={regOwnerPhone}
-                    onChange={(e) => setRegOwnerPhone(e.target.value)}
-                    required
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white text-right focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.02] mt-2"
-                >
-                  تایید و ثبت رایگان واحد روی نقشه ۳ بعدی
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
+      {/* ==================== SELLER & AGENT MANAGEMENT MODAL ==================== */}
+      {selectedBuilding && (
+        <BuildingManagementModal
+          isOpen={manageModalOpen}
+          onClose={() => {
+            setManageModalOpen(false);
+            setEditingUnit(null);
+            setEditingFloor(null);
+          }}
+          building={selectedBuilding}
+          initialUnit={editingUnit}
+          initialFloor={editingFloor}
+          onSaveBuilding={handleSaveBuildingUpdates}
+        />
       )}
     </div>
   );
@@ -414,7 +323,9 @@ export default function MapPage() {
           <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 animate-spin">
             <Layers className="w-5 h-5" />
           </div>
-          <span className="text-xs text-slate-400">در حال بارگذاری موتور نقشه ۳ بعدی تهران...</span>
+          <span className="text-xs text-slate-400 font-bold">
+            در حال بارگذاری نقشه ۲ بعدی کاداستر تهران...
+          </span>
         </div>
       }
     >

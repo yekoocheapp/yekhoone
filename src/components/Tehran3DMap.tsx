@@ -7,7 +7,6 @@ import {
   TehranBuilding,
   TEHRAN_BUILDINGS,
   TEHRAN_DISTRICTS,
-  DistrictShortcut,
   getActiveUnitsInBuilding
 } from "@/data/buildings";
 import {
@@ -17,15 +16,14 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Sun,
-  Moon,
-  Sunset,
-  Layers,
-  Sparkles,
   Building2,
   MapPin,
+  Sparkles,
   Eye,
-  Filter,
+  Layers,
+  Camera,
+  Ruler,
+  ShieldCheck,
   Check
 } from "lucide-react";
 
@@ -35,12 +33,14 @@ interface Tehran3DMapProps {
   filterOnlyActive?: boolean;
   activeDistrictId?: string;
   onDistrictChange?: (districtId: string) => void;
+  buildings?: TehranBuilding[];
+  userRole?: "home_seeker" | "seller_agent";
 }
 
-// OpenFreeMap styles with global 3D vector tile building data (unblocked, Cloudflare CDN)
+// Dark architectural map styles matching site dark palette (#020617 / slate-950)
 const MAP_STYLES = {
-  bright: "https://tiles.openfreemap.org/styles/bright",
-  liberty: "https://tiles.openfreemap.org/styles/liberty",
+  dark: "https://tiles.openfreemap.org/styles/dark",
+  cartoDark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
   positron: "https://tiles.openfreemap.org/styles/positron"
 };
 
@@ -49,87 +49,108 @@ export default function Tehran3DMap({
   selectedBuildingId,
   filterOnlyActive = false,
   activeDistrictId,
-  onDistrictChange
+  onDistrictChange,
+  buildings = TEHRAN_BUILDINGS,
+  userRole = "home_seeker"
 }: Tehran3DMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
-  const [styleMode, setStyleMode] = useState<"liberty" | "bright" | "positron">("liberty");
+  const [styleMode, setStyleMode] = useState<"dark" | "cartoDark" | "positron">("dark");
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
-  const [compassBearing, setCompassBearing] = useState<number>(-15);
+  const [compassBearing, setCompassBearing] = useState<number>(0);
+  const [isStreetLevel, setIsStreetLevel] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [hoveredBuilding, setHoveredBuilding] = useState<TehranBuilding | null>(null);
 
-  // Helper: Setup 3D Extruded Buildings Layer on MapLibre
-  const setup3DBuildingsLayer = useCallback((map: maplibregl.Map) => {
-    // Check if openmaptiles source exists
-    if (!map.getSource("openmaptiles")) return;
-    if (map.getLayer("3d-buildings")) return;
-
-    // Find the first label layer to insert 3D buildings underneath labels
-    const layers = map.getStyle().layers;
-    let labelLayerId: string | undefined;
-    if (layers) {
-      for (let i = 0; i < layers.length; i++) {
-        if (layers[i].type === "symbol" && layers[i].layout && (layers[i].layout as any)["text-field"]) {
-          labelLayerId = layers[i].id;
-          break;
-        }
+  // Setup 2D Cadastral Footprints & 3D Extrusion on MapLibre
+  const configureBuildingLayers = useCallback((map: maplibregl.Map) => {
+    // If openmaptiles or carto building layer exists, style it in sleek dark cadastre slate
+    if (map.getLayer("building")) {
+      try {
+        map.setPaintProperty("building", "fill-color", [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          13,
+          "#1e293b",
+          16,
+          "#334155"
+        ]);
+        map.setPaintProperty("building", "fill-outline-color", "#64748b");
+        map.setPaintProperty("building", "fill-opacity", 0.9);
+      } catch (e) {
+        console.warn("Could not set custom building paint:", e);
       }
     }
 
-    // Add 3D Extrusion Layer for real Tehran buildings
-    map.addLayer(
-      {
-        id: "3d-buildings",
-        source: "openmaptiles",
-        "source-layer": "building",
-        type: "fill-extrusion",
-        minzoom: 14,
-        paint: {
-          "fill-extrusion-color": [
-            "interpolate",
-            ["linear"],
-            ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 4], 3.2], 12],
-            0,
-            "#0f172a",
-            20,
-            "#1e293b",
-            40,
-            "#334155",
-            80,
-            "#475569"
-          ],
-          "fill-extrusion-height": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            14,
-            0,
-            14.05,
-            ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 4], 3.2], 12]
-          ],
-          "fill-extrusion-base": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            14,
-            0,
-            14.05,
-            ["coalesce", ["get", "render_min_height"], 0]
-          ],
-          "fill-extrusion-opacity": 0.88
+    // Add 3D Extruded Buildings Layer when descending to street level
+    if (map.getSource("openmaptiles") && !map.getLayer("3d-buildings-extrusion")) {
+      const layers = map.getStyle().layers;
+      let labelLayerId: string | undefined;
+      if (layers) {
+        for (let i = 0; i < layers.length; i++) {
+          if (layers[i].type === "symbol" && layers[i].layout && (layers[i].layout as any)["text-field"]) {
+            labelLayerId = layers[i].id;
+            break;
+          }
         }
-      },
-      labelLayerId
-    );
+      }
+
+      try {
+        map.addLayer(
+          {
+            id: "3d-buildings-extrusion",
+            source: "openmaptiles",
+            "source-layer": "building",
+            type: "fill-extrusion",
+            minzoom: 16.5,
+            paint: {
+              "fill-extrusion-color": [
+                "interpolate",
+                ["linear"],
+                ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 4], 3.2], 12],
+                0,
+                "#0f172a",
+                15,
+                "#1e293b",
+                30,
+                "#334155",
+                60,
+                "#475569"
+              ],
+              "fill-extrusion-height": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                16.5,
+                0,
+                17.2,
+                ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 4], 3.2], 12]
+              ],
+              "fill-extrusion-base": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                16.5,
+                0,
+                17.2,
+                ["coalesce", ["get", "render_min_height"], 0]
+              ],
+              "fill-extrusion-opacity": 0.92
+            }
+          },
+          labelLayerId
+        );
+      } catch (err) {
+        console.warn("Extrusion layer init error:", err);
+      }
+    }
   }, []);
 
-  // Initialize MapLibre GL instance
+  // Initialize MapLibre GL in 2D Top-Down Mode First
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Explicitly configure Worker URL & RTL plugin for Next.js Turbopack
     if (typeof window !== "undefined") {
       const origin = window.location.origin;
       const workerUrl = `${origin}/maplibre-gl-worker.js`;
@@ -148,14 +169,14 @@ export default function Tehran3DMap({
       } catch {}
     }
 
-    // Center on Sa'adat Abad / Tehran
+    // 2D FIRST: pitch: 0, bearing: 0, zoom: 15.5
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: MAP_STYLES[styleMode],
-      center: [51.3734, 35.7876],
-      zoom: 16.2,
-      pitch: 60,
-      bearing: -15,
+      center: [51.3734, 35.7876], // Sa'adat Abad / Tehran
+      zoom: 15.5,
+      pitch: 0, // Strictly 2D top-down initially
+      bearing: 0,
       maxPitch: 80,
       attributionControl: false
     });
@@ -164,72 +185,80 @@ export default function Tehran3DMap({
 
     map.on("load", () => {
       setMapLoaded(true);
-      setup3DBuildingsLayer(map);
+      configureBuildingLayers(map);
     });
 
     map.on("rotate", () => {
       setCompassBearing(map.getBearing());
     });
 
-    // Real-time click on any real 3D building in Tehran
-    map.on("click", (e) => {
-      // 1. Check if user clicked an extruded 3D building
-      const features = map.queryRenderedFeatures(e.point, { layers: ["3d-buildings"] });
+    map.on("pitch", () => {
+      setIsStreetLevel(map.getPitch() > 40);
+    });
 
-      // 2. Check if click is near any registered building in TEHRAN_BUILDINGS
-      let matchedBuilding: TehranBuilding | undefined;
+    // CLICK ON ANY BUILDING PLACEHOLDER
+    map.on("click", (e) => {
       const clickedLng = e.lngLat.lng;
       const clickedLat = e.lngLat.lat;
 
-      for (const bldg of TEHRAN_BUILDINGS) {
+      // 1. Check if clicked near an existing registered building
+      let matchedBuilding: TehranBuilding | undefined;
+      for (const bldg of buildings) {
         const dLng = Math.abs(bldg.coordinates.lng - clickedLng);
         const dLat = Math.abs(bldg.coordinates.lat - clickedLat);
-        // Approx within 0.0008 deg (~70 meters)
-        if (dLng < 0.0008 && dLat < 0.0008) {
+        // Approx within ~60 meters
+        if (dLng < 0.0007 && dLat < 0.0007) {
           matchedBuilding = bldg;
           break;
         }
       }
 
+      // 2. Query vector building polygons (both 2D and 3D)
+      const buildingFeatures = map.queryRenderedFeatures(e.point, {
+        layers: ["building", "3d-buildings-extrusion"].filter((l) => map.getLayer(l))
+      });
+
       if (matchedBuilding) {
         onSelectBuilding(matchedBuilding);
+        // Smooth camera descent from 2D down to street level
         map.flyTo({
           center: [matchedBuilding.coordinates.lng, matchedBuilding.coordinates.lat],
-          zoom: 17.5,
-          pitch: 65,
-          duration: 1200
+          zoom: 18.5,
+          pitch: 74,
+          bearing: -15,
+          duration: 1600
         });
-      } else if (features && features.length > 0) {
-        // Real building polygon in Tehran was clicked!
-        const feat = features[0];
+      } else if (buildingFeatures && buildingFeatures.length > 0) {
+        // Dynamic building on-the-fly for real cadastral plot in Tehran
+        const feat = buildingFeatures[0];
         const height = feat.properties?.render_height || (feat.properties?.levels ? feat.properties.levels * 3.2 : 18);
-        const estimatedFloors = Math.max(3, Math.round(height / 3.2));
+        const estimatedFloors = Math.max(3, Math.min(15, Math.round(height / 3.2)));
+        const estimatedWidth = Math.round(14 + (Math.abs(clickedLng * 1000) % 10));
 
-        // Create on-the-fly real cadastral building twin for Tehran
         const dynamicBuilding: TehranBuilding = {
-          id: `osm-${feat.id || Math.round(clickedLat * 10000)}`,
-          name: `ساختمان پلاک ثبتی ${Math.round(clickedLng * 100) % 50 + 1}`,
+          id: `cadastre-${feat.id || Math.round(clickedLat * 10000)}`,
+          name: `ساختمان پلاک ثبتی ${Math.round(clickedLng * 100) % 60 + 1}`,
           district: "تهران (محدوده شهری)",
-          street: "کوچه ثبتی مجاور",
-          plaque: `پلاک ${Math.round(clickedLng * 100) % 50 + 1}`,
-          fullAddress: `تهران، مختصات جغرافیایی ${clickedLat.toFixed(4)}°N, ${clickedLng.toFixed(4)}°E`,
+          street: "خیابان و کوچه ثبتی مجاور",
+          plaque: `پلاک ${Math.round(clickedLng * 100) % 60 + 1}`,
+          fullAddress: `تهران، مختصات کاداستر شهری ${clickedLat.toFixed(4)}°N, ${clickedLng.toFixed(4)}°E`,
           totalFloors: estimatedFloors,
           unitsCount: estimatedFloors * 2,
-          age: 3,
+          age: 4,
           architecturalStyle: "modern-glass",
           amenities: {
             hasElevator: estimatedFloors > 3,
             hasParking: true,
             hasStorage: true,
             hasLobby: estimatedFloors > 5,
-            hasLobbyMan: estimatedFloors > 6,
+            hasLobbyMan: false,
             hasRoofGarden: false,
             hasPool: false,
             hasGym: false
           },
           coordinates: { lat: clickedLat, lng: clickedLng },
           worldPosition: { x: 0, z: 0 },
-          dimensions: { width: 18, depth: 20, height: height },
+          dimensions: { width: estimatedWidth, depth: 20, height: height },
           floors: Array.from({ length: estimatedFloors }).map((_, idx) => {
             const fNum = estimatedFloors - idx;
             return {
@@ -237,19 +266,19 @@ export default function Tehran3DMap({
               floorLabel: fNum === estimatedFloors ? `طبقه ${fNum} (بالاترین طبقه)` : `طبقه ${fNum}`,
               units: [
                 {
-                  id: `dyn-u-${fNum}-1`,
+                  id: `cad-u-${fNum}-1`,
                   unitNumber: `واحد ${fNum * 2 - 1} - شمالی`,
                   floor: fNum,
-                  meters: 110,
+                  meters: 115,
                   bedrooms: 2,
                   status: "unlisted",
-                  notes: "این واحد هنوز در سامانه یه خونه ثبت نشده است"
+                  notes: "این واحد هنوز در سامانه قیمت‌گذاری نشده است"
                 },
                 {
-                  id: `dyn-u-${fNum}-2`,
+                  id: `cad-u-${fNum}-2`,
                   unitNumber: `واحد ${fNum * 2} - جنوبی`,
                   floor: fNum,
-                  meters: 110,
+                  meters: 120,
                   bedrooms: 2,
                   status: "occupied",
                   notes: "سکونت شخصی"
@@ -260,20 +289,22 @@ export default function Tehran3DMap({
         };
 
         onSelectBuilding(dynamicBuilding);
+        // Smooth camera descent from 2D down to street level
         map.flyTo({
           center: [clickedLng, clickedLat],
-          zoom: 17.5,
-          pitch: 65,
-          duration: 1000
+          zoom: 18.5,
+          pitch: 74,
+          bearing: -15,
+          duration: 1600
         });
       }
     });
 
-    // Hover cursor styling
-    map.on("mousemove", "3d-buildings", () => {
+    // Hover cursor
+    map.on("mousemove", "building", () => {
       map.getCanvas().style.cursor = "pointer";
     });
-    map.on("mouseleave", "3d-buildings", () => {
+    map.on("mouseleave", "building", () => {
       map.getCanvas().style.cursor = "";
     });
 
@@ -284,16 +315,15 @@ export default function Tehran3DMap({
     };
   }, []);
 
-  // Render Real 3D Custom HTML Markers for Registered Properties in Tehran
+  // Update Custom HTML Cadastral Markers on the Map
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Clear old markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
-    TEHRAN_BUILDINGS.forEach((bldg) => {
+    buildings.forEach((bldg) => {
       const { rentUnits, saleUnits } = getActiveUnitsInBuilding(bldg);
       const totalActive = rentUnits.length + saleUnits.length;
       if (filterOnlyActive && totalActive === 0) return;
@@ -301,18 +331,19 @@ export default function Tehran3DMap({
       const hasRent = rentUnits.length > 0;
       const hasSale = saleUnits.length > 0;
       const isSelected = selectedBuildingId === bldg.id;
+      const frontageWidth = bldg.dimensions?.width || 18;
 
-      // Create Custom 3D Marker DOM Element
       const el = document.createElement("div");
       el.className = "group cursor-pointer select-none";
 
-      const badgeColor = hasRent && hasSale
-        ? "bg-purple-500 text-white border-purple-300"
-        : hasRent
-        ? "bg-emerald-500 text-slate-950 border-emerald-300"
-        : hasSale
-        ? "bg-amber-500 text-slate-950 border-amber-300"
-        : "bg-slate-800 text-slate-300 border-slate-700";
+      const badgeColor =
+        hasRent && hasSale
+          ? "bg-purple-500 text-white border-purple-300"
+          : hasRent
+          ? "bg-emerald-500 text-slate-950 border-emerald-300"
+          : hasSale
+          ? "bg-amber-500 text-slate-950 border-amber-300"
+          : "bg-slate-800 text-slate-300 border-slate-700";
 
       let priceLabel = "";
       if (hasRent && rentUnits[0].deposit) {
@@ -324,27 +355,32 @@ export default function Tehran3DMap({
       }
 
       el.innerHTML = `
-        <div class="relative flex flex-col items-center transition-all duration-300 ${isSelected ? "scale-110 z-40" : "hover:scale-105 z-20"}">
-          <!-- Price Badge Pill -->
+        <div class="relative flex flex-col items-center transition-all duration-300 ${
+          isSelected ? "scale-115 z-40" : "hover:scale-105 z-20"
+        }">
+          <!-- Cadastral Price Pill -->
           <div class="px-2.5 py-1 rounded-xl shadow-2xl font-black text-[11px] whitespace-nowrap border flex items-center gap-1.5 ${badgeColor}">
-            <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
             <span>${priceLabel}</span>
+            <span class="text-[9px] opacity-80 border-r border-black/20 pr-1 mr-0.5">${frontageWidth}م بر</span>
           </div>
 
-          <!-- Pin stem & pulse aura -->
-          <div class="w-3 h-3 rotate-45 -mt-1.5 shadow-md ${badgeColor}"></div>
-          <div class="w-2.5 h-2.5 rounded-full bg-amber-400 mt-0.5 shadow-lg shadow-amber-500/50"></div>
+          <!-- Pin Stem & Cadastral Dot -->
+          <div class="w-2.5 h-2.5 rotate-45 -mt-1 shadow-md ${badgeColor}"></div>
+          <div class="w-2 h-2 rounded-full ${isSelected ? "bg-amber-400 ring-4 ring-amber-400/40" : "bg-amber-400"} mt-0.5 shadow-lg"></div>
         </div>
       `;
 
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         onSelectBuilding(bldg);
+        // Smooth camera descent from 2D down to street level
         map.flyTo({
           center: [bldg.coordinates.lng, bldg.coordinates.lat],
-          zoom: 17.5,
-          pitch: 65,
-          duration: 1200
+          zoom: 18.5,
+          pitch: 74,
+          bearing: -15,
+          duration: 1600
         });
       });
 
@@ -354,22 +390,22 @@ export default function Tehran3DMap({
 
       markersRef.current.push(marker);
     });
-  }, [filterOnlyActive, selectedBuildingId, onSelectBuilding]);
+  }, [buildings, filterOnlyActive, selectedBuildingId, onSelectBuilding]);
 
-  // Handle building selection camera focus
+  // Handle building focus from parent
   useEffect(() => {
     if (!selectedBuildingId || !mapRef.current) return;
-    const bldg = TEHRAN_BUILDINGS.find((b) => b.id === selectedBuildingId);
+    const bldg = buildings.find((b) => b.id === selectedBuildingId);
     if (!bldg) return;
 
     mapRef.current.flyTo({
       center: [bldg.coordinates.lng, bldg.coordinates.lat],
-      zoom: 17.5,
-      pitch: 65,
-      bearing: -20,
-      duration: 1500
+      zoom: 18.5,
+      pitch: 74,
+      bearing: -15,
+      duration: 1600
     });
-  }, [selectedBuildingId]);
+  }, [selectedBuildingId, buildings]);
 
   // Handle district jump
   useEffect(() => {
@@ -379,23 +415,46 @@ export default function Tehran3DMap({
 
     mapRef.current.flyTo({
       center: [district.centerCoordinates.lng, district.centerCoordinates.lat],
-      zoom: district.zoom || 16.3,
-      pitch: district.pitch || 60,
-      bearing: district.bearing || -15,
-      duration: 2000
+      zoom: district.zoom || 15.5,
+      pitch: 0, // Reset to 2D on district switch
+      bearing: 0,
+      duration: 1800
     });
   }, [activeDistrictId]);
 
   // Style change handler
-  const handleStyleChange = (mode: "liberty" | "bright" | "positron") => {
+  const handleStyleChange = (mode: "dark" | "cartoDark" | "positron") => {
     if (!mapRef.current) return;
     setStyleMode(mode);
     mapRef.current.setStyle(MAP_STYLES[mode]);
     mapRef.current.once("style.load", () => {
       if (mapRef.current) {
-        setup3DBuildingsLayer(mapRef.current);
+        configureBuildingLayers(mapRef.current);
       }
     });
+  };
+
+  // Switch between 2D Top-Down & 3D Street Level Camera
+  const toggleCamera2D3D = () => {
+    if (!mapRef.current) return;
+    const currentPitch = mapRef.current.getPitch();
+    if (currentPitch > 25) {
+      // Switch back to 2D Top-Down
+      mapRef.current.flyTo({
+        pitch: 0,
+        bearing: 0,
+        zoom: Math.max(15, mapRef.current.getZoom() - 1.5),
+        duration: 1200
+      });
+    } else {
+      // Descend to 3D Street Level
+      mapRef.current.flyTo({
+        pitch: 74,
+        zoom: Math.min(18.5, mapRef.current.getZoom() + 1.5),
+        bearing: -15,
+        duration: 1400
+      });
+    }
   };
 
   const handleZoom = (delta: number) => {
@@ -403,13 +462,13 @@ export default function Tehran3DMap({
     mapRef.current.easeTo({ zoom: mapRef.current.getZoom() + delta, duration: 300 });
   };
 
-  const resetView = () => {
+  const resetToFullTehran2D = () => {
     if (!mapRef.current) return;
     mapRef.current.flyTo({
       center: [51.3734, 35.7876],
       zoom: 14.5,
-      pitch: 50,
-      bearing: -15,
+      pitch: 0, // Pure 2D
+      bearing: 0,
       duration: 1500
     });
     onSelectBuilding(null);
@@ -429,15 +488,15 @@ export default function Tehran3DMap({
       ref={mapContainerRef}
       className="relative w-full h-full bg-slate-950 overflow-hidden select-none"
     >
-      {/* Top Left Navigation Bar & Compass */}
+      {/* Top Left Navigation & Camera Modes */}
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2 pointer-events-none">
         {/* Compass */}
         <div
           onClick={() => {
             if (mapRef.current) mapRef.current.resetNorthPitch({ duration: 800 });
           }}
-          className="bg-slate-950/85 backdrop-blur-md p-2.5 rounded-2xl border border-slate-800 shadow-xl flex items-center gap-1.5 text-slate-300 text-xs font-mono pointer-events-auto cursor-pointer hover:bg-slate-900 transition-colors"
-          title="جهت‌نمای جغرافیایی تهران (شمال به سمت قله توچال و شمیرانات)"
+          className="bg-slate-950/90 backdrop-blur-md p-2.5 rounded-2xl border border-slate-800 shadow-xl flex items-center gap-1.5 text-slate-300 text-xs font-mono pointer-events-auto cursor-pointer hover:bg-slate-900 transition-colors"
+          title="جهت‌نمای جغرافیایی شمال تهران (قله توچال)"
         >
           <Compass
             className="w-4 h-4 text-amber-400 transition-transform duration-150"
@@ -446,58 +505,70 @@ export default function Tehran3DMap({
           <span className="font-bold text-amber-400">N</span>
         </div>
 
-        {/* Real Vector Map Themes (Liberty / Bright / Positron) */}
-        <div className="bg-slate-950/85 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl flex items-center gap-1 pointer-events-auto">
+        {/* 2D / 3D Street Level Camera Angle Switcher */}
+        <button
+          onClick={toggleCamera2D3D}
+          className={`pointer-events-auto px-3 py-2 rounded-2xl backdrop-blur-md border text-xs font-bold transition-all shadow-xl flex items-center gap-1.5 ${
+            isStreetLevel
+              ? "bg-amber-500 text-slate-950 border-amber-400 shadow-amber-500/20 font-black"
+              : "bg-slate-950/90 hover:bg-slate-900 border-slate-800 text-slate-200"
+          }`}
+          title="تغییر دید بین نقشه ۲ بعدی کاداستر و نمای ۳ بعدی خیابانی"
+        >
+          {isStreetLevel ? (
+            <>
+              <Camera className="w-4 h-4 text-slate-950" />
+              <span>نمای خیابانی (۳ بعدی)</span>
+            </>
+          ) : (
+            <>
+              <Layers className="w-4 h-4 text-amber-400" />
+              <span>دید ۲ بعدی کاداستر</span>
+            </>
+          )}
+        </button>
+
+        {/* Dark Theme Selector */}
+        <div className="hidden sm:flex bg-slate-950/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl pointer-events-auto">
           <button
-            onClick={() => handleStyleChange("liberty")}
+            onClick={() => handleStyleChange("dark")}
             className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              styleMode === "liberty"
-                ? "bg-amber-500 text-slate-950 shadow-md"
+              styleMode === "dark"
+                ? "bg-amber-500 text-slate-950 shadow-md font-black"
                 : "text-slate-400 hover:text-white"
             }`}
-            title="نقشه شهری کامل تهران با خیابان‌ها و کوچه‌ها"
+            title="نقشه تیره شهری مطابق تم سایت"
           >
-            شهری لیبرتی
+            دارک شهری
           </button>
           <button
-            onClick={() => handleStyleChange("bright")}
+            onClick={() => handleStyleChange("cartoDark")}
             className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              styleMode === "bright"
-                ? "bg-amber-500 text-slate-950 shadow-md"
+              styleMode === "cartoDark"
+                ? "bg-amber-500 text-slate-950 shadow-md font-black"
                 : "text-slate-400 hover:text-white"
             }`}
-            title="نقشه شفاف روز"
+            title="نقشه مشکی کاداستر"
           >
-            روشن
-          </button>
-          <button
-            onClick={() => handleStyleChange("positron")}
-            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              styleMode === "positron"
-                ? "bg-amber-500 text-slate-950 shadow-md"
-                : "text-slate-400 hover:text-white"
-            }`}
-            title="نقشه مهندسی مینیمال"
-          >
-            مینیمال
+            کاداستر مشکی
           </button>
         </div>
       </div>
 
-      {/* Top Right Quick Controls */}
+      {/* Top Right Controls */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">
-        {/* Reset Camera View */}
+        {/* Reset to 2D Top View */}
         <button
-          onClick={resetView}
-          className="p-2.5 rounded-2xl bg-slate-950/85 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors backdrop-blur-md shadow-xl flex items-center gap-1.5 text-xs font-semibold"
-          title="بازنشانی دید کل تهران"
+          onClick={resetToFullTehran2D}
+          className="p-2.5 rounded-2xl bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors backdrop-blur-md shadow-xl flex items-center gap-1.5 text-xs font-semibold"
+          title="بازنشانی به دید ۲ بعدی کل تهران"
         >
           <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-          <span className="hidden sm:inline">کل تهران</span>
+          <span className="hidden sm:inline">دید کل تهران</span>
         </button>
 
         {/* Zoom In / Out Buttons */}
-        <div className="flex items-center bg-slate-950/85 backdrop-blur-md rounded-2xl border border-slate-800 p-1 shadow-xl">
+        <div className="flex items-center bg-slate-950/90 backdrop-blur-md rounded-2xl border border-slate-800 p-1 shadow-xl">
           <button
             onClick={() => handleZoom(1)}
             className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white"
@@ -518,7 +589,7 @@ export default function Tehran3DMap({
         {/* Fullscreen Button */}
         <button
           onClick={toggleFullscreen}
-          className="p-2.5 rounded-2xl bg-slate-950/85 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors backdrop-blur-md shadow-xl"
+          className="p-2.5 rounded-2xl bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors backdrop-blur-md shadow-xl"
           title={isFullscreen ? "خروج از تمام‌صفحه" : "تمام‌صفحه"}
         >
           {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -529,26 +600,30 @@ export default function Tehran3DMap({
       <div className="absolute bottom-4 right-4 z-20 pointer-events-none hidden md:flex items-center gap-3 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 text-[11px] shadow-xl">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20" />
-          <span className="text-slate-300">رهن و اجاره فعال</span>
+          <span className="text-slate-300">رهن و اجاره</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-amber-400/20" />
-          <span className="text-slate-300">فروش نقدی فعال</span>
+          <span className="text-slate-300">فروش نقدی</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-purple-400 ring-2 ring-purple-400/20" />
-          <span className="text-slate-300">چندین آگهی</span>
+          <span className="text-slate-300">چندین واحد</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-500" />
-          <span className="text-slate-400">ساختمان‌های ۳ بعدی تهران</span>
+          <span className="w-2.5 h-2.5 rounded-sm bg-slate-700 border border-slate-600" />
+          <span className="text-slate-400">پلاک‌های کاداستر شهری</span>
         </div>
       </div>
 
-      {/* Interactive Helper Hint */}
-      <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-slate-950/90 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-800 text-[11px] text-slate-300 shadow-xl">
+      {/* Helper Notification Banner */}
+      <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 text-[11px] text-slate-300 shadow-xl">
         <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-        <span>روی هر ساختمانی در خیابان‌های تهران کلیک کنید تا شناسنامه و طبقات آن باز شود</span>
+        <span>
+          {userRole === "seller_agent"
+            ? "روی هر ساختمانی کلیک کنید تا دوربین به دید خیابانی برود و بتوانید بر ساختمان و واحدها را قیمت‌گذاری کنید"
+            : "روی هر پلاک کلیک کنید تا دوربین به دید خیابانی برود و نمای معمارانه بر ساختمان و واحدها باز شود"}
+        </span>
       </div>
     </div>
   );
