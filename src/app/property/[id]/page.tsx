@@ -37,8 +37,15 @@ import {
   Clock,
   Send,
   RotateCw,
-  Cpu
+  Cpu,
+  Image as ImageIcon,
+  Video,
+  Eye,
+  Sparkles as SparklesIcon
 } from "lucide-react";
+import VirtualTourViewer from "@/components/VirtualTourViewer";
+import VideoTourPlayer from "@/components/VideoTourPlayer";
+import { TourRoom } from "@/data/properties";
 
 export default function PropertyDetailPage() {
   const params = useParams();
@@ -51,6 +58,54 @@ export default function PropertyDetailPage() {
   const [saved, setSaved] = useState<boolean>(false);
   const [bookingModalOpen, setBookingModalOpen] = useState<boolean>(false);
   const [bookingSuccess, setBookingSuccess] = useState<boolean>(false);
+  const [mediaMode, setMediaMode] = useState<"photos" | "video" | "tour360">(
+    property.hasVirtualTour ? "tour360" : "photos"
+  );
+
+  const tourRooms: TourRoom[] = property.virtualTour?.rooms || [
+    {
+      id: "living-room",
+      name: "سالن پذیرایی و نشیمن",
+      panoramaUrl: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/2294472375_24a3b8ef46_o.jpg",
+      description: `${property.title} - سالن نورگیر اصلی`,
+      hotspots: [
+        {
+          id: "h-win",
+          title: "پنجره و نورگیر عالی",
+          description: "نورگیر مستقیم با پنجره‌های دوجداره استاندارد.",
+          type: "info",
+          pitch: 5,
+          yaw: 40
+        },
+        {
+          id: "h-to-kitchen",
+          title: "ورود به آشپزخانه",
+          description: "دسترسی به کابینت‌ها و فضای پخت و پز",
+          type: "portal",
+          targetRoomId: "kitchen",
+          pitch: -5,
+          yaw: 120
+        }
+      ]
+    },
+    {
+      id: "kitchen",
+      name: "آشپزخانه و مطبخ",
+      panoramaUrl: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=2000&q=80",
+      description: "آشپزخانه با متریال عالی و اتصالات مدرن",
+      hotspots: [
+        {
+          id: "h-k-to-living",
+          title: "بازگشت به پذیرایی",
+          description: "ورود به سالن",
+          type: "portal",
+          targetRoomId: "living-room",
+          pitch: -5,
+          yaw: -60
+        }
+      ]
+    }
+  ];
 
   // Property-specific conversion slider
   const [customDeposit, setCustomDeposit] = useState<number>(
@@ -164,75 +219,157 @@ export default function PropertyDetailPage() {
         {/* Top Grid: Gallery & Sticky Contact Card */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Column 1 & 2: Gallery & Details */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Gallery Box */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-2 sm:p-3 shadow-xl">
-              {/* Main Image */}
-              <div className="relative h-72 sm:h-96 md:h-[420px] w-full rounded-2xl overflow-hidden bg-slate-950">
-                <Image
-                  src={property.images[activeImageIndex]}
-                  alt={property.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+          <div className="lg:col-span-2 space-y-6">
+            {/* 3-Way Media Mode Switcher (Photos / Video / 360 Virtual Tour) */}
+            <div className="bg-slate-900 border border-slate-800 p-2 rounded-2xl shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                {/* Mode 1: Static Photos */}
+                <button
+                  onClick={() => setMediaMode("photos")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                    mediaMode === "photos"
+                      ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
+                      : "bg-slate-950/80 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800/80"
+                  }`}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  <span>تصاویر ({property.images.length})</span>
+                </button>
 
-                {/* Left/Right Navigation */}
-                {property.images.length > 1 && (
-                  <>
-                    <button
-                      onClick={() =>
-                        setActiveImageIndex((prev) =>
-                          prev === 0 ? property.images.length - 1 : prev - 1
-                        )
-                      }
-                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-950/70 hover:bg-slate-950 text-white backdrop-blur-md transition-all shadow-lg"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setActiveImageIndex((prev) =>
-                          prev === property.images.length - 1 ? 0 : prev + 1
-                        )
-                      }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-950/70 hover:bg-slate-950 text-white backdrop-blur-md transition-all shadow-lg"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </>
-                )}
+                {/* Mode 2: Video Walkthrough */}
+                <button
+                  onClick={() => setMediaMode("video")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                    mediaMode === "video"
+                      ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
+                      : "bg-slate-950/80 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800/80"
+                  }`}
+                >
+                  <Video className="w-4 h-4 text-red-400" />
+                  <span>ویدیو تور ملک</span>
+                  <span className="px-1.5 py-0.2 rounded-md bg-red-500/20 text-red-400 text-[10px] font-extrabold border border-red-500/30">
+                    4K
+                  </span>
+                </button>
 
-                {/* Counter Pill */}
-                <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-white text-xs font-medium border border-white/10">
-                  {activeImageIndex + 1} از {property.images.length} تصویر
-                </div>
+                {/* Mode 3: 360 Virtual Tour */}
+                <button
+                  onClick={() => setMediaMode("tour360")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                    mediaMode === "tour360"
+                      ? "bg-gradient-to-l from-indigo-500 via-purple-500 to-amber-500 text-white shadow-lg shadow-indigo-500/25"
+                      : "bg-slate-950/80 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800/80"
+                  }`}
+                >
+                  <Eye className="w-4 h-4 text-amber-400" />
+                  <span>تور مجازی ۳۶۰°</span>
+                  <span className="px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-extrabold border border-amber-500/30 animate-pulse">
+                    فوق‌پیشرفته
+                  </span>
+                </button>
               </div>
 
-              {/* Thumbnails Row */}
-              {property.images.length > 1 && (
-                <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1">
-                  {property.images.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveImageIndex(idx)}
-                      className={`relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
-                        activeImageIndex === idx
-                          ? "border-amber-500 scale-105 shadow-md"
-                          : "border-transparent opacity-60 hover:opacity-100"
-                      }`}
-                    >
-                      <Image
-                        src={img}
-                        alt="پیش‌نمایش تصویر"
-                        fill
-                        className="object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 px-2">
+                <SparklesIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>بازدید هوشمند بدون نیاز به حضور فیزیکی</span>
+              </div>
             </div>
+
+            {/* Media Mode 1: Static Photos Gallery */}
+            {mediaMode === "photos" && (
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-2 sm:p-3 shadow-xl animate-in fade-in duration-200">
+                {/* Main Image */}
+                <div className="relative h-72 sm:h-96 md:h-[420px] w-full rounded-2xl overflow-hidden bg-slate-950">
+                  <Image
+                    src={property.images[activeImageIndex]}
+                    alt={property.title}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+
+                  {/* Left/Right Navigation */}
+                  {property.images.length > 1 && (
+                    <>
+                      <button
+                        onClick={() =>
+                          setActiveImageIndex((prev) =>
+                            prev === 0 ? property.images.length - 1 : prev - 1
+                          )
+                        }
+                        className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-950/70 hover:bg-slate-950 text-white backdrop-blur-md transition-all shadow-lg"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          setActiveImageIndex((prev) =>
+                            prev === property.images.length - 1 ? 0 : prev + 1
+                          )
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-950/70 hover:bg-slate-950 text-white backdrop-blur-md transition-all shadow-lg"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Counter Pill */}
+                  <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-white text-xs font-medium border border-white/10">
+                    {activeImageIndex + 1} از {property.images.length} تصویر
+                  </div>
+                </div>
+
+                {/* Thumbnails Row */}
+                {property.images.length > 1 && (
+                  <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1">
+                    {property.images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveImageIndex(idx)}
+                        className={`relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
+                          activeImageIndex === idx
+                            ? "border-amber-500 scale-105 shadow-md"
+                            : "border-transparent opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        <Image
+                          src={img}
+                          alt="پیش‌نمایش تصویر"
+                          fill
+                          className="object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Media Mode 2: Video Walkthrough */}
+            {mediaMode === "video" && (
+              <div className="animate-in fade-in duration-200">
+                <VideoTourPlayer
+                  videoUrl={property.videoUrl}
+                  posterImage={property.images[0]}
+                  propertyTitle={property.title}
+                  agentName={property.agentName}
+                  agentPhone={property.agentPhone}
+                  onBookVisit={() => setBookingModalOpen(true)}
+                />
+              </div>
+            )}
+
+            {/* Media Mode 3: 360° Interactive Virtual Tour */}
+            {mediaMode === "tour360" && (
+              <div className="animate-in fade-in duration-200">
+                <VirtualTourViewer
+                  rooms={tourRooms}
+                  initialRoomId={property.virtualTour?.startingRoomId}
+                  propertyTitle={property.title}
+                />
+              </div>
+            )}
 
             {/* Quick Specs Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

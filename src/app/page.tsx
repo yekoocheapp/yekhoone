@@ -28,7 +28,9 @@ import {
   Building,
   ExternalLink,
   RotateCw,
-  Cpu
+  Cpu,
+  Eye,
+  Video
 } from "lucide-react";
 
 export default function HomePage() {
@@ -36,6 +38,7 @@ export default function HomePage() {
   const [dealType, setDealType] = useState<"all" | "rent" | "sale">("rent");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("همه");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [onlyVirtualTour, setOnlyVirtualTour] = useState<boolean>(false);
   const [calculatorOpen, setCalculatorOpen] = useState<boolean>(false);
   const [submitModalOpen, setSubmitModalOpen] = useState<boolean>(false);
   const [contactModalProperty, setContactModalProperty] = useState<Property | null>(null);
@@ -55,6 +58,7 @@ export default function HomePage() {
   const filteredProperties = properties.filter((item) => {
     if (dealType !== "all" && item.type !== dealType) return false;
     if (selectedDistrict !== "همه" && item.district !== selectedDistrict) return false;
+    if (onlyVirtualTour && !item.hasVirtualTour) return false;
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       return (
@@ -172,37 +176,53 @@ export default function HomePage() {
 
           {/* Search Box */}
           <div className="bg-slate-900/90 border border-slate-800 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-slate-950/80 backdrop-blur-xl">
-            {/* Top Deal Tabs */}
-            <div className="flex items-center justify-start gap-2 mb-3 pb-2 border-b border-slate-800/80 text-xs font-semibold">
+            {/* Top Deal Tabs & Virtual Tour Filter */}
+            <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-800/80 text-xs font-semibold overflow-x-auto">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => setDealType("rent")}
+                  className={`px-4 py-1.5 rounded-lg transition-all ${
+                    dealType === "rent"
+                      ? "bg-amber-500 text-slate-950 font-bold shadow"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  رهن و اجاره
+                </button>
+                <button
+                  onClick={() => setDealType("sale")}
+                  className={`px-4 py-1.5 rounded-lg transition-all ${
+                    dealType === "sale"
+                      ? "bg-amber-500 text-slate-950 font-bold shadow"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  خرید آپارتمان
+                </button>
+                <button
+                  onClick={() => setDealType("all")}
+                  className={`px-4 py-1.5 rounded-lg transition-all ${
+                    dealType === "all"
+                      ? "bg-amber-500 text-slate-950 font-bold shadow"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  همه فایل‌ها
+                </button>
+              </div>
+
+              {/* 360 Virtual Tour Filter Pill */}
               <button
-                onClick={() => setDealType("rent")}
-                className={`px-4 py-1.5 rounded-lg transition-all ${
-                  dealType === "rent"
-                    ? "bg-amber-500 text-slate-950 font-bold shadow"
-                    : "text-slate-400 hover:text-white"
+                onClick={() => setOnlyVirtualTour(!onlyVirtualTour)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all shrink-0 text-xs ${
+                  onlyVirtualTour
+                    ? "bg-gradient-to-l from-indigo-500 to-amber-500 text-white font-bold shadow-lg shadow-indigo-500/30"
+                    : "bg-slate-950/80 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700"
                 }`}
               >
-                رهن و اجاره
-              </button>
-              <button
-                onClick={() => setDealType("sale")}
-                className={`px-4 py-1.5 rounded-lg transition-all ${
-                  dealType === "sale"
-                    ? "bg-amber-500 text-slate-950 font-bold shadow"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                خرید آپارتمان
-              </button>
-              <button
-                onClick={() => setDealType("all")}
-                className={`px-4 py-1.5 rounded-lg transition-all ${
-                  dealType === "all"
-                    ? "bg-amber-500 text-slate-950 font-bold shadow"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                همه فایل‌ها
+                <Eye className="w-3.5 h-3.5 text-amber-400" />
+                <span>فقط تور مجازی ۳۶۰°</span>
+                {onlyVirtualTour && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
               </button>
             </div>
 
@@ -325,7 +345,7 @@ export default function HomePage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30" />
 
-                {/* Deal Tag */}
+                {/* Deal Tag & Virtual Tour Badge */}
                 <div className="absolute top-3 right-3 flex items-center gap-1.5">
                   <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow">
                     {prop.type === "rent" ? "رهن و اجاره" : "فروش"}
@@ -333,6 +353,12 @@ export default function HomePage() {
                   <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-950/70 backdrop-blur-md text-white border border-white/10">
                     {prop.district}
                   </span>
+                  {prop.hasVirtualTour && (
+                    <span className="px-2 py-1 rounded-lg text-xs font-bold bg-gradient-to-l from-indigo-500 to-purple-600 text-white shadow-lg flex items-center gap-1 border border-indigo-400/40">
+                      <Eye className="w-3 h-3 text-amber-300" />
+                      <span>تور ۳۶۰°</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* Verified Agency Badge & Algorithmic Bump indicator */}

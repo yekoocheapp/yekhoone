@@ -45,6 +45,7 @@ export default function AgencyDashboardPage() {
   const [newDeposit, setNewDeposit] = useState("");
   const [newRent, setNewRent] = useState("");
   const [newTotalSale, setNewTotalSale] = useState("");
+  const [newHasTour, setNewHasTour] = useState<boolean>(true);
 
   const handleAddProperty = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +83,10 @@ export default function AgencyDashboardPage() {
       agentRating: 4.9,
       agentDealsCount: 53,
       isVerified: true,
+      hasVirtualTour: newHasTour,
+      videoUrl: newHasTour
+        ? "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-balcony-view-40742-large.mp4"
+        : undefined,
       images: [
         "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
       ],
@@ -96,7 +101,11 @@ export default function AgencyDashboardPage() {
 
     setProperties([created, ...properties]);
     setShowAddModal(false);
-    setNotificationToast("فایل با موفقیت ثبت شد و بلافاصله در چرخه نردبان الگوریتمی ۴ الی ۶ ساعته قرار گرفت!");
+    setNotificationToast(
+      newHasTour
+        ? "فایل جدید با تور مجازی ۳۶۰° و نردبان الگوریتمی با موفقیت ثبت شد!"
+        : "فایل با موفقیت ثبت شد و بلافاصله در چرخه نردبان الگوریتمی ۴ الی ۶ ساعته قرار گرفت!"
+    );
     setTimeout(() => setNotificationToast(null), 5000);
   };
 
@@ -316,12 +325,19 @@ export default function AgencyDashboardPage() {
                           <Image src={prop.images[0]} alt={prop.title} fill className="object-cover" />
                         </div>
                         <div>
-                          <Link
-                            href={`/property/${prop.id}`}
-                            className="font-bold text-white hover:text-amber-400 transition-colors line-clamp-1 block text-sm"
-                          >
-                            {prop.title}
-                          </Link>
+                          <div className="flex items-center gap-1.5">
+                            <Link
+                              href={`/property/${prop.id}`}
+                              className="font-bold text-white hover:text-amber-400 transition-colors line-clamp-1 block text-sm"
+                            >
+                              {prop.title}
+                            </Link>
+                            {prop.hasVirtualTour && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold shrink-0">
+                                🥽 ۳۶۰°
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[11px] text-slate-400">
                             {prop.meters} متر • {prop.bedrooms} خواب • {prop.floor === 0 ? "همکف" : `طبقه ${prop.floor}`}
                           </span>
@@ -541,6 +557,25 @@ export default function AgencyDashboardPage() {
                   onChange={(e) => setNewAddress(e.target.value)}
                   placeholder="مثال: علامه شمالی، کوچه هجدهم"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {/* Virtual Tour Toggle Option */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                    <Eye className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-white block text-xs">فعال‌سازی تور مجازی ۳۶۰° و ویدیو تور</span>
+                    <span className="text-[11px] text-slate-400">امکان بازدید ۳ بعدی در سالن، آشپزخانه و خواب‌ها برای مشتریان</span>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={newHasTour}
+                  onChange={(e) => setNewHasTour(e.target.checked)}
+                  className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                 />
               </div>
 

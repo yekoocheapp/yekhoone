@@ -41,6 +41,34 @@ export interface Property {
   lastAlgorithmicBump?: string;
   nextAlgorithmicBump?: string;
   bumpIntervalHours?: number; // 4 to 6 hours systemic rotation
+  hasVirtualTour?: boolean;
+  videoUrl?: string;
+  virtualTour?: VirtualTourData;
+}
+
+export interface TourHotspot {
+  id: string;
+  title: string;
+  description: string;
+  type: "info" | "portal";
+  targetRoomId?: string;
+  pitch: number; // vertical angle (-85 to +85)
+  yaw: number;   // horizontal angle (-180 to +180)
+}
+
+export interface TourRoom {
+  id: string;
+  name: string;
+  panoramaUrl: string;
+  thumbnail?: string;
+  description: string;
+  hotspots: TourHotspot[];
+}
+
+export interface VirtualTourData {
+  enabled: boolean;
+  startingRoomId: string;
+  rooms: TourRoom[];
 }
 
 export const initialProperties: Property[] = [
@@ -89,7 +117,141 @@ export const initialProperties: Property[] = [
     createdAt: "امروز",
     lastAlgorithmicBump: "۴۵ دقیقه پیش",
     nextAlgorithmicBump: "۳ ساعت و ۱۵ دقیقه دیگر",
-    bumpIntervalHours: 4
+    bumpIntervalHours: 4,
+    hasVirtualTour: true,
+    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-balcony-view-40742-large.mp4",
+    virtualTour: {
+      enabled: true,
+      startingRoomId: "living-room",
+      rooms: [
+        {
+          id: "living-room",
+          name: "سالن پذیرایی و نشیمن",
+          panoramaUrl: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/2294472375_24a3b8ef46_o.jpg",
+          description: "سالن پرده‌خور آفتاب‌گیر با پنجره‌های قدی ترمال‌بریک و نور جنوب تهران",
+          hotspots: [
+            {
+              id: "h-living-win",
+              title: "پنجره‌های قدی دوجداره",
+              description: "پنجره‌های تمام‌قد ترمال‌بریک آکپا با شیشه‌های دوجداره لمینت عایق صوتی و حرارتی کامل.",
+              type: "info",
+              pitch: 5,
+              yaw: 40
+            },
+            {
+              id: "h-living-floor",
+              title: "سنگ کف دهبید ممتاز",
+              description: "سنگ طبیعی سوپر دهبید در ابعاد ۸۰×۸۰ با ساب پولیش ضدخش ایتالیایی.",
+              type: "info",
+              pitch: -35,
+              yaw: -20
+            },
+            {
+              id: "h-to-kitchen",
+              title: "آشپزخانه مدرن انزو",
+              description: "ورود به بخش آشپزخانه و ناهارخوری",
+              type: "portal",
+              targetRoomId: "kitchen",
+              pitch: -5,
+              yaw: 120
+            },
+            {
+              id: "h-to-bedroom",
+              title: "اتاق خواب مستر",
+              description: "ورود به فضای خواب اصلی و کلوزت",
+              type: "portal",
+              targetRoomId: "master-bed",
+              pitch: 0,
+              yaw: -110
+            }
+          ]
+        },
+        {
+          id: "kitchen",
+          name: "آشپزخانه انزو ایتالیا",
+          panoramaUrl: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=2000&q=80",
+          description: "کابینت‌های لوکس پلی‌اورتان انزو با صفحه یکپارچه کورین و مطبخ مخفی",
+          hotspots: [
+            {
+              id: "h-kitchen-cabinets",
+              title: "کابینت‌های پلی‌اورتان انزو",
+              description: "رنگ سوپر پلی‌اورتان ضدآب با یراق‌آلات بلوم اتریش آرام‌بند و جزیره متحرک.",
+              type: "info",
+              pitch: 10,
+              yaw: 30
+            },
+            {
+              id: "h-kitchen-to-living",
+              title: "بازگشت به سالن پذیرایی",
+              description: "خروج از آشپزخانه و ورود به پذیرایی",
+              type: "portal",
+              targetRoomId: "living-room",
+              pitch: -5,
+              yaw: -60
+            },
+            {
+              id: "h-kitchen-to-terrace",
+              title: "ورود به تراس مشجر",
+              description: "دسترسی مستقیم از آشپزخانه به تراس اختصاصی",
+              type: "portal",
+              targetRoomId: "terrace",
+              pitch: 0,
+              yaw: 150
+            }
+          ]
+        },
+        {
+          id: "master-bed",
+          name: "اتاق خواب مستر",
+          panoramaUrl: "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=2000&q=80",
+          description: "خواب کینگ با دیوار چوبی آکوستیک، کمد دیواری عمیق و حمام اختصاصی شیشه‌ای",
+          hotspots: [
+            {
+              id: "h-bed-closet",
+              title: "کلوزت روم با روشنایی هوشمند",
+              description: "کمدهای دیواری تمام قد با سنسور حرکتی و جاکفشی اختصاصی.",
+              type: "info",
+              pitch: 5,
+              yaw: 60
+            },
+            {
+              id: "h-bed-to-living",
+              title: "بازگشت به پذیرایی",
+              description: "ورود مجدد به سالن نشیمن اصلی",
+              type: "portal",
+              targetRoomId: "living-room",
+              pitch: -5,
+              yaw: -140
+            }
+          ]
+        },
+        {
+          id: "terrace",
+          name: "تراس اختصاصی و باربیکیو",
+          panoramaUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=2000&q=80",
+          description: "تراس مسقف با کفپوش ضدآب، باربیکیو سنگی و ویوی باز بدون مشرف شمال تهران",
+          hotspots: [
+            {
+              id: "h-terrace-view",
+              title: "چشم‌انداز کوه‌های البرز",
+              description: "ویوی ابدی به سمت شمال تهران و آب و هوای ییلاقی دامنه البرز.",
+              type: "info",
+              pitch: 15,
+              yaw: 20
+            },
+            {
+              id: "h-terrace-to-kitchen",
+              title: "ورود به آشپزخانه",
+              description: "بازگشت از تراس به فضای آشپزخانه",
+              type: "portal",
+              targetRoomId: "kitchen",
+              pitch: -5,
+              yaw: -160
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     id: 2,
@@ -135,7 +297,57 @@ export const initialProperties: Property[] = [
     createdAt: "۲ روز پیش",
     lastAlgorithmicBump: "۲ ساعت پیش",
     nextAlgorithmicBump: "۲ ساعت دیگر",
-    bumpIntervalHours: 4
+    bumpIntervalHours: 4,
+    hasVirtualTour: true,
+    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-balcony-view-40742-large.mp4",
+    virtualTour: {
+      enabled: true,
+      startingRoomId: "living-room-2",
+      rooms: [
+        {
+          id: "living-room-2",
+          name: "سالن پذیرایی دیپلمات‌نشین",
+          panoramaUrl: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/2294472375_24a3b8ef46_o.jpg",
+          description: "سالن وسیع با تراس قابل چیدمان و دید به خیابان مهستان",
+          hotspots: [
+            {
+              id: "h2-1",
+              title: "تراس رو به فضای سبز",
+              description: "تراس مبله ۱۵ متری با دید کامل به فضای سبز فاز ۱ شهرک غرب.",
+              type: "portal",
+              targetRoomId: "terrace-2",
+              pitch: 5,
+              yaw: 70
+            },
+            {
+              id: "h2-2",
+              title: "سیستم چیلر مرکزی",
+              description: "سیستم سرمایش و گرمایش چیلر مرکزی با فن‌کویل‌های سقفی بی‌صدا.",
+              type: "info",
+              pitch: 30,
+              yaw: -30
+            }
+          ]
+        },
+        {
+          id: "terrace-2",
+          name: "تراس اختصاصی رو به مهستان",
+          panoramaUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=2000&q=80",
+          description: "تراس دل‌انگیز با چیدمان میز صبحانه‌خوری و ویوی سبز",
+          hotspots: [
+            {
+              id: "h2-3",
+              title: "بازگشت به پذیرایی",
+              description: "ورود مجدد به سالن نشیمن اصلی",
+              type: "portal",
+              targetRoomId: "living-room-2",
+              pitch: -5,
+              yaw: -120
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     id: 3,
