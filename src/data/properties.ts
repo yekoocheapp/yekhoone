@@ -38,6 +38,9 @@ export interface Property {
   description: string;
   coordinates: { lat: number; lng: number };
   createdAt: string;
+  lastAlgorithmicBump?: string;
+  nextAlgorithmicBump?: string;
+  bumpIntervalHours?: number; // 4 to 6 hours systemic rotation
 }
 
 export const initialProperties: Property[] = [
@@ -83,7 +86,10 @@ export const initialProperties: Property[] = [
     tags: ["نوساز کلیدنخورده", "لابی مجلل مبله", "سرایداری ۲۴ ساعته مقیم", "سالن پرده‌خور"],
     description: "واحدی استثنایی در یکی از دنج‌ترین و عریض‌ترین کوچه‌های علامه شمالی. پلان تفکیکی بی‌نقص بدون کوچک‌ترین پرتی. سالن پذیرایی وسیع و آفتاب‌گیر با پنجره‌های قدی ترمال‌بریک رو به جنوب. آشپزخانه دلباز با کابینت‌های مدرن انزو و صفحه سنگ کورین. اتاق خواب‌های استاندارد با کمد دیواری‌های عمیق. لابی شیک، مشاعات تمیز، ۲ لاین آسانسور ویتور ایتالیا و سرایدار مقیم. تخلیه و آماده تحویل فوری.",
     coordinates: { lat: 35.7876, lng: 51.3734 },
-    createdAt: "امروز"
+    createdAt: "امروز",
+    lastAlgorithmicBump: "۴۵ دقیقه پیش",
+    nextAlgorithmicBump: "۳ ساعت و ۱۵ دقیقه دیگر",
+    bumpIntervalHours: 4
   },
   {
     id: 2,
@@ -126,7 +132,10 @@ export const initialProperties: Property[] = [
     tags: ["تک‌واحدی", "تراس رو به فضای سبز", "استخر و جکوزی فعال", "مستر روم"],
     description: "لوکس‌ترین سازه منطقه در تاپ لوکیشن ایران‌زمین. فرعی دنج و مشجر. یک خواب مستر با کلوزت روم مجهز. آشپزخانه فرنیش بوش آلمان. مشاعات آبی لوکس شامل استخر، سونا و جکوزی فعال با نگهداری هفتگی. پارکینگ باکس اختصاصی بدون مزاحم. لابی‌من سه شیفت و امنیت فوق‌العاده بالا.",
     coordinates: { lat: 35.7592, lng: 51.3654 },
-    createdAt: "۲ روز پیش"
+    createdAt: "۲ روز پیش",
+    lastAlgorithmicBump: "۲ ساعت پیش",
+    nextAlgorithmicBump: "۲ ساعت دیگر",
+    bumpIntervalHours: 4
   },
   {
     id: 3,
@@ -168,7 +177,10 @@ export const initialProperties: Property[] = [
     tags: ["رهن کامل", "سالن مربع بدون پرتی", "دسترسی عالی به ستاری و همت"],
     description: "واحدی استثنایی با رهن کامل و امکان تبدیل جزئی. نقشه مهندسی با چیدمان عالی برای دو دست مبل. نورگیر عالی در طول روز. مشاعات بازسازی شده با دوربین مداربسته در کل ساختمان. همسایگان موجه و فرهیخته. دسترسی ۲ دقیقه‌ای به بی‌آر‌تی و اشرفی اصفهانی.",
     coordinates: { lat: 35.7689, lng: 51.3321 },
-    createdAt: "امروز"
+    createdAt: "امروز",
+    lastAlgorithmicBump: "۳ ساعت پیش",
+    nextAlgorithmicBump: "۱ ساعت دیگر",
+    bumpIntervalHours: 4
   },
   {
     id: 4,
@@ -210,7 +222,10 @@ export const initialProperties: Property[] = [
     tags: ["کابینت های‌گلاس ترک", "تراس کاربردی", "آسانسور ۸ نفره اتوماتیک"],
     description: "واحدی بسیار شیک و مدرن با نور مستقیم جنوب. کابینت‌های های‌گلاس سفید مات با گاز رومیزی و هود توکار. سیستم سرمایش و گرمایش مستقل داکت اسپلیت. مشاعات تمام سنگ با نورپردازی خطی. مالک بسیار منعطف با امکان تمدید چند ساله برای خانواده موجه.",
     coordinates: { lat: 35.7381, lng: 51.3542 },
-    createdAt: "۳ روز پیش"
+    createdAt: "۳ روز پیش",
+    lastAlgorithmicBump: "۳۰ دقیقه پیش",
+    nextAlgorithmicBump: "۵ ساعت و ۳۰ دقیقه دیگر",
+    bumpIntervalHours: 6
   },
   {
     id: 5,
@@ -255,7 +270,10 @@ export const initialProperties: Property[] = [
     tags: ["شاهکار معماری", "روف‌گاردن مجهز ۳۶۰ درجه", "۲ پارکینگ سندی باکس", "لابی با ارتفاع سقف ۶ متر"],
     description: "فروش استثنایی واحدی سوپرلوکس در تاپ‌ترین لوکیشن گل‌سنگ نیاوران. سازه‌ای از سازنده بنام شمیران با متریال تماماً وارداتی برند. سالن یکپارچه بدون ستون رو به کوهستان و شهر. ۳ خواب کینگ با حمام‌های مستر اختصاصی. لابی مجلل به وسعت ۴۰۰ متر همراه با لابی‌من ۲۴ ساعته، تیم خدماتی مقیم، سالن اجتماعات، سینما اختصاصی و استخر چهارفصل در طبقه منفی دو.",
     coordinates: { lat: 35.8198, lng: 51.4682 },
-    createdAt: "امروز"
+    createdAt: "امروز",
+    lastAlgorithmicBump: "۱ ساعت پیش",
+    nextAlgorithmicBump: "۳ ساعت دیگر",
+    bumpIntervalHours: 4
   },
   {
     id: 6,
@@ -297,7 +315,10 @@ export const initialProperties: Property[] = [
     tags: ["صفر تا صد بازسازی", "۲ دقیقه پیاده تا ایستگاه مترو", "تخلیه کلید در املاک"],
     description: "واحد نقلی و بسیار تمیز، بازسازی شده به سبک مینیمال مدرن. لوله‌کشی و سیم‌کشی به طور کامل تعویض شده است. مناسب زوج یا مجرد موجه. ساختمان بسیار آرام با مدیریت قوی. دسترسی فوق‌العاده سریع به ایستگاه مترو طرشت و میدان صادقیه.",
     coordinates: { lat: 35.7205, lng: 51.3392 },
-    createdAt: "۴ روز پیش"
+    createdAt: "۴ روز پیش",
+    lastAlgorithmicBump: "۴ ساعت پیش",
+    nextAlgorithmicBump: "۲ ساعت دیگر",
+    bumpIntervalHours: 6
   }
 ];
 

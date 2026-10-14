@@ -26,7 +26,9 @@ import {
   Compass,
   ArrowRightLeft,
   Building,
-  ExternalLink
+  ExternalLink,
+  RotateCw,
+  Cpu
 } from "lucide-react";
 
 export default function HomePage() {
@@ -333,7 +335,7 @@ export default function HomePage() {
                   </span>
                 </div>
 
-                {/* Verified Agency Badge */}
+                {/* Verified Agency Badge & Algorithmic Bump indicator */}
                 <div className="absolute bottom-3 right-3 left-3 flex items-center justify-between text-xs text-white">
                   <div className="flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-emerald-500/30">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -341,6 +343,13 @@ export default function HomePage() {
                       {prop.agencyName}
                     </span>
                   </div>
+
+                  {prop.lastAlgorithmicBump && (
+                    <div className="flex items-center gap-1 bg-slate-950/85 backdrop-blur-md px-2 py-1 rounded-lg border border-indigo-500/30 text-[10px] text-indigo-300">
+                      <RotateCw className="w-2.5 h-2.5 text-indigo-400" />
+                      <span>نردبان: {prop.lastAlgorithmicBump}</span>
+                    </div>
+                  )}
                 </div>
               </Link>
 
@@ -441,7 +450,7 @@ export default function HomePage() {
             </h3>
 
             <p className="text-slate-300 text-sm leading-relaxed mb-6">
-              ما پلتفرم «یه خونه» را برای حمایت از صنف مشاورین املاک ساختیم. هیچ پولی برای هر آگهی، ثبت فایل یا نردبان از شما گرفته نمی‌شود. مشتریان واقعی و بدون واسطه مستقیماً با آژانس شما تماس می‌گیرند.
+              ما پلتفرم «یه خونه» را برای حمایت از صنف مشاورین املاک ساختیم. هیچ پولی برای هر آگهی، ثبت فایل یا نردبان از شما گرفته نمی‌شود و سیستم به صورت کاملاً خودکار و عادلانه هر ۴ تا ۶ ساعت تمام فایل‌ها را به صدر نتایج هدایت می‌کند. مشتریان واقعی و بدون واسطه مستقیماً با آژانس شما تماس می‌گیرند.
             </p>
 
             <div className="flex flex-wrap items-center gap-4">

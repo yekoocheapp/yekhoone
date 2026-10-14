@@ -35,7 +35,9 @@ import {
   Home,
   Check,
   Clock,
-  Send
+  Send,
+  RotateCw,
+  Cpu
 } from "lucide-react";
 
 export default function PropertyDetailPage() {
@@ -140,12 +142,23 @@ export default function PropertyDetailPage() {
             </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-slate-400 flex items-center gap-1.5 mt-2">
-            <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>{property.address}</span>
+          <div className="flex flex-wrap items-center gap-2 mt-2 text-xs sm:text-sm text-slate-400">
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>{property.address}</span>
+            </div>
             <span className="text-slate-600 mr-2">•</span>
             <span className="text-slate-500">{property.createdAt}</span>
-          </p>
+            {property.lastAlgorithmicBump && (
+              <>
+                <span className="text-slate-600 mr-2">•</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[11px] font-medium">
+                  <RotateCw className="w-3 h-3 text-indigo-400" />
+                  <span>نردبان هوشمند الگوریتمی: {property.lastAlgorithmicBump}</span>
+                </span>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Top Grid: Gallery & Sticky Contact Card */}

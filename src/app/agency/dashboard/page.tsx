@@ -21,14 +21,19 @@ import {
   Zap,
   Filter,
   Check,
-  X
+  X,
+  RotateCw,
+  Clock,
+  Cpu,
+  Info
 } from "lucide-react";
 
 export default function AgencyDashboardPage() {
   const [properties, setProperties] = useState<Property[]>(initialProperties);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"all" | "active" | "deals">("all");
-  const [bumpToast, setBumpToast] = useState<string | null>(null);
+  const [notificationToast, setNotificationToast] = useState<string | null>(null);
+  const [showAlgorithmModal, setShowAlgorithmModal] = useState<boolean>(false);
 
   // New property form state
   const [newTitle, setNewTitle] = useState("");
@@ -40,13 +45,6 @@ export default function AgencyDashboardPage() {
   const [newDeposit, setNewDeposit] = useState("");
   const [newRent, setNewRent] = useState("");
   const [newTotalSale, setNewTotalSale] = useState("");
-
-  const handleBump = (title: string) => {
-    setBumpToast(`فایل «${title}» با موفقیت نردبان شد و در صدر فایل‌های تهران قرار گرفت (۱۰۰٪ رایگان)!`);
-    setTimeout(() => {
-      setBumpToast(null);
-    }, 4000);
-  };
 
   const handleAddProperty = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,13 +88,16 @@ export default function AgencyDashboardPage() {
       tags: ["نوساز", "فول امکانات", "تخلیه"],
       description: "فایل اختصاصی ثبت شده توسط آژانس در سامانه یه خونه.",
       coordinates: { lat: 35.78, lng: 51.37 },
-      createdAt: "لحظاتی پیش"
+      createdAt: "لحظاتی پیش",
+      lastAlgorithmicBump: "لحظاتی پیش",
+      nextAlgorithmicBump: "۴ ساعت دیگر",
+      bumpIntervalHours: 4
     };
 
     setProperties([created, ...properties]);
     setShowAddModal(false);
-    setBumpToast("فایل جدید شما با موفقیت و کاملاً رایگان در سامانه یه خونه منتشر شد!");
-    setTimeout(() => setBumpToast(null), 4000);
+    setNotificationToast("فایل با موفقیت ثبت شد و بلافاصله در چرخه نردبان الگوریتمی ۴ الی ۶ ساعته قرار گرفت!");
+    setTimeout(() => setNotificationToast(null), 5000);
   };
 
   const handleDelete = (id: number) => {
@@ -142,10 +143,10 @@ export default function AgencyDashboardPage() {
       </header>
 
       {/* Toast Notification */}
-      {bumpToast && (
+      {notificationToast && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-slate-950 font-bold px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-xs animate-in slide-in-from-top duration-300">
           <CheckCircle2 className="w-4 h-4" />
-          <span>{bumpToast}</span>
+          <span>{notificationToast}</span>
         </div>
       )}
 
@@ -205,7 +206,7 @@ export default function AgencyDashboardPage() {
                   تاکنون <span className="text-emerald-400 font-extrabold">۶,۸۰۰,۰۰۰ تومان</span> در هزینه‌های آگهی و نردبان صرفه‌جویی کرده‌اید!
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  در دیوار بابت ثبت {properties.length} فایل و نردبان روزانه باید حداقل ۷ میلیون تومان پرداخت می‌کردید. در «یه خونه» این خدمات برای همیشه رایگان است.
+                  در دیوار بابت ثبت {properties.length} فایل و نردبان‌های مکرر روزانه باید میلیون‌ها تومان پول می‌دادید. در «یه خونه» نردبان به صورت کاملاً خودکار، سیستماتیک و الگوریتمی هر ۴ تا ۶ ساعت برای تمام فایل‌ها بدون ۱ ریال هزینه اعمال می‌شود.
                 </p>
               </div>
             </div>
@@ -248,11 +249,11 @@ export default function AgencyDashboardPage() {
 
           <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-400">نردبان رایگان فعال</span>
-              <Zap className="w-4 h-4 text-amber-400" />
+              <span className="text-xs text-slate-400">نردبان سیستمی و الگوریتمی</span>
+              <Cpu className="w-4 h-4 text-indigo-400" />
             </div>
-            <span className="text-2xl font-black text-amber-400">نامحدود</span>
-            <span className="text-[11px] text-slate-500 mr-2">هر روز رایگان</span>
+            <span className="text-lg sm:text-xl font-black text-indigo-400">خودکار (۴ الی ۶ ساعت)</span>
+            <span className="text-[11px] text-slate-500 mr-2 block mt-1">بدون نیاز به کلیک دستی</span>
           </div>
         </div>
 
@@ -260,13 +261,27 @@ export default function AgencyDashboardPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h2 className="text-lg font-bold text-white">مدیریت فایل‌های ملکی آژانس</h2>
-              <p className="text-xs text-slate-400">
-                امکان نردبان رایگان، ویرایش مشخصات یا حذف فایل‌ها پس از انجام معامله
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white">مدیریت فایل‌های ملکی و نردبان هوشمند</h2>
+                <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[11px] font-semibold flex items-center gap-1">
+                  <RotateCw className="w-3 h-3 animate-spin" style={{ animationDuration: '8s' }} />
+                  موتور الگوریتمی فعال
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                در یه خونه نردبان دستی وجود ندارد؛ سیستم هر ۴ الی ۶ ساعت تمام فایل‌ها را به صورت عادلانه در صدر قرار می‌دهد.
               </p>
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAlgorithmModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold transition-all"
+              >
+                <Cpu className="w-3.5 h-3.5" />
+                <span>الگوریتم چگونه کار می‌کند؟</span>
+              </button>
+
               <button
                 onClick={() => setActiveTab("all")}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
@@ -287,8 +302,8 @@ export default function AgencyDashboardPage() {
                   <th className="py-3 px-4 font-semibold">محله</th>
                   <th className="py-3 px-4 font-semibold">نوع معامله</th>
                   <th className="py-3 px-4 font-semibold">قیمت / ودیعه</th>
-                  <th className="py-3 px-4 font-semibold">وضعیت</th>
-                  <th className="py-3 px-4 font-semibold text-center">عملیات رایگان</th>
+                  <th className="py-3 px-4 font-semibold">وضعیت نردبان الگوریتمی (سیستمی)</th>
+                  <th className="py-3 px-4 font-semibold text-center">عملیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80">
@@ -344,41 +359,39 @@ export default function AgencyDashboardPage() {
                       )}
                     </td>
 
-                    {/* Status */}
+                    {/* Algorithmic Bump Status (100% Systemic - No manual button) */}
                     <td className="py-3 px-4">
-                      <span className="inline-flex items-center gap-1 text-emerald-400 text-[11px] font-bold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        منتشر شده
-                      </span>
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-medium text-[11px]">
+                          <RotateCw className="w-3 h-3 text-indigo-400" />
+                          نردبان خودکار ({prop.bumpIntervalHours || 4} ساعته)
+                        </span>
+                        <div className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                          <span>آخرین نردبان: <strong className="text-slate-200">{prop.lastAlgorithmicBump || "لحظاتی پیش"}</strong></span>
+                          <span className="text-slate-600">•</span>
+                          <span>نوبت بعد: <strong className="text-amber-400">{prop.nextAlgorithmicBump || "۴ ساعت دیگر"}</strong></span>
+                        </div>
+                      </div>
                     </td>
 
                     {/* Actions */}
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-center gap-2">
-                        {/* Free Bump Button */}
-                        <button
-                          onClick={() => handleBump(prop.title)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 text-amber-400 border border-amber-500/30 transition-all font-bold text-[11px]"
-                          title="نردبان رایگان و انتقال به صدر آگهی‌ها"
-                        >
-                          <Zap className="w-3.5 h-3.5" />
-                          <span>نردبان رایگان</span>
-                        </button>
-
                         {/* View Details */}
                         <Link
                           href={`/property/${prop.id}`}
-                          className="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                          title="مشاهده آگهی"
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border border-slate-800 text-[11px] font-medium"
+                          title="مشاهده صفحه عمومی فایل"
                         >
-                          <ExternalLink className="w-4 h-4" />
+                          <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
+                          <span>مشاهده</span>
                         </Link>
 
-                        {/* Delete */}
+                        {/* Delete / Closed deal */}
                         <button
                           onClick={() => handleDelete(prop.id)}
-                          className="p-1.5 rounded-lg bg-slate-950 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors"
-                          title="حذف فایل (معامله شد)"
+                          className="p-1.5 rounded-lg bg-slate-950 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors border border-slate-800"
+                          title="حذف فایل (معامله انجام شد)"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -531,6 +544,17 @@ export default function AgencyDashboardPage() {
                 />
               </div>
 
+              {/* Algorithmic Bumping Callout */}
+              <div className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-start gap-2.5">
+                <Cpu className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <div className="text-[11px] leading-relaxed">
+                  <span className="font-bold text-indigo-300 block mb-0.5">چرخه نردبان ۱۰۰٪ سیستمی و الگوریتمی</span>
+                  <span className="text-slate-400">
+                    این فایل به صورت خودکار هر ۴ الی ۶ ساعت در صدر نتایج قرار خواهد گرفت. نیازی به پرداخت هزینه یا زدن مکرر دکمه نردبان نیست.
+                  </span>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 className="w-full mt-4 py-3 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 text-slate-950 font-bold text-sm shadow-xl shadow-amber-500/20"
@@ -538,6 +562,78 @@ export default function AgencyDashboardPage() {
                 انتشار رایگان در یه خونه
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== ALGORITHMIC ENGINE EXPLAINER MODAL ==================== */}
+      {showAlgorithmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-xl w-full relative shadow-2xl animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowAlgorithmModal(false)}
+              className="absolute top-5 left-5 p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <Cpu className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">سازوکار نردبان الگوریتمی و سیستمی «یه خونه»</h3>
+                <p className="text-xs text-slate-400">چرا در پلتفرم ما دکمه دستی نردبان وجود ندارد؟</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-300 leading-relaxed">
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+                <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm mb-1.5">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>۱. عدالت کامل برای تمام مشاوران و مالکین</span>
+                </div>
+                <p className="text-slate-400">
+                  در دیوار، آژانس‌هایی که بودجه‌های میلیونی دارند، با خرید مکرر نردبان، تمام ردیف‌های اول را قبضه می‌کنند و فایل مشاورین کم‌درآمدتر زیر آوار پنهان می‌شود. در «یه خونه»، نردبان سیستمی است و تمام فایل‌های معتبر بر اساس صف ریاضی چرخشی (Round-Robin) هر ۴ الی ۶ ساعت یکبار به صورت کاملاً برابر به صدر صفحه می‌آیند.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+                <div className="flex items-center gap-2 text-amber-400 font-bold text-sm mb-1.5">
+                  <Clock className="w-4 h-4" />
+                  <span>۲. آسایش کامل و صفر شدن زحمت کاربری</span>
+                </div>
+                <p className="text-slate-400">
+                  نیازی نیست صبح زود یا آخر شب برای زدن دکمه نردبان آلارم گوشی بگذارید یا کار خود را متوقف کنید. سرورهای ابری «یه خونه» شبانه‌روزی و بدون نیاز به حتی یک کلیک شما، فایل‌هایتان را مرتباً تازه و در معرض دید مشتریان قرار می‌دهند.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm mb-1.5">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>۳. ریشه‌کن شدن ربات‌ها، افزونه‌ها و اسپم</span>
+                </div>
+                <p className="text-slate-400">
+                  در سامانه‌هایی با دکمه نردبان رایگان دستی، افراد از ربات‌ها و افزونه‌های خودکار برای کلیک مدام استفاده می‌کردند که تجربه کاربری را تخریب می‌کرد. سیستماتیک بودن نردبان در «یه خونه» هرگونه امکان سوءاستفاده یا تقلب را از ریشه می‌بندد.
+                </p>
+              </div>
+
+              <div className="bg-indigo-950/30 border border-indigo-500/20 p-4 rounded-2xl text-center">
+                <span className="text-[11px] text-indigo-300 font-medium block">
+                  دوره گردش الگوریتم: <strong className="text-white">هر ۴ تا ۶ ساعت یکبار</strong>
+                </span>
+                <span className="text-[10px] text-slate-400 mt-1 block">
+                  تمام فایل‌های فعال این آژانس هم‌اکنون در این چرخه قرار دارند.
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowAlgorithmModal(false)}
+              className="w-full mt-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-colors"
+            >
+              متوجه شدم
+            </button>
           </div>
         </div>
       )}
