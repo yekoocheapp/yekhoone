@@ -2,193 +2,35 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import {
+  initialProperties,
+  Property,
+  formatPersianNumber
+} from "@/data/properties";
 import {
   Search,
   MapPin,
   Building2,
   Home,
-  Key,
   ShieldCheck,
   Phone,
   Calculator,
   PlusCircle,
   Sparkles,
-  ChevronDown,
   BedDouble,
   Maximize2,
   Car,
-  Layers,
-  Heart,
-  Share2,
   CheckCircle2,
   X,
   Compass,
   ArrowRightLeft,
-  Building
+  Building,
+  ExternalLink
 } from "lucide-react";
 
-// Mock verified property files across Tehran
-interface Property {
-  id: number;
-  title: string;
-  district: string;
-  address: string;
-  type: "rent" | "sale";
-  propertyType: string;
-  meters: number;
-  bedrooms: number;
-  floor: string;
-  hasParking: boolean;
-  hasElevator: boolean;
-  hasStorage: boolean;
-  deposit: number; // in Tomans
-  rent: number;    // in Tomans
-  totalPrice?: number;
-  agencyName: string;
-  agentName: string;
-  agentPhone: string;
-  isVerified: boolean;
-  image: string;
-  tags: string[];
-}
-
-const mockProperties: Property[] = [
-  {
-    id: 1,
-    title: "آپارتمان ۱۲۰ متری، نورگیر عالی، علامه شمالی",
-    district: "سعادت‌آباد",
-    address: "سعادت‌آباد، خیابان علامه شمالی، کوچه هجدهم",
-    type: "rent",
-    propertyType: "آپارتمان مسکونی",
-    meters: 120,
-    bedrooms: 2,
-    floor: "طبقه سوم (۲ واحدی)",
-    hasParking: true,
-    hasElevator: true,
-    hasStorage: true,
-    deposit: 600000000,
-    rent: 32000000,
-    agencyName: "املاک نوین سعادت‌آباد",
-    agentName: "مهرداد عزیزی (مشاور ارشد)",
-    agentPhone: "۰۹۱۲۳۴۵۶۷۸۹",
-    isVerified: true,
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-    tags: ["نوساز", "لابی مجلل", "سرایداری ۲۴ ساعته"]
-  },
-  {
-    id: 2,
-    title: "واحد ۱۴۵ متری لوکس، فاز یک با تراس قابل چیدمان",
-    district: "شهرک غرب",
-    address: "شهرک غرب، بلوار ایران‌زمین، خیابان گلستان",
-    type: "rent",
-    propertyType: "آپارتمان مسکونی",
-    meters: 145,
-    bedrooms: 3,
-    floor: "طبقه پنجم (تک‌واحدی)",
-    hasParking: true,
-    hasElevator: true,
-    hasStorage: true,
-    deposit: 1200000000,
-    rent: 45000000,
-    agencyName: "املاک دیپلمات غرب",
-    agentName: "مهندس حسینی",
-    agentPhone: "۰۹۱۹۸۷۶۵۴۳۲",
-    isVerified: true,
-    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80",
-    tags: ["مستر روم", "ویو ابدی", "استخر و سونا"]
-  },
-  {
-    id: 3,
-    title: "۸۵ متری خوش‌نقشه، سردار جنگل، بدون پرتی",
-    district: "پونک",
-    address: "پونک، سردار جنگل شمالی، کوچه شقایق",
-    type: "rent",
-    propertyType: "آپارتمان مسکونی",
-    meters: 85,
-    bedrooms: 2,
-    floor: "طبقه دوم با آسانسور",
-    hasParking: true,
-    hasElevator: true,
-    hasStorage: true,
-    deposit: 850000000,
-    rent: 0,
-    agencyName: "املاک کاج پونک",
-    agentName: "امیر رضایی",
-    agentPhone: "۰۹۳۵۱۲۳۴۵۶۷",
-    isVerified: true,
-    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
-    tags: ["رهن کامل", "سالن پرده‌خور", "دسترسی عالی به اشرفی"]
-  },
-  {
-    id: 4,
-    title: "۹۵ متری نوساز، خیابان ابراهیمی با پارکینگ سندی",
-    district: "مرزداران",
-    address: "مرزداران، خیابان شهید ابراهیمی، بوستان دوم",
-    type: "rent",
-    propertyType: "آپارتمان مسکونی",
-    meters: 95,
-    bedrooms: 2,
-    floor: "طبقه چهارم",
-    hasParking: true,
-    hasElevator: true,
-    hasStorage: true,
-    deposit: 400000000,
-    rent: 22000000,
-    agencyName: "املاک نگین مرزداران",
-    agentName: "محسن یعقوبی",
-    agentPhone: "۰۹۱۲۸۸۸۹۹۰۰",
-    isVerified: true,
-    image: "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=800&q=80",
-    tags: ["کابینت های‌گلاس", "پکیج و اسپیلت", "نورگیر مستقیم"]
-  },
-  {
-    id: 5,
-    title: "۱۸۰ متری مدرن، گل‌سنگ، فول مشاعات هتلینگ",
-    district: "نیاوران",
-    address: "نیاوران، خیابان گل‌سنگ، بن‌بست مینا",
-    type: "sale",
-    propertyType: "آپارتمان مسکونی",
-    meters: 180,
-    bedrooms: 3,
-    floor: "طبقه ششم",
-    hasParking: true,
-    hasElevator: true,
-    hasStorage: true,
-    deposit: 0,
-    rent: 0,
-    totalPrice: 48000000000,
-    agencyName: "املاک پایتخت شمیران",
-    agentName: "سهراب کریمی",
-    agentPhone: "۰۹۱۲۱۱۱۴۴۵۵",
-    isVerified: true,
-    image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=800&q=80",
-    tags: ["سند تک‌برگ", "روف‌گاردن ۳۶۰", "۲ پارکینگ سندی"]
-  },
-  {
-    id: 6,
-    title: "۷۰ متری بازسازی شده کامل، سازمان آب، مناسب زوج",
-    district: "صادقیه",
-    address: "صادقیه، فلکه اول، خیابان سازمان آب",
-    type: "rent",
-    propertyType: "آپارتمان مسکونی",
-    meters: 70,
-    bedrooms: 1,
-    floor: "طبقه اول",
-    hasParking: true,
-    hasElevator: false,
-    hasStorage: true,
-    deposit: 250000000,
-    rent: 16000000,
-    agencyName: "املاک ستاره صادقیه",
-    agentName: "بهروز مرادی",
-    agentPhone: "۰۹۱۲۷۷۷۲۲۳۳",
-    isVerified: true,
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-    tags: ["دسترسی ۲ دقیقه به مترو", "تخلیه آماده تحویل"]
-  }
-];
-
 export default function HomePage() {
+  const [properties, setProperties] = useState<Property[]>(initialProperties);
   const [dealType, setDealType] = useState<"all" | "rent" | "sale">("rent");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("همه");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -201,10 +43,6 @@ export default function HomePage() {
   const [calcRent, setCalcRent] = useState<number>(15);       // 15 million
   const [calcRate, setCalcRate] = useState<number>(3);        // 3% standard rate
 
-  const formatPrice = (num: number) => {
-    return new Intl.NumberFormat("fa-IR").format(num);
-  };
-
   // Convert Rahn to full Rahn
   const fullRahnEquivalent = calcDeposit + (calcRent / (calcRate / 100));
   // Convert Rahn to full Rent (assuming 100M deposit minimum)
@@ -212,7 +50,7 @@ export default function HomePage() {
 
   const districts = ["همه", "سعادت‌آباد", "شهرک غرب", "پونک", "مرزداران", "نیاوران", "صادقیه", "تهرانپارس", "پاسداران", "یوسف‌آباد"];
 
-  const filteredProperties = mockProperties.filter((item) => {
+  const filteredProperties = properties.filter((item) => {
     if (dealType !== "all" && item.type !== dealType) return false;
     if (selectedDistrict !== "همه" && item.district !== selectedDistrict) return false;
     if (searchQuery.trim() !== "") {
@@ -227,13 +65,13 @@ export default function HomePage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* ==================== HEADER ==================== */}
       <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Logo & Brand Name */}
-          <div className="flex items-center gap-3">
-            <div className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-amber-500/10 border border-amber-500/30">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-amber-500/10 border border-amber-500/30 group-hover:scale-105 transition-transform">
               <Image
                 src="/logo.jpg"
                 alt="لوگو یه خونه"
@@ -253,7 +91,7 @@ export default function HomePage() {
               </div>
               <p className="text-[11px] text-slate-400">سامانه هوشمند املاک ایران (YeKhoone)</p>
             </div>
-          </div>
+          </Link>
 
           {/* Center Nav Links */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
@@ -276,12 +114,13 @@ export default function HomePage() {
               <Calculator className="w-4 h-4 text-amber-400" />
               تبدیل رهن و اجاره
             </button>
-            <button
-              onClick={() => setSubmitModalOpen(true)}
-              className="hover:text-amber-400 transition-colors"
+            <Link
+              href="/agency/dashboard"
+              className="flex items-center gap-1.5 hover:text-amber-400 transition-colors text-amber-400/90 font-semibold"
             >
+              <Building2 className="w-4 h-4 text-amber-400" />
               پنل همکاران و آژانس‌ها
-            </button>
+            </Link>
           </nav>
 
           {/* Actions & Submission CTA */}
@@ -458,7 +297,7 @@ export default function HomePage() {
               فایل‌های مسکن در {selectedDistrict === "همه" ? "کل تهران" : selectedDistrict}
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              نمایش {filteredProperties.length} فایل تایید شده با قیمت کارشناسی
+              نمایش {filteredProperties.length} فایل تایید شده با قیمت کارشناسی (روی هر کارت کلیک کنید تا وارد صفحه کامل ملک شوید)
             </p>
           </div>
 
@@ -470,14 +309,14 @@ export default function HomePage() {
         {/* Grid of Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProperties.map((prop) => (
-            <article
+            <div
               key={prop.id}
-              className="bg-slate-900/70 border border-slate-800/80 hover:border-amber-500/40 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-slate-950/80 flex flex-col group"
+              className="bg-slate-900/70 border border-slate-800/80 hover:border-amber-500/50 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-slate-950/90 flex flex-col group relative"
             >
-              {/* Photo Box */}
-              <div className="relative h-56 w-full overflow-hidden bg-slate-800">
+              {/* Photo Box & Link to Detail */}
+              <Link href={`/property/${prop.id}`} className="block relative h-56 w-full overflow-hidden bg-slate-950">
                 <Image
-                  src={prop.image}
+                  src={prop.images[0]}
                   alt={prop.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -503,14 +342,17 @@ export default function HomePage() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Card Details */}
               <div className="p-4 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base text-white group-hover:text-amber-400 transition-colors line-clamp-1 mb-2">
-                    {prop.title}
-                  </h3>
+                  <Link href={`/property/${prop.id}`} className="block">
+                    <h3 className="font-bold text-sm sm:text-base text-white group-hover:text-amber-400 transition-colors line-clamp-1 mb-2">
+                      {prop.title}
+                    </h3>
+                  </Link>
+
                   <p className="text-xs text-slate-400 flex items-center gap-1 mb-3">
                     <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                     <span className="line-clamp-1">{prop.address}</span>
@@ -520,11 +362,11 @@ export default function HomePage() {
                   <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-slate-800/80 text-xs text-slate-300 mb-4">
                     <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
                       <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{formatPrice(prop.meters)} متر</span>
+                      <span>{formatPersianNumber(prop.meters)} متر</span>
                     </div>
                     <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
                       <BedDouble className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{formatPrice(prop.bedrooms)} خواب</span>
+                      <span>{formatPersianNumber(prop.bedrooms)} خواب</span>
                     </div>
                     <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
                       <Car className="w-3.5 h-3.5 text-amber-400" />
@@ -540,13 +382,13 @@ export default function HomePage() {
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-slate-400">ودیعه (رهن):</span>
                         <span className="font-bold text-white text-sm">
-                          {formatPrice(prop.deposit)} تومان
+                          {formatPersianNumber(prop.deposit)} تومان
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-slate-400">اجاره ماهانه:</span>
                         <span className="font-extrabold text-amber-400 text-sm">
-                          {prop.rent === 0 ? "رهن کامل" : `${formatPrice(prop.rent)} تومان`}
+                          {prop.rent === 0 ? "رهن کامل" : `${formatPersianNumber(prop.rent)} تومان`}
                         </span>
                       </div>
                     </div>
@@ -554,22 +396,31 @@ export default function HomePage() {
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs text-slate-400">قیمت کل:</span>
                       <span className="font-extrabold text-amber-400 text-base">
-                        {formatPrice(prop.totalPrice || 0)} تومان
+                        {formatPersianNumber(prop.totalPrice || 0)} تومان
                       </span>
                     </div>
                   )}
 
-                  {/* Contact Button */}
-                  <button
-                    onClick={() => setContactModalProperty(prop)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-amber-500 hover:text-slate-950 font-bold text-xs text-slate-200 transition-all border border-slate-700/60 hover:border-amber-500"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>تماس با مشاور ({prop.agentName.split(" ")[0]})</span>
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setContactModalProperty(prop)}
+                      className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors border border-slate-700"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>تماس مشاور</span>
+                    </button>
+                    <Link
+                      href={`/property/${prop.id}`}
+                      className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 transition-all"
+                    >
+                      <span>مشاهده کامل</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </article>
+            </div>
           ))}
         </div>
 
@@ -594,17 +445,18 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
-              <button
-                onClick={() => setSubmitModalOpen(true)}
-                className="px-6 py-3 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105"
+              <Link
+                href="/agency/dashboard"
+                className="px-6 py-3 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 flex items-center gap-2"
               >
-                + ثبت رایگان فایل جدید
-              </button>
+                <Building2 className="w-4 h-4" />
+                <span>ورود به پنل آژانس و مدیریت فایل‌ها</span>
+              </Link>
               <button
                 onClick={() => setSubmitModalOpen(true)}
                 className="px-6 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-white font-semibold text-sm border border-slate-700 transition-colors"
               >
-                ثبت نام و ایجاد پروفایل آژانس
+                + ثبت فوری فایل ملکی
               </button>
             </div>
           </div>
@@ -625,9 +477,9 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-6 text-slate-400">
-            <span>درباره یه خونه</span>
+            <Link href="/" className="hover:text-white">صفحه اصلی</Link>
+            <Link href="/agency/dashboard" className="hover:text-white">پنل آژانس‌ها</Link>
             <span>شرایط و قوانین</span>
-            <span>راهنمای مشاورین</span>
             <span>پشتیبانی</span>
           </div>
 
@@ -663,7 +515,7 @@ export default function HomePage() {
               <div>
                 <div className="flex justify-between text-xs mb-2">
                   <span className="text-slate-400">ودیعه نقدی (رهن فعلی):</span>
-                  <span className="font-bold text-white text-sm">{formatPrice(calcDeposit)} میلیون تومان</span>
+                  <span className="font-bold text-white text-sm">{formatPersianNumber(calcDeposit)} میلیون تومان</span>
                 </div>
                 <input
                   type="range"
@@ -680,7 +532,7 @@ export default function HomePage() {
               <div>
                 <div className="flex justify-between text-xs mb-2">
                   <span className="text-slate-400">اجاره ماهانه فعلی:</span>
-                  <span className="font-bold text-amber-400 text-sm">{formatPrice(calcRent)} میلیون تومان</span>
+                  <span className="font-bold text-amber-400 text-sm">{formatPersianNumber(calcRent)} میلیون تومان</span>
                 </div>
                 <input
                   type="range"
@@ -704,7 +556,7 @@ export default function HomePage() {
                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-right">
                   <span className="text-xs text-amber-400 font-semibold block mb-1">معادل رهن کامل:</span>
                   <span className="text-lg font-extrabold text-white">
-                    {formatPrice(Math.round(fullRahnEquivalent))}
+                    {formatPersianNumber(Math.round(fullRahnEquivalent))}
                   </span>
                   <span className="text-[11px] text-slate-400 mr-1">میلیون تومان</span>
                 </div>
@@ -712,7 +564,7 @@ export default function HomePage() {
                 <div className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/60 text-right">
                   <span className="text-xs text-slate-300 font-semibold block mb-1">معادل اجاره (با ۱۰۰م ودیعه):</span>
                   <span className="text-lg font-extrabold text-amber-400">
-                    {formatPrice(Math.max(0, Math.round(fullRentEquivalent)))}
+                    {formatPersianNumber(Math.max(0, Math.round(fullRentEquivalent)))}
                   </span>
                   <span className="text-[11px] text-slate-400 mr-1">میلیون تومان</span>
                 </div>
@@ -832,7 +684,7 @@ export default function HomePage() {
                 <input
                   required
                   type="text"
-                  placeholder="مثال: املاک نوین سعادت‌آباد - مشاور حیدری"
+                  placeholder="مثال: املاک نوین سعادت‌آباد - مشاور مهرداد حیدری"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
                 />
               </div>
