@@ -39,11 +39,11 @@ interface Tehran3DMapProps {
   onOpen3DFront?: () => void;
 }
 
-// Colorful "Bright Darkmode" architectural styles matching site dark palette
+// Middle-ground architectural styles (balanced between dark and light, with crystal-clear street typography)
 const MAP_STYLES = {
   brightDark: "/styles/bright-dark-style.json",
-  cartoDark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-  positron: "https://tiles.openfreemap.org/styles/positron"
+  voyager: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+  cartoDark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
 };
 
 export default function Tehran3DMap({
@@ -59,7 +59,7 @@ export default function Tehran3DMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
-  const [styleMode, setStyleMode] = useState<"brightDark" | "cartoDark" | "positron">("brightDark");
+  const [styleMode, setStyleMode] = useState<"brightDark" | "voyager" | "cartoDark">("brightDark");
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const [compassBearing, setCompassBearing] = useState<number>(0);
   const [isStreetLevel, setIsStreetLevel] = useState<boolean>(false);
@@ -430,7 +430,7 @@ export default function Tehran3DMap({
   }, [activeDistrictId]);
 
   // Style change handler
-  const handleStyleChange = (mode: "brightDark" | "cartoDark" | "positron") => {
+  const handleStyleChange = (mode: "brightDark" | "voyager" | "cartoDark") => {
     if (!mapRef.current) return;
     setStyleMode(mode);
     let target = MAP_STYLES[mode];
@@ -541,7 +541,7 @@ export default function Tehran3DMap({
           )}
         </button>
 
-        {/* Theme Selector (Bright Darkmode Default) */}
+        {/* Theme Selector (Middle-Ground Slate Default) */}
         <div className="hidden sm:flex bg-slate-950/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl pointer-events-auto">
           <button
             onClick={() => handleStyleChange("brightDark")}
@@ -550,9 +550,20 @@ export default function Tehran3DMap({
                 ? "bg-amber-500 text-slate-950 shadow-md font-black"
                 : "text-slate-400 hover:text-white"
             }`}
-            title="نقشه دارک‌مود شاد و رنگی با خیابان‌های درخشان و فضای سبز"
+            title="تم اسلیت متعادل بین تیره و روشن با نام‌های فوق‌العاده خوانا"
           >
-            دارک‌مود درخشان
+            اسلیت متعادل
+          </button>
+          <button
+            onClick={() => handleStyleChange("voyager")}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+              styleMode === "voyager"
+                ? "bg-amber-500 text-slate-950 shadow-md font-black"
+                : "text-slate-400 hover:text-white"
+            }`}
+            title="تم کارتو وویجر شهری"
+          >
+            کارتو وویجر
           </button>
           <button
             onClick={() => handleStyleChange("cartoDark")}

@@ -21,7 +21,7 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#080d1a"
+        "background-color": "#1a2333"
       }
     },
     {
@@ -168,8 +168,8 @@
         ]
       ],
       "paint": {
-        "fill-color": "hsl(0,2%,5%)",
-        "fill-opacity": 0.4
+        "fill-color": "#1e293b",
+        "fill-opacity": 0.9
       }
     },
     {
@@ -202,7 +202,7 @@
         ]
       ],
       "paint": {
-        "fill-color": "#064e3b",
+        "fill-color": "#165339",
         "fill-opacity": 0.85
       }
     },
@@ -235,7 +235,7 @@
         ]
       ],
       "paint": {
-        "fill-color": "#064e3b",
+        "fill-color": "#165339",
         "fill-opacity": 0.85
       }
     },
@@ -257,7 +257,7 @@
         false
       ],
       "paint": {
-        "line-color": "#0ea5e9",
+        "line-color": "#38bdf8",
         "line-width": [
           "interpolate",
           [
@@ -331,9 +331,9 @@
         "text-size": 12
       },
       "paint": {
-        "text-color": "#38bdf8",
-        "text-halo-color": "#080d1a",
-        "text-halo-width": 1
+        "text-color": "#7dd3fc",
+        "text-halo-color": "#0f172a",
+        "text-halo-width": 1.5
       }
     },
     {
@@ -356,9 +356,9 @@
       ],
       "paint": {
         "fill-antialias": true,
-        "fill-color": "#1e293b",
-        "fill-outline-color": "#475569",
-        "fill-opacity": 0.92
+        "fill-color": "#283548",
+        "fill-outline-color": "#64748b",
+        "fill-opacity": 0.95
       }
     },
     {
@@ -720,8 +720,8 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#334155",
-        "line-opacity": 0.85,
+        "line-color": "#475569",
+        "line-opacity": 0.9,
         "line-width": [
           "interpolate",
           [
@@ -732,9 +732,9 @@
             "zoom"
           ],
           13,
-          1.5,
+          1.8,
           20,
-          14
+          16
         ]
       }
     },
@@ -946,7 +946,7 @@
         "line-join": "miter"
       },
       "paint": {
-        "line-color": "#78350f",
+        "line-color": "#92400e",
         "line-width": [
           "interpolate",
           [
@@ -959,7 +959,7 @@
           4,
           3,
           6,
-          4,
+          4.5,
           20,
           28
         ]
@@ -1012,7 +1012,7 @@
           4,
           2,
           6,
-          2.5,
+          3,
           20,
           24
         ]
@@ -1497,33 +1497,22 @@
         "symbol-placement": "line",
         "symbol-spacing": 350,
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            " ",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -1532,18 +1521,28 @@
         "text-max-angle": 30,
         "text-pitch-alignment": "viewport",
         "text-rotation-alignment": "map",
-        "text-size": 10,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          11,
+          16,
+          13.5,
+          18,
+          16
+        ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgba(80, 78, 78, 1)",
-        "text-halo-blur": 0,
-        "text-halo-color": "rgba(0, 0, 0, 1)",
-        "text-halo-width": 1,
-        "text-translate": [
-          0,
-          0
-        ]
+        "text-color": "#ffffff",
+        "text-halo-color": "#0f172a",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -1578,10 +1577,22 @@
         "symbol-placement": "line",
         "symbol-spacing": 350,
         "text-field": [
-          "to-string",
+          "coalesce",
           [
             "get",
-            "ref"
+            "name:fa"
+          ],
+          [
+            "get",
+            "name"
+          ],
+          [
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -1589,14 +1600,27 @@
         ],
         "text-pitch-alignment": "viewport",
         "text-rotation-alignment": "viewport",
-        "text-size": 10
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          11,
+          14,
+          13,
+          17,
+          16
+        ]
       },
       "paint": {
-        "text-color": "hsl(0,0%,37%)",
-        "text-translate": [
-          0,
-          2
-        ]
+        "text-color": "#fef08a",
+        "text-halo-color": "#0f172a",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -1788,33 +1812,22 @@
       "layout": {
         "text-anchor": "center",
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -1825,14 +1838,28 @@
           0.5,
           0
         ],
-        "text-size": 10,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          12,
+          14,
+          15,
+          17,
+          18
+        ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
-        "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -1867,33 +1894,22 @@
       "layout": {
         "text-anchor": "center",
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -1904,14 +1920,28 @@
           0.5,
           0
         ],
-        "text-size": 10,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          12,
+          14,
+          15,
+          17,
+          18
+        ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
-        "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -1947,33 +1977,22 @@
         "icon-size": 0.4,
         "text-anchor": "left",
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -1984,15 +2003,28 @@
           0.5,
           0.2
         ],
-        "text-size": 10,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          12,
+          14,
+          15,
+          17,
+          18
+        ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "icon-opacity": 0.7,
-        "text-color": "rgb(101,101,101)",
-        "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -2045,33 +2077,22 @@
           "center"
         ],
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -2082,15 +2103,28 @@
           0.5,
           0.2
         ],
-        "text-size": 10,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          12,
+          14,
+          15,
+          17,
+          18
+        ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "icon-opacity": 0.7,
-        "text-color": "rgb(101,101,101)",
-        "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -2151,33 +2185,22 @@
           "center"
         ],
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -2188,15 +2211,28 @@
           0.5,
           0.2
         ],
-        "text-size": 10,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          12,
+          14,
+          15,
+          17,
+          18
+        ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "icon-opacity": 0.7,
-        "text-color": "rgb(101,101,101)",
-        "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -2257,33 +2293,22 @@
           "center"
         ],
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -2294,15 +2319,28 @@
           0.5,
           0.2
         ],
-        "text-size": 14,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          12,
+          14,
+          15,
+          17,
+          18
+        ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "icon-opacity": 0.7,
-        "text-color": "rgb(101,101,101)",
-        "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -2336,46 +2374,49 @@
       ],
       "layout": {
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
           "Noto Sans Regular"
         ],
-        "text-size": 10,
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          12,
+          14,
+          15,
+          17,
+          18
+        ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
-        "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -2416,33 +2457,22 @@
       ],
       "layout": {
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -2456,17 +2486,20 @@
           [
             "zoom"
           ],
-          0,
-          9,
-          1,
-          11
+          10,
+          12,
+          14,
+          15,
+          17,
+          18
         ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1.4
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -2512,33 +2545,22 @@
       ],
       "layout": {
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -2552,17 +2574,20 @@
           [
             "zoom"
           ],
-          0,
           10,
-          6,
-          12
+          12,
+          14,
+          15,
+          17,
+          18
         ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1.4
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     },
     {
@@ -2609,33 +2634,22 @@
       "layout": {
         "text-anchor": "center",
         "text-field": [
-          "case",
+          "coalesce",
           [
-            "has",
-            "name:nonlatin"
+            "get",
+            "name:fa"
           ],
           [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
+            "get",
+            "name"
           ],
           [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
+            "get",
+            "name:en"
+          ],
+          [
+            "get",
+            "name_en"
           ]
         ],
         "text-font": [
@@ -2644,25 +2658,25 @@
         "text-size": [
           "interpolate",
           [
-            "exponential",
-            1.4
+            "linear"
           ],
           [
             "zoom"
           ],
-          0,
           10,
-          3,
           12,
-          4,
-          14
+          14,
+          15,
+          17,
+          18
         ],
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1.4
+        "text-color": "#ffffff",
+        "text-halo-color": "#090d16",
+        "text-halo-width": 2.2,
+        "text-halo-blur": 0.5
       }
     }
   ]
