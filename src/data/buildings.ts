@@ -72,6 +72,9 @@ export interface DistrictShortcut {
   name: string;
   nameEn: string;
   centerCoordinates: { lat: number; lng: number };
+  zoom: number;
+  pitch: number;
+  bearing: number;
   worldCenter: { x: number; z: number };
   cameraTarget: { x: number; y: number; z: number };
   cameraPosition: { x: number; y: number; z: number };
@@ -85,6 +88,9 @@ export const TEHRAN_DISTRICTS: DistrictShortcut[] = [
     name: "سعادت‌آباد",
     nameEn: "Sa'adat Abad",
     centerCoordinates: { lat: 35.7876, lng: 51.3734 },
+    zoom: 16.5,
+    pitch: 60,
+    bearing: -15,
     worldCenter: { x: -60, z: -80 },
     cameraTarget: { x: -60, y: 15, z: -80 },
     cameraPosition: { x: -30, y: 70, z: -20 },
@@ -96,6 +102,9 @@ export const TEHRAN_DISTRICTS: DistrictShortcut[] = [
     name: "شهرک غرب",
     nameEn: "Shahrak-e Gharb",
     centerCoordinates: { lat: 35.7592, lng: 51.3654 },
+    zoom: 16.2,
+    pitch: 58,
+    bearing: 10,
     worldCenter: { x: -70, z: 40 },
     cameraTarget: { x: -70, y: 15, z: 40 },
     cameraPosition: { x: -40, y: 80, z: 110 },
@@ -107,6 +116,9 @@ export const TEHRAN_DISTRICTS: DistrictShortcut[] = [
     name: "نیاوران و شمیرانات",
     nameEn: "Niavaran",
     centerCoordinates: { lat: 35.8198, lng: 51.4682 },
+    zoom: 16.4,
+    pitch: 62,
+    bearing: -25,
     worldCenter: { x: 70, z: -160 },
     cameraTarget: { x: 70, y: 25, z: -160 },
     cameraPosition: { x: 100, y: 95, z: -100 },
@@ -118,6 +130,9 @@ export const TEHRAN_DISTRICTS: DistrictShortcut[] = [
     name: "مرزداران",
     nameEn: "Marzdaran",
     centerCoordinates: { lat: 35.7381, lng: 51.3542 },
+    zoom: 16.3,
+    pitch: 55,
+    bearing: -5,
     worldCenter: { x: -40, z: 120 },
     cameraTarget: { x: -40, y: 15, z: 120 },
     cameraPosition: { x: -10, y: 75, z: 190 },
@@ -129,6 +144,9 @@ export const TEHRAN_DISTRICTS: DistrictShortcut[] = [
     name: "پونک و سردار جنگل",
     nameEn: "Punak",
     centerCoordinates: { lat: 35.7689, lng: 51.3321 },
+    zoom: 16.2,
+    pitch: 55,
+    bearing: -10,
     worldCenter: { x: -140, z: -20 },
     cameraTarget: { x: -140, y: 15, z: -20 },
     cameraPosition: { x: -110, y: 75, z: 50 },
@@ -140,11 +158,42 @@ export const TEHRAN_DISTRICTS: DistrictShortcut[] = [
     name: "صادقیه و ستارخان",
     nameEn: "Sadeghiyeh",
     centerCoordinates: { lat: 35.7205, lng: 51.3392 },
+    zoom: 16.5,
+    pitch: 50,
+    bearing: 5,
     worldCenter: { x: -80, z: 190 },
     cameraTarget: { x: -80, y: 15, z: 190 },
     cameraPosition: { x: -50, y: 70, z: 255 },
     activeListingsCount: 92,
     description: "فلکه اول صادقیه، خیابان سازمان آب، گلناز و دسترسی سریع به مترو"
+  },
+  {
+    id: "tajrish",
+    name: "تجریش و الهیه",
+    nameEn: "Tajrish & Elahieh",
+    centerCoordinates: { lat: 35.8050, lng: 51.4320 },
+    zoom: 16.4,
+    pitch: 60,
+    bearing: -20,
+    worldCenter: { x: 30, z: -130 },
+    cameraTarget: { x: 30, y: 20, z: -130 },
+    cameraPosition: { x: 60, y: 85, z: -70 },
+    activeListingsCount: 79,
+    description: "میدان تجریش، خیابان فرشته، الهیه و برج‌های مارک‌دار شمال شهر"
+  },
+  {
+    id: "jordan",
+    name: "جردن و ولیعصر",
+    nameEn: "Jordan / Valiasr",
+    centerCoordinates: { lat: 35.7750, lng: 51.4220 },
+    zoom: 16.3,
+    pitch: 58,
+    bearing: 15,
+    worldCenter: { x: 20, z: -50 },
+    cameraTarget: { x: 20, y: 20, z: -50 },
+    cameraPosition: { x: 50, y: 85, z: 10 },
+    activeListingsCount: 65,
+    description: "بلوار نلسون ماندلا (جردن)، پارک ملت، خیابان ولیعصر و اسفندیار"
   }
 ];
 
