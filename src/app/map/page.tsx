@@ -7,7 +7,6 @@ import { useSearchParams } from "next/navigation";
 import Tehran3DMap from "@/components/Tehran3DMap";
 import BuildingInspectorDrawer from "@/components/BuildingInspectorDrawer";
 import BuildingManagementModal from "@/components/BuildingManagementModal";
-import Building3DFrontViewer from "@/components/Building3DFrontViewer";
 import {
   TehranBuilding,
   BuildingFloor,
@@ -35,8 +34,7 @@ import {
   UserCheck,
   Eye,
   Key,
-  Ruler,
-  Box
+  Ruler
 } from "lucide-react";
 
 function MapPageContent() {
@@ -56,9 +54,6 @@ function MapPageContent() {
   const [editingUnit, setEditingUnit] = useState<BuildingUnit | null>(null);
   const [editingFloor, setEditingFloor] = useState<BuildingFloor | null>(null);
 
-  // 3D Front-of-Building Architectural Viewer State
-  const [is3DFrontViewerOpen, setIs3DFrontViewerOpen] = useState<boolean>(false);
-
   // Parse query params for initial building or property focus
   useEffect(() => {
     const buildingIdParam = searchParams.get("buildingId");
@@ -68,7 +63,6 @@ function MapPageContent() {
       const bldg = getBuildingByPropertyId(Number(propertyIdParam));
       if (bldg) {
         setSelectedBuilding(bldg);
-        setIs3DFrontViewerOpen(true);
         return;
       }
     }
@@ -77,7 +71,6 @@ function MapPageContent() {
       const bldg = getBuildingById(buildingIdParam);
       if (bldg) {
         setSelectedBuilding(bldg);
-        setIs3DFrontViewerOpen(true);
       }
     }
   }, [searchParams]);
@@ -98,16 +91,11 @@ function MapPageContent() {
 
   const handleSelectBuildingFromSearch = (building: TehranBuilding) => {
     setSelectedBuilding(building);
-    setIs3DFrontViewerOpen(true);
     setSearchQuery("");
   };
 
   const handleSelectBuildingFromMap = (bldg: TehranBuilding | null) => {
     setSelectedBuilding(bldg);
-    if (bldg) {
-      // Automatically open the 3D Front of the Building when tapped
-      setIs3DFrontViewerOpen(true);
-    }
   };
 
   // Agent/Seller edits building or unit
@@ -135,11 +123,7 @@ function MapPageContent() {
   return (
     <div className="relative w-screen h-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden font-sans select-none">
       {/* ==================== TOP NAVIGATION OVERLAY ==================== */}
-      <header
-        className={`absolute top-0 inset-x-0 z-30 pointer-events-none p-2.5 sm:p-4 transition-all duration-300 ${
-          is3DFrontViewerOpen ? "opacity-0 -translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
-        }`}
-      >
+      <header className="absolute top-0 inset-x-0 z-30 pointer-events-none p-2.5 sm:p-4 transition-all duration-300 opacity-100 translate-y-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
           {/* Right Section: Logo, Home, and District Selector Dropdown */}
           <div className="flex items-center gap-2 pointer-events-auto shrink-0">
@@ -196,7 +180,6 @@ function MapPageContent() {
                         onClick={() => {
                           setActiveDistrictId(dist.id);
                           setSelectedBuilding(null);
-                          setIs3DFrontViewerOpen(false);
                           setDistrictDropdownOpen(false);
                         }}
                         className={`w-full text-right px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
@@ -303,7 +286,7 @@ function MapPageContent() {
         </div>
       </header>
 
-      {/* ==================== 2D CADASTRAL & STREET LEVEL MAP ==================== */}
+      {/* ==================== 2D CADASTRAL MAP ==================== */}
       <main className="flex-1 w-full h-full relative">
         <Tehran3DMap
           onSelectBuilding={handleSelectBuildingFromMap}
@@ -311,41 +294,21 @@ function MapPageContent() {
           activeDistrictId={activeDistrictId}
           buildings={buildingsList}
           userRole={userRole}
-          onOpen3DFront={() => setIs3DFrontViewerOpen(true)}
         />
       </main>
 
-      {/* ==================== 3D FRONT-OF-BUILDING ARCHITECTURAL VIEWER ==================== */}
-      {selectedBuilding && is3DFrontViewerOpen ? (
-        <Building3DFrontViewer
-          building={selectedBuilding}
-          userRole={userRole}
-          onClose={() => setIs3DFrontViewerOpen(false)}
-          onEditBuilding={handleOpenEditBuilding}
-          onEditUnit={handleOpenEditUnit}
-          onRequestAgentMode={() => {
-            setUserRole("seller_agent");
-            setManageModalOpen(true);
-          }}
-        />
-      ) : (
-        /* ==================== BUILDING FACADE & TWIN INSPECTOR DRAWER ==================== */
-        <BuildingInspectorDrawer
-          building={selectedBuilding}
-          onClose={() => {
-            setSelectedBuilding(null);
-            setIs3DFrontViewerOpen(false);
-          }}
-          userRole={userRole}
-          onEditBuilding={handleOpenEditBuilding}
-          onEditUnit={handleOpenEditUnit}
-          onOpen3DFront={() => setIs3DFrontViewerOpen(true)}
-          onRequestAgentMode={() => {
-            setUserRole("seller_agent");
-            setManageModalOpen(true);
-          }}
-        />
-      )}
+      {/* ==================== 2D BUILDING FACADE & UNIT INSPECTOR DRAWER ==================== */}
+      <BuildingInspectorDrawer
+        building={selectedBuilding}
+        onClose={() => setSelectedBuilding(null)}
+        userRole={userRole}
+        onEditBuilding={handleOpenEditBuilding}
+        onEditUnit={handleOpenEditUnit}
+        onRequestAgentMode={() => {
+          setUserRole("seller_agent");
+          setManageModalOpen(true);
+        }}
+      />
 
       {/* ==================== SELLER & AGENT MANAGEMENT MODAL ==================== */}
       {selectedBuilding && (

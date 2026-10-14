@@ -48,7 +48,6 @@ interface BuildingInspectorDrawerProps {
   onEditBuilding?: () => void;
   onEditUnit?: (unit: BuildingUnit, floor: BuildingFloor) => void;
   onRequestAgentMode?: () => void;
-  onOpen3DFront?: () => void;
 }
 
 export default function BuildingInspectorDrawer({
@@ -59,8 +58,7 @@ export default function BuildingInspectorDrawer({
   userRole = "home_seeker",
   onEditBuilding,
   onEditUnit,
-  onRequestAgentMode,
-  onOpen3DFront
+  onRequestAgentMode
 }: BuildingInspectorDrawerProps) {
   const [selectedFloorNum, setSelectedFloorNum] = useState<number | "all">("all");
   const [activeTab, setActiveTab] = useState<"facade" | "list">("facade");
@@ -149,17 +147,6 @@ export default function BuildingInspectorDrawer({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {onOpen3DFront && (
-            <button
-              onClick={onOpen3DFront}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all hover:scale-105"
-              title="مشاهده نمای ۳ بعدی روبروی ساختمان (بر اصلی)"
-            >
-              <Box className="w-3.5 h-3.5" />
-              <span>دید ۳ بعدی نما</span>
-            </button>
-          )}
-
           {/* Action Button for Landlord/Agent */}
           {userRole === "seller_agent" && (
             <button

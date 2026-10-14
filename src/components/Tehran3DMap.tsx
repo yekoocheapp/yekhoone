@@ -21,10 +21,8 @@ import {
   Sparkles,
   Eye,
   Layers,
-  Camera,
   Ruler,
-  ShieldCheck,
-  Box
+  ShieldCheck
 } from "lucide-react";
 
 interface Tehran3DMapProps {
@@ -35,7 +33,6 @@ interface Tehran3DMapProps {
   onDistrictChange?: (districtId: string) => void;
   buildings?: TehranBuilding[];
   userRole?: "home_seeker" | "seller_agent";
-  onOpen3DFront?: () => void;
 }
 
 // Middle-ground slate architectural style (balanced between dark and light, with crystal-clear street typography)
@@ -48,20 +45,18 @@ export default function Tehran3DMap({
   activeDistrictId,
   onDistrictChange,
   buildings = TEHRAN_BUILDINGS,
-  userRole = "home_seeker",
-  onOpen3DFront
+  userRole = "home_seeker"
 }: Tehran3DMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const [compassBearing, setCompassBearing] = useState<number>(0);
-  const [isStreetLevel, setIsStreetLevel] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // Setup 2D Cadastral Footprints & 3D Extrusion on MapLibre
+  // Setup 2D Cadastral Footprints on MapLibre
   const configureBuildingLayers = useCallback((map: maplibregl.Map) => {
-    // 1. Style 2D Cadastral building layer with crisp, bright slate boundaries
+    // Style 2D Cadastral building layer with crisp, bright slate boundaries
     if (map.getLayer("building")) {
       try {
         map.setPaintProperty("building", "fill-color", [
@@ -79,72 +74,9 @@ export default function Tehran3DMap({
         console.warn("Could not set custom building paint:", e);
       }
     }
-
-    // 2. Add 3D Extruded Buildings Layer across Tehran (active from zoom 14.5+)
-    if (map.getSource("openmaptiles") && !map.getLayer("3d-buildings-extrusion")) {
-      const layers = map.getStyle().layers;
-      let labelLayerId: string | undefined;
-      if (layers) {
-        for (let i = 0; i < layers.length; i++) {
-          if (layers[i].type === "symbol" && layers[i].layout && (layers[i].layout as any)["text-field"]) {
-            labelLayerId = layers[i].id;
-            break;
-          }
-        }
-      }
-
-      try {
-        map.addLayer(
-          {
-            id: "3d-buildings-extrusion",
-            source: "openmaptiles",
-            "source-layer": "building",
-            type: "fill-extrusion",
-            minzoom: 14.5,
-            paint: {
-              "fill-extrusion-color": [
-                "interpolate",
-                ["linear"],
-                ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 4], 3.2], 12],
-                0,
-                "#1e293b",
-                15,
-                "#334155",
-                30,
-                "#475569",
-                60,
-                "#64748b"
-              ],
-              "fill-extrusion-height": [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                14.5,
-                0,
-                15.2,
-                ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 4], 3.2], 14]
-              ],
-              "fill-extrusion-base": [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                14.5,
-                0,
-                15.2,
-                ["coalesce", ["get", "render_min_height"], 0]
-              ],
-              "fill-extrusion-opacity": 0.95
-            }
-          },
-          labelLayerId
-        );
-      } catch (err) {
-        console.warn("Extrusion layer init error:", err);
-      }
-    }
   }, []);
 
-  // Initialize MapLibre GL in 2D Top-Down Mode First
+  // Initialize MapLibre GL in 2D Top-Down Mode
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -170,15 +102,17 @@ export default function Tehran3DMap({
       } catch {}
     }
 
-    // 2D FIRST: pitch: 0, bearing: 0, zoom: 15.5
+    // Strictly 2D Cadastral map: pitch 0, maxPitch 0
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: styleUrl,
       center: [51.3734, 35.7876], // Sa'adat Abad / Tehran
       zoom: 15.5,
-      pitch: 0, // Strictly 2D top-down initially
+      pitch: 0,
       bearing: 0,
-      maxPitch: 80,
+      maxPitch: 0,
+      dragRotate: false,
+      touchPitch: false,
       attributionControl: false
     });
 
@@ -191,10 +125,6 @@ export default function Tehran3DMap({
 
     map.on("rotate", () => {
       setCompassBearing(map.getBearing());
-    });
-
-    map.on("pitch", () => {
-      setIsStreetLevel(map.getPitch() > 40);
     });
 
     // CLICK ON ANY BUILDING PLACEHOLDER
@@ -214,20 +144,19 @@ export default function Tehran3DMap({
         }
       }
 
-      // 2. Query vector building polygons (both 2D and 3D)
+      // 2. Query vector building polygons
       const buildingFeatures = map.queryRenderedFeatures(e.point, {
-        layers: ["building", "3d-buildings-extrusion"].filter((l) => map.getLayer(l))
+        layers: ["building"].filter((l) => map.getLayer(l))
       });
 
       if (matchedBuilding) {
         onSelectBuilding(matchedBuilding);
-        // Smooth camera descent from 2D down to street level
         map.flyTo({
           center: [matchedBuilding.coordinates.lng, matchedBuilding.coordinates.lat],
-          zoom: 18.5,
-          pitch: 74,
-          bearing: -15,
-          duration: 1600
+          zoom: 17.5,
+          pitch: 0,
+          bearing: 0,
+          duration: 1000
         });
       } else if (buildingFeatures && buildingFeatures.length > 0) {
         // Dynamic building on-the-fly for real cadastral plot in Tehran
@@ -290,13 +219,12 @@ export default function Tehran3DMap({
         };
 
         onSelectBuilding(dynamicBuilding);
-        // Smooth camera descent from 2D down to street level
         map.flyTo({
           center: [clickedLng, clickedLat],
-          zoom: 18.5,
-          pitch: 74,
-          bearing: -15,
-          duration: 1600
+          zoom: 17.5,
+          pitch: 0,
+          bearing: 0,
+          duration: 1000
         });
       }
     });
@@ -375,13 +303,12 @@ export default function Tehran3DMap({
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         onSelectBuilding(bldg);
-        // Smooth camera descent from 2D down to street level
         map.flyTo({
           center: [bldg.coordinates.lng, bldg.coordinates.lat],
-          zoom: 18.5,
-          pitch: 74,
-          bearing: -15,
-          duration: 1600
+          zoom: 17.5,
+          pitch: 0,
+          bearing: 0,
+          duration: 1000
         });
       });
 
@@ -401,10 +328,10 @@ export default function Tehran3DMap({
 
     mapRef.current.flyTo({
       center: [bldg.coordinates.lng, bldg.coordinates.lat],
-      zoom: 18.5,
-      pitch: 74,
-      bearing: -15,
-      duration: 1600
+      zoom: 17.5,
+      pitch: 0,
+      bearing: 0,
+      duration: 1000
     });
   }, [selectedBuildingId, buildings]);
 
@@ -417,34 +344,11 @@ export default function Tehran3DMap({
     mapRef.current.flyTo({
       center: [district.centerCoordinates.lng, district.centerCoordinates.lat],
       zoom: district.zoom || 15.5,
-      pitch: 0, // Reset to 2D on district switch
+      pitch: 0,
       bearing: 0,
-      duration: 1800
+      duration: 1500
     });
   }, [activeDistrictId]);
-
-  // Switch between 2D Top-Down & 3D Street Level Camera
-  const toggleCamera2D3D = () => {
-    if (!mapRef.current) return;
-    const currentPitch = mapRef.current.getPitch();
-    if (currentPitch > 25) {
-      // Switch back to 2D Top-Down
-      mapRef.current.flyTo({
-        pitch: 0,
-        bearing: 0,
-        zoom: Math.max(15, mapRef.current.getZoom() - 1.5),
-        duration: 1200
-      });
-    } else {
-      // Descend to 3D Street Level
-      mapRef.current.flyTo({
-        pitch: 74,
-        zoom: Math.min(18.5, mapRef.current.getZoom() + 1.5),
-        bearing: -15,
-        duration: 1400
-      });
-    }
-  };
 
   const handleZoom = (delta: number) => {
     if (!mapRef.current) return;
@@ -479,7 +383,7 @@ export default function Tehran3DMap({
       ref={mapContainerRef}
       className="relative w-full h-full bg-slate-950 overflow-hidden select-none"
     >
-      {/* Top Left Navigation & Camera Modes (Moved to top-20 to sit comfortably below page header) */}
+      {/* Top Left Navigation (Moved to top-20 to sit comfortably below page header) */}
       <div className="absolute top-20 left-4 z-20 flex items-center gap-2 pointer-events-none">
         {/* Compass */}
         <div
@@ -495,46 +399,7 @@ export default function Tehran3DMap({
           />
           <span className="font-bold text-amber-400">N</span>
         </div>
-
-        {/* 2D / 3D Street Level Camera Angle Switcher */}
-        <button
-          onClick={toggleCamera2D3D}
-          className={`pointer-events-auto px-3 py-2 rounded-2xl backdrop-blur-md border text-xs font-bold transition-all shadow-xl flex items-center gap-1.5 ${
-            isStreetLevel
-              ? "bg-amber-500 text-slate-950 border-amber-400 shadow-amber-500/20 font-black"
-              : "bg-slate-950/90 hover:bg-slate-900 border-slate-800 text-slate-200"
-          }`}
-          title="تغییر دید بین نقشه ۲ بعدی کاداستر و نمای ۳ بعدی خیابانی"
-        >
-          {isStreetLevel ? (
-            <>
-              <Camera className="w-4 h-4 text-slate-950" />
-              <span>نمای خیابانی (۳ بعدی)</span>
-            </>
-          ) : (
-            <>
-              <Layers className="w-4 h-4 text-amber-400" />
-              <span>دید ۲ بعدی کاداستر</span>
-            </>
-          )}
-        </button>
       </div>
-
-      {/* Prominent Floating Pill: "مشاهده نمای ۳ بعدی روبروی ساختمان" */}
-      {selectedBuilding && onOpen3DFront && (
-        <div className="absolute top-20 inset-x-0 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-4">
-          <button
-            onClick={onOpen3DFront}
-            className="pointer-events-auto flex items-center gap-2.5 px-4 sm:px-6 py-2.5 rounded-full bg-gradient-to-l from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm shadow-2xl shadow-amber-500/30 transition-all hover:scale-105 border border-amber-300/40"
-          >
-            <Box className="w-4 h-4 animate-bounce" />
-            <span>مشاهده نمای ۳ بعدی روبروی ساختمان: {selectedBuilding.name}</span>
-            <span className="text-xs bg-slate-950 text-amber-400 px-2 py-0.5 rounded-full">
-              {selectedBuilding.dimensions?.width || 18}م بر
-            </span>
-          </button>
-        </div>
-      )}
 
       {/* Standard Bottom-Right Navigation Stack (Reset, Zoom, Fullscreen) */}
       <div className="absolute bottom-6 right-4 z-20 flex items-center gap-2 pointer-events-auto">
