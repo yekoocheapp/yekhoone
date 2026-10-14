@@ -127,7 +127,7 @@ export const initialProperties: Property[] = [
         {
           id: "living-room",
           name: "سالن پذیرایی و نشیمن",
-          panoramaUrl: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/2294472375_24a3b8ef46_o.jpg",
+          panoramaUrl: "",
           description: "سالن پرده‌خور آفتاب‌گیر با پنجره‌های قدی ترمال‌بریک و نور جنوب تهران",
           hotspots: [
             {
@@ -299,7 +299,6 @@ export const initialProperties: Property[] = [
     nextAlgorithmicBump: "۲ ساعت دیگر",
     bumpIntervalHours: 4,
     hasVirtualTour: true,
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-balcony-view-40742-large.mp4",
     virtualTour: {
       enabled: true,
       startingRoomId: "living-room-2",
@@ -307,7 +306,7 @@ export const initialProperties: Property[] = [
         {
           id: "living-room-2",
           name: "سالن پذیرایی دیپلمات‌نشین",
-          panoramaUrl: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/2294472375_24a3b8ef46_o.jpg",
+          panoramaUrl: "",
           description: "سالن وسیع با تراس قابل چیدمان و دید به خیابان مهستان",
           hotspots: [
             {

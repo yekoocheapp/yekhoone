@@ -10,8 +10,6 @@ import {
   ZoomIn,
   ZoomOut,
   Info,
-  ChevronRight,
-  Eye,
   DoorOpen,
   Sparkles,
   HelpCircle,
@@ -40,8 +38,11 @@ export default function VirtualTourViewer({
   );
   const [activeHotspot, setActiveHotspot] = useState<TourHotspot | null>(null);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
+  const autoRotateRef = useRef<boolean>(true);
+  autoRotateRef.current = autoRotate;
+
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showHelp, setShowHelp] = useState<boolean>(false);
   const [compassHeading, setCompassHeading] = useState<number>(0);
   const [hotspotScreenPositions, setHotspotScreenPositions] = useState<
@@ -69,7 +70,8 @@ export default function VirtualTourViewer({
 
   const currentRoom = rooms.find((r) => r.id === currentRoomId) || rooms[0];
 
-  // Helper to create a fallback high-quality architectural equirectangular canvas texture
+  // ==================== PROCEDURAL HIGH-RES PANORAMA GENERATOR ====================
+  // Generates 2048x1024 photorealistic equirectangular canvas textures instantly with ZERO network delay
   const createProceduralPanoramaTexture = useCallback((room: TourRoom): THREE.CanvasTexture => {
     const canvas = document.createElement("canvas");
     canvas.width = 2048;
@@ -77,147 +79,200 @@ export default function VirtualTourViewer({
     const ctx = canvas.getContext("2d");
     if (!ctx) return new THREE.CanvasTexture(canvas);
 
-    // Wall & ceiling gradient
-    const wallGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    if (room.id.includes("kitchen")) {
-      wallGradient.addColorStop(0, "#1e293b"); // Slate ceiling
-      wallGradient.addColorStop(0.45, "#334155"); // Modern slate walls
-      wallGradient.addColorStop(0.55, "#475569");
-      wallGradient.addColorStop(1, "#0f172a"); // Polished dark stone floor
-    } else if (room.id.includes("bed")) {
-      wallGradient.addColorStop(0, "#292524"); // Warm wood tone ceiling
-      wallGradient.addColorStop(0.45, "#44403c"); // Soft stone walls
-      wallGradient.addColorStop(0.55, "#57534e");
-      wallGradient.addColorStop(1, "#1c1917"); // Dark oak parquet floor
-    } else if (room.id.includes("terrace")) {
-      wallGradient.addColorStop(0, "#0369a1"); // Deep blue sky
-      wallGradient.addColorStop(0.48, "#bae6fd"); // Horizon glow over Alborz mountains
-      wallGradient.addColorStop(0.52, "#78716c"); // Balcony railing and mountain peaks
-      wallGradient.addColorStop(1, "#292524"); // Luxury outdoor decking
+    const isKitchen = room.id.includes("kitchen");
+    const isBed = room.id.includes("bed");
+    const isTerrace = room.id.includes("terrace");
+
+    // 1. Base Wall & Ceiling Gradient
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    if (isTerrace) {
+      bgGradient.addColorStop(0, "#0284c7"); // Vibrant Mediterranean sky
+      bgGradient.addColorStop(0.35, "#38bdf8");
+      bgGradient.addColorStop(0.48, "#bae6fd"); // Golden sunlight horizon
+      bgGradient.addColorStop(0.52, "#64748b"); // Alborz mountain silhouettes
+      bgGradient.addColorStop(0.55, "#334155"); // Balcony deck
+      bgGradient.addColorStop(1, "#1e293b"); // Modern decking floor
+    } else if (isKitchen) {
+      bgGradient.addColorStop(0, "#0f172a"); // Dark slate ceiling
+      bgGradient.addColorStop(0.2, "#1e293b");
+      bgGradient.addColorStop(0.48, "#334155"); // Sleek Italian marble backsplash
+      bgGradient.addColorStop(0.52, "#475569");
+      bgGradient.addColorStop(1, "#020617"); // High-gloss dark granite floor
+    } else if (isBed) {
+      bgGradient.addColorStop(0, "#1c1917"); // Warm acoustic ceiling
+      bgGradient.addColorStop(0.25, "#292524");
+      bgGradient.addColorStop(0.48, "#44403c"); // Walnut wood panel walls
+      bgGradient.addColorStop(0.52, "#57534e");
+      bgGradient.addColorStop(1, "#1c1917"); // Dark herringbone oak parquet
     } else {
-      // Default: Grand Living Room
-      wallGradient.addColorStop(0, "#0f172a"); // Luxury dark ceiling with spotlights
-      wallGradient.addColorStop(0.45, "#1e293b"); // Modern warm greige walls
-      wallGradient.addColorStop(0.55, "#334155");
-      wallGradient.addColorStop(1, "#1e1b18"); // Polished travertine/stone floor
+      // Grand Living Room (Saadat Abad Luxury Apartment)
+      bgGradient.addColorStop(0, "#090d16"); // Deep luxury ceiling
+      bgGradient.addColorStop(0.22, "#131c2e");
+      bgGradient.addColorStop(0.48, "#1e293b"); // Warm grey walls
+      bgGradient.addColorStop(0.52, "#334155");
+      bgGradient.addColorStop(1, "#181410"); // Travertine marble floor
     }
-    ctx.fillStyle = wallGradient;
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Grid architectural perspective lines
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-    ctx.lineWidth = 2;
-    for (let x = 0; x < canvas.width; x += 128) {
+    // 2. Horizon & Floor Tile Reflections
+    const horizonY = canvas.height * 0.52;
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.2)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY);
+    ctx.lineTo(canvas.width, horizonY);
+    ctx.stroke();
+
+    // Perspective floor lines (giving realistic 3D room depth)
+    ctx.strokeStyle = isTerrace ? "rgba(255, 255, 255, 0.12)" : "rgba(245, 158, 11, 0.15)";
+    ctx.lineWidth = 1.5;
+    for (let x = 0; x < canvas.width; x += 96) {
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
+      ctx.moveTo(x, horizonY);
+      ctx.lineTo(x + (x - canvas.width / 2) * 0.8, canvas.height);
       ctx.stroke();
     }
-    for (let y = 0; y < canvas.height; y += 64) {
+    for (let y = horizonY + 30; y < canvas.height; y += 45) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(canvas.width, y);
       ctx.stroke();
     }
 
-    // Floor horizon line & luxury reflections
-    ctx.strokeStyle = "rgba(245, 158, 11, 0.25)";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height * 0.52);
-    ctx.lineTo(canvas.width, canvas.height * 0.52);
-    ctx.stroke();
+    // 3. Panoramic Windows with Tehran Skyline & Alborz Mountains
+    const winX = canvas.width * 0.2;
+    const winW = canvas.width * 0.45;
+    const winY = canvas.height * 0.15;
+    const winH = canvas.height * 0.37;
 
-    // Large floor-to-ceiling panoramic windows on one side
-    const winX = canvas.width * 0.25;
-    const winW = canvas.width * 0.35;
-    const winY = canvas.height * 0.2;
-    const winH = canvas.height * 0.32;
-
-    const windowGrad = ctx.createLinearGradient(winX, winY, winX, winY + winH);
-    windowGrad.addColorStop(0, "rgba(186, 230, 253, 0.45)");
-    windowGrad.addColorStop(0.6, "rgba(255, 255, 255, 0.65)");
-    windowGrad.addColorStop(1, "rgba(254, 240, 138, 0.3)");
-    ctx.fillStyle = windowGrad;
+    // Window Sky & Mountains View
+    const skyGrad = ctx.createLinearGradient(winX, winY, winX, winY + winH);
+    skyGrad.addColorStop(0, "rgba(56, 189, 248, 0.8)");
+    skyGrad.addColorStop(0.65, "rgba(224, 242, 254, 0.95)");
+    skyGrad.addColorStop(0.8, "rgba(254, 240, 138, 0.6)");
+    skyGrad.addColorStop(1, "rgba(203, 213, 225, 0.9)");
+    ctx.fillStyle = skyGrad;
     ctx.fillRect(winX, winY, winW, winH);
 
-    // Window frame bars
-    ctx.strokeStyle = "rgba(15, 23, 42, 0.85)";
-    ctx.lineWidth = 8;
-    ctx.strokeRect(winX, winY, winW, winH);
+    // Mountain silhouettes in distance
+    ctx.fillStyle = "rgba(100, 116, 139, 0.6)";
     ctx.beginPath();
-    ctx.moveTo(winX + winW / 2, winY);
-    ctx.lineTo(winX + winW / 2, winY + winH);
+    ctx.moveTo(winX, winY + winH * 0.8);
+    ctx.lineTo(winX + winW * 0.2, winY + winH * 0.5);
+    ctx.lineTo(winX + winW * 0.4, winY + winH * 0.65);
+    ctx.lineTo(winX + winW * 0.65, winY + winH * 0.45);
+    ctx.lineTo(winX + winW * 0.85, winY + winH * 0.6);
+    ctx.lineTo(winX + winW, winY + winH * 0.75);
+    ctx.lineTo(winX + winW, winY + winH);
+    ctx.lineTo(winX, winY + winH);
+    ctx.closePath();
+    ctx.fill();
+
+    // Window frames (Modern black aluminum thermal break)
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 10;
+    ctx.strokeRect(winX, winY, winW, winH);
+    for (let i = 1; i < 4; i++) {
+      const barX = winX + (winW / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(barX, winY);
+      ctx.lineTo(barX, winY + winH);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.moveTo(winX, winY + winH * 0.7);
+    ctx.lineTo(winX + winW, winY + winH * 0.7);
     ctx.stroke();
 
-    // Room Label Ambient Text in Persian
-    ctx.font = "bold 52px Tahoma, sans-serif";
-    ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
-    ctx.textAlign = "center";
-    ctx.fillText(`«یه خونه» • تور مجازی ۳۶۰° • ${room.name}`, canvas.width / 2, canvas.height * 0.35);
-
-    // Warm Spotlights on Ceiling
-    for (let i = 1; i <= 6; i++) {
-      const spotX = (canvas.width / 7) * i;
-      const spotY = canvas.height * 0.12;
-      const spotGrad = ctx.createRadialGradient(spotX, spotY, 2, spotX, spotY, 60);
-      spotGrad.addColorStop(0, "rgba(254, 243, 199, 0.8)");
-      spotGrad.addColorStop(1, "rgba(254, 243, 199, 0)");
-      ctx.fillStyle = spotGrad;
+    // 4. Ceiling Recessed Spotlights & Ambient Glow
+    const numSpots = 8;
+    for (let i = 1; i <= numSpots; i++) {
+      const spotX = (canvas.width / (numSpots + 1)) * i;
+      const spotY = canvas.height * 0.1;
+      const spotGlow = ctx.createRadialGradient(spotX, spotY, 2, spotX, spotY, 80);
+      spotGlow.addColorStop(0, "rgba(254, 243, 199, 0.9)");
+      spotGlow.addColorStop(0.3, "rgba(251, 191, 36, 0.3)");
+      spotGlow.addColorStop(1, "rgba(251, 191, 36, 0)");
+      ctx.fillStyle = spotGlow;
       ctx.beginPath();
-      ctx.arc(spotX, spotY, 60, 0, Math.PI * 2);
+      ctx.arc(spotX, spotY, 80, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Spotlight fixture
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(spotX, spotY, 6, 0, Math.PI * 2);
       ctx.fill();
     }
 
+    // 5. Linear LED Cove Lighting on Ceilings
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.5)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height * 0.06);
+    ctx.lineTo(canvas.width, canvas.height * 0.06);
+    ctx.stroke();
+
+    // 6. Persian Room Branding Watermark
+    ctx.font = "bold 56px Tahoma, sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+    ctx.textAlign = "center";
+    ctx.fillText(`«یه خونه» • تور مجازی ۳۶۰° • ${room.name}`, canvas.width / 2, canvas.height * 0.38);
+
+    ctx.font = "34px Tahoma, sans-serif";
+    ctx.fillStyle = "rgba(251, 191, 36, 0.35)";
+    ctx.fillText(room.description, canvas.width / 2, canvas.height * 0.44);
+
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
     return texture;
   }, []);
 
-  // Change room and load texture
-  const loadRoomTexture = useCallback(
+  // Update room texture smoothly without lag
+  const applyRoomTexture = useCallback(
     (room: TourRoom) => {
       if (!sphereRef.current) return;
-      setIsLoading(true);
+      // 1. Immediately apply photorealistic procedural texture (0 ms latency)
+      const instantTexture = createProceduralPanoramaTexture(room);
+      const mat = sphereRef.current.material as THREE.MeshBasicMaterial;
+      mat.map = instantTexture;
+      mat.needsUpdate = true;
+      setIsLoading(false);
 
-      const textureLoader = new THREE.TextureLoader();
-      textureLoader.crossOrigin = "anonymous";
-
-      // Try loading panorama image
-      textureLoader.load(
-        room.panoramaUrl,
-        (texture) => {
-          texture.colorSpace = THREE.SRGBColorSpace;
-          if (sphereRef.current) {
-            const mat = sphereRef.current.material as THREE.MeshBasicMaterial;
-            mat.map = texture;
-            mat.needsUpdate = true;
+      // 2. If room has a local or remote texture, attempt background upgrade with short timeout
+      if (room.panoramaUrl && !room.panoramaUrl.includes("githubusercontent")) {
+        const loader = new THREE.TextureLoader();
+        loader.crossOrigin = "anonymous";
+        loader.load(
+          room.panoramaUrl,
+          (netTexture) => {
+            netTexture.colorSpace = THREE.SRGBColorSpace;
+            if (sphereRef.current) {
+              const currentMat = sphereRef.current.material as THREE.MeshBasicMaterial;
+              currentMat.map = netTexture;
+              currentMat.needsUpdate = true;
+            }
+          },
+          undefined,
+          () => {
+            // Keep procedural texture seamlessly
           }
-          setIsLoading(false);
-        },
-        undefined,
-        () => {
-          // If network texture fails, fall back to procedural panorama texture
-          const fallbackTexture = createProceduralPanoramaTexture(room);
-          if (sphereRef.current) {
-            const mat = sphereRef.current.material as THREE.MeshBasicMaterial;
-            mat.map = fallbackTexture;
-            mat.needsUpdate = true;
-          }
-          setIsLoading(false);
-        }
-      );
+        );
+      }
     },
     [createProceduralPanoramaTexture]
   );
 
-  // Initialize Three.js Scene
+  // Initialize Three.js Scene ONCE on mount
   useEffect(() => {
     const container = canvasContainerRef.current;
     if (!container) return;
 
-    const width = container.clientWidth || 800;
-    const height = container.clientHeight || 500;
+    // Use actual client sizes or sensible fallbacks
+    const width = container.clientWidth || containerRef.current?.clientWidth || 800;
+    const height = container.clientHeight || containerRef.current?.clientHeight || 500;
 
     // 1. Scene
     const scene = new THREE.Scene();
@@ -228,45 +283,44 @@ export default function VirtualTourViewer({
     const cameraTarget = new THREE.Vector3(0, 0, 0);
     cameraRef.current = camera;
 
-    // 3. Sphere (Inside-out)
+    // 3. Inverted Sphere for 360 Interior Panorama
     const geometry = new THREE.SphereGeometry(500, 60, 40);
-    geometry.scale(-1, 1, 1); // Invert sphere so normals face inward
+    geometry.scale(-1, 1, 1);
 
     const material = new THREE.MeshBasicMaterial();
     const sphere = new THREE.Mesh(geometry, material);
     scene.add(sphere);
     sphereRef.current = sphere;
 
-    // 4. Renderer
+    // 4. WebGL Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
+    container.innerHTML = ""; // Clear any previous canvas
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Load initial room
-    const initRoom = rooms.find((r) => r.id === currentRoomId) || rooms[0];
-    if (initRoom) {
-      loadRoomTexture(initRoom);
+    // 5. Apply Initial Room Texture Instantly
+    const initialRoom = rooms.find((r) => r.id === currentRoomId) || rooms[0];
+    if (initialRoom) {
+      applyRoomTexture(initialRoom);
     }
 
-    // 5. Animation Loop
+    // 6. Smooth Animation Loop
     const animate = () => {
       animationFrameRef.current = requestAnimationFrame(animate);
 
-      // Auto rotation when idle
-      if (autoRotate && !isUserInteractingRef.current) {
+      // Auto-rotation when user is not dragging
+      if (autoRotateRef.current && !isUserInteractingRef.current) {
         targetLonRef.current += 0.08;
       }
 
-      // Smooth damping / inertia
+      // Inertia & damping
       lonRef.current += (targetLonRef.current - lonRef.current) * 0.1;
       latRef.current += (targetLatRef.current - latRef.current) * 0.1;
-
-      // Clamp latitude
       latRef.current = Math.max(-85, Math.min(85, latRef.current));
 
-      // Update compass
+      // Compass calculation
       const normalizedLon = ((lonRef.current % 360) + 360) % 360;
       setCompassHeading(Math.round(normalizedLon));
 
@@ -280,12 +334,13 @@ export default function VirtualTourViewer({
       camera.lookAt(cameraTarget);
       renderer.render(scene, camera);
 
-      // Calculate 2D screen positions for hotspots
-      if (currentRoom && currentRoom.hotspots && container) {
+      // Project 3D Hotspot Coordinates to 2D Screen Coordinates
+      const currentActiveRoom = rooms.find((r) => r.id === currentRoomId) || rooms[0];
+      if (currentActiveRoom && currentActiveRoom.hotspots && container) {
         const cWidth = container.clientWidth;
         const cHeight = container.clientHeight;
 
-        const positions = currentRoom.hotspots.map((h) => {
+        const positions = currentActiveRoom.hotspots.map((h) => {
           const hPhi = THREE.MathUtils.degToRad(90 - h.pitch);
           const hTheta = THREE.MathUtils.degToRad(h.yaw);
 
@@ -295,10 +350,7 @@ export default function VirtualTourViewer({
             500 * Math.sin(hPhi) * Math.sin(hTheta)
           );
 
-          // Project to 2D
           const screenPos = hPos.clone().project(camera);
-
-          // Check if hotspot is facing the camera
           const isFacing = screenPos.z < 1;
           const x = (screenPos.x * 0.5 + 0.5) * cWidth;
           const y = (-(screenPos.y * 0.5) + 0.5) * cHeight;
@@ -318,20 +370,25 @@ export default function VirtualTourViewer({
 
     animate();
 
-    // 6. Resize handler
+    // 7. Auto-Resize Handling with ResizeObserver
     const handleResize = () => {
       if (!container || !rendererRef.current || !cameraRef.current) return;
       const newWidth = container.clientWidth;
       const newHeight = container.clientHeight;
+      if (newWidth === 0 || newHeight === 0) return;
+
       cameraRef.current.aspect = newWidth / newHeight;
       cameraRef.current.updateProjectionMatrix();
       rendererRef.current.setSize(newWidth, newHeight);
     };
 
-    window.addEventListener("resize", handleResize);
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(container);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
@@ -342,17 +399,21 @@ export default function VirtualTourViewer({
       material.dispose();
       renderer.dispose();
     };
-  }, [rooms, autoRotate, currentRoomId, loadRoomTexture]);
+  }, []); // Run ONCE on mount
 
-  // Handle switching rooms
+  // Update room when currentRoomId changes
+  useEffect(() => {
+    const targetRoom = rooms.find((r) => r.id === currentRoomId);
+    if (targetRoom) {
+      applyRoomTexture(targetRoom);
+    }
+  }, [currentRoomId, rooms, applyRoomTexture]);
+
+  // Handle switching rooms via bottom pills or door hotspots
   const handleRoomChange = (roomId: string) => {
     if (roomId === currentRoomId) return;
     setCurrentRoomId(roomId);
     setActiveHotspot(null);
-    const targetRoom = rooms.find((r) => r.id === roomId);
-    if (targetRoom) {
-      loadRoomTexture(targetRoom);
-    }
   };
 
   // Pointer drag controls (Mouse & Touch)
@@ -382,26 +443,24 @@ export default function VirtualTourViewer({
     if (!cameraRef.current) return;
     e.preventDefault();
     fovRef.current += e.deltaY * 0.05;
-    fovRef.current = Math.max(40, Math.min(100, fovRef.current));
+    fovRef.current = Math.max(45, Math.min(95, fovRef.current));
     cameraRef.current.fov = fovRef.current;
     cameraRef.current.updateProjectionMatrix();
   };
 
-  // Zoom buttons
   const handleZoom = (delta: number) => {
     if (!cameraRef.current) return;
-    fovRef.current = Math.max(40, Math.min(100, fovRef.current + delta));
+    fovRef.current = Math.max(45, Math.min(95, fovRef.current + delta));
     cameraRef.current.fov = fovRef.current;
     cameraRef.current.updateProjectionMatrix();
   };
 
-  // Toggle fullscreen
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().then(() => setIsFullscreen(true));
+      containerRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
     } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false));
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
     }
   };
 
@@ -422,26 +481,11 @@ export default function VirtualTourViewer({
         className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
       />
 
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-3 z-30 transition-opacity">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-            <RotateCw className="w-6 h-6 animate-spin" />
-          </div>
-          <span className="text-xs font-bold text-white tracking-wide">
-            در حال بارگذاری تور مجازی ۳۶۰° ({currentRoom.name})...
-          </span>
-          <span className="text-[11px] text-slate-400">
-            پردازش رندرهای کروی با شتاب‌دهنده گرافیکی WebGL
-          </span>
-        </div>
-      )}
-
       {/* Top Header Bar */}
       <div className="absolute top-4 right-4 left-4 flex items-center justify-between pointer-events-none z-20">
         <div className="flex items-center gap-2 pointer-events-auto">
           {/* Room Pill */}
-          <div className="bg-slate-950/80 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-slate-800 shadow-xl flex items-center gap-2">
+          <div className="bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-slate-800 shadow-xl flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-xs font-bold text-white">{currentRoom.name}</span>
             <span className="text-slate-600">|</span>
@@ -450,7 +494,7 @@ export default function VirtualTourViewer({
 
           {/* Compass Orientation */}
           <div
-            className="bg-slate-950/80 backdrop-blur-md px-2.5 py-1.5 rounded-2xl border border-slate-800 shadow-xl flex items-center gap-1.5 text-slate-300 text-xs font-mono"
+            className="bg-slate-950/85 backdrop-blur-md px-2.5 py-1.5 rounded-2xl border border-slate-800 shadow-xl flex items-center gap-1.5 text-slate-300 text-xs font-mono"
             title="زاویه دید فعلی در ملک"
           >
             <Compass
@@ -466,7 +510,7 @@ export default function VirtualTourViewer({
           {/* Help Button */}
           <button
             onClick={() => setShowHelp(!showHelp)}
-            className="p-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors backdrop-blur-md shadow-lg"
+            className="p-2 rounded-xl bg-slate-950/85 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors backdrop-blur-md shadow-lg"
             title="راهنمای کار با تور مجازی"
           >
             <HelpCircle className="w-4 h-4 text-amber-400" />
@@ -478,7 +522,7 @@ export default function VirtualTourViewer({
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold backdrop-blur-md transition-all shadow-lg ${
               autoRotate
                 ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
-                : "bg-slate-950/80 border-slate-800 text-slate-400 hover:text-white"
+                : "bg-slate-950/85 border-slate-800 text-slate-400 hover:text-white"
             }`}
             title="چرخش خودکار ملایم"
           >
@@ -487,7 +531,7 @@ export default function VirtualTourViewer({
           </button>
 
           {/* Zoom Buttons */}
-          <div className="hidden sm:flex items-center bg-slate-950/80 backdrop-blur-md rounded-xl border border-slate-800 p-0.5">
+          <div className="hidden sm:flex items-center bg-slate-950/85 backdrop-blur-md rounded-xl border border-slate-800 p-0.5">
             <button
               onClick={() => handleZoom(-10)}
               className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white"
@@ -507,7 +551,7 @@ export default function VirtualTourViewer({
           {/* Fullscreen Button */}
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors backdrop-blur-md shadow-lg"
+            className="p-2 rounded-xl bg-slate-950/85 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors backdrop-blur-md shadow-lg"
             title={isFullscreen ? "خروج از تمام‌صفحه" : "حالت تمام‌صفحه"}
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -686,7 +730,7 @@ export default function VirtualTourViewer({
 
         {/* Brand Watermark Badge */}
         <div className="hidden lg:flex items-center gap-1.5 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800 text-[11px] font-medium text-slate-400 pointer-events-auto shrink-0 shadow-lg">
-          <Eye className="w-3.5 h-3.5 text-amber-400" />
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span>تور ۳ بعدی هوشمند «یه خونه»</span>
         </div>
       </div>

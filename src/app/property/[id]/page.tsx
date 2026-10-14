@@ -66,7 +66,7 @@ export default function PropertyDetailPage() {
     {
       id: "living-room",
       name: "سالن پذیرایی و نشیمن",
-      panoramaUrl: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/2294472375_24a3b8ef46_o.jpg",
+      panoramaUrl: "",
       description: `${property.title} - سالن نورگیر اصلی`,
       hotspots: [
         {
