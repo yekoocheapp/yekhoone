@@ -24,7 +24,8 @@ import {
   Camera,
   Ruler,
   ShieldCheck,
-  Check
+  Check,
+  Box
 } from "lucide-react";
 
 interface Tehran3DMapProps {
@@ -35,11 +36,12 @@ interface Tehran3DMapProps {
   onDistrictChange?: (districtId: string) => void;
   buildings?: TehranBuilding[];
   userRole?: "home_seeker" | "seller_agent";
+  onOpen3DFront?: () => void;
 }
 
-// Dark architectural map styles matching site dark palette (#020617 / slate-950)
+// Colorful "Bright Darkmode" architectural styles matching site dark palette
 const MAP_STYLES = {
-  dark: "https://tiles.openfreemap.org/styles/dark",
+  brightDark: "/styles/bright-dark-style.json",
   cartoDark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
   positron: "https://tiles.openfreemap.org/styles/positron"
 };
@@ -51,12 +53,13 @@ export default function Tehran3DMap({
   activeDistrictId,
   onDistrictChange,
   buildings = TEHRAN_BUILDINGS,
-  userRole = "home_seeker"
+  userRole = "home_seeker",
+  onOpen3DFront
 }: Tehran3DMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
-  const [styleMode, setStyleMode] = useState<"dark" | "cartoDark" | "positron">("dark");
+  const [styleMode, setStyleMode] = useState<"brightDark" | "cartoDark" | "positron">("brightDark");
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const [compassBearing, setCompassBearing] = useState<number>(0);
   const [isStreetLevel, setIsStreetLevel] = useState<boolean>(false);
@@ -64,7 +67,7 @@ export default function Tehran3DMap({
 
   // Setup 2D Cadastral Footprints & 3D Extrusion on MapLibre
   const configureBuildingLayers = useCallback((map: maplibregl.Map) => {
-    // If openmaptiles or carto building layer exists, style it in sleek dark cadastre slate
+    // 1. Style 2D Cadastral building layer with crisp, bright slate boundaries
     if (map.getLayer("building")) {
       try {
         map.setPaintProperty("building", "fill-color", [
@@ -77,13 +80,13 @@ export default function Tehran3DMap({
           "#334155"
         ]);
         map.setPaintProperty("building", "fill-outline-color", "#64748b");
-        map.setPaintProperty("building", "fill-opacity", 0.9);
+        map.setPaintProperty("building", "fill-opacity", 0.92);
       } catch (e) {
         console.warn("Could not set custom building paint:", e);
       }
     }
 
-    // Add 3D Extruded Buildings Layer when descending to street level
+    // 2. Add 3D Extruded Buildings Layer across Tehran (active from zoom 14.5+)
     if (map.getSource("openmaptiles") && !map.getLayer("3d-buildings-extrusion")) {
       const layers = map.getStyle().layers;
       let labelLayerId: string | undefined;
@@ -103,40 +106,40 @@ export default function Tehran3DMap({
             source: "openmaptiles",
             "source-layer": "building",
             type: "fill-extrusion",
-            minzoom: 16.5,
+            minzoom: 14.5,
             paint: {
               "fill-extrusion-color": [
                 "interpolate",
                 ["linear"],
                 ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 4], 3.2], 12],
                 0,
-                "#0f172a",
-                15,
                 "#1e293b",
-                30,
+                15,
                 "#334155",
+                30,
+                "#475569",
                 60,
-                "#475569"
+                "#64748b"
               ],
               "fill-extrusion-height": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                16.5,
+                14.5,
                 0,
-                17.2,
-                ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 4], 3.2], 12]
+                15.2,
+                ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 4], 3.2], 14]
               ],
               "fill-extrusion-base": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                16.5,
+                14.5,
                 0,
-                17.2,
+                15.2,
                 ["coalesce", ["get", "render_min_height"], 0]
               ],
-              "fill-extrusion-opacity": 0.92
+              "fill-extrusion-opacity": 0.95
             }
           },
           labelLayerId
@@ -151,9 +154,13 @@ export default function Tehran3DMap({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
+    let styleUrl = MAP_STYLES[styleMode];
     if (typeof window !== "undefined") {
       const origin = window.location.origin;
       const workerUrl = `${origin}/maplibre-gl-worker.js`;
+      if (styleUrl.startsWith("/")) {
+        styleUrl = `${origin}${styleUrl}`;
+      }
       try {
         maplibregl.setWorkerUrl(workerUrl);
       } catch (e) {
@@ -172,7 +179,7 @@ export default function Tehran3DMap({
     // 2D FIRST: pitch: 0, bearing: 0, zoom: 15.5
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: MAP_STYLES[styleMode],
+      style: styleUrl,
       center: [51.3734, 35.7876], // Sa'adat Abad / Tehran
       zoom: 15.5,
       pitch: 0, // Strictly 2D top-down initially
@@ -338,11 +345,11 @@ export default function Tehran3DMap({
 
       const badgeColor =
         hasRent && hasSale
-          ? "bg-purple-500 text-white border-purple-300"
+          ? "bg-purple-500 text-white border-purple-300 shadow-purple-500/30"
           : hasRent
-          ? "bg-emerald-500 text-slate-950 border-emerald-300"
+          ? "bg-emerald-500 text-slate-950 border-emerald-300 shadow-emerald-500/30 font-black"
           : hasSale
-          ? "bg-amber-500 text-slate-950 border-amber-300"
+          ? "bg-amber-500 text-slate-950 border-amber-300 shadow-amber-500/30 font-black"
           : "bg-slate-800 text-slate-300 border-slate-700";
 
       let priceLabel = "";
@@ -367,7 +374,7 @@ export default function Tehran3DMap({
 
           <!-- Pin Stem & Cadastral Dot -->
           <div class="w-2.5 h-2.5 rotate-45 -mt-1 shadow-md ${badgeColor}"></div>
-          <div class="w-2 h-2 rounded-full ${isSelected ? "bg-amber-400 ring-4 ring-amber-400/40" : "bg-amber-400"} mt-0.5 shadow-lg"></div>
+          <div class="w-2.5 h-2.5 rounded-full ${isSelected ? "bg-amber-400 ring-4 ring-amber-400/50 scale-125" : "bg-amber-400"} mt-0.5 shadow-lg"></div>
         </div>
       `;
 
@@ -423,10 +430,14 @@ export default function Tehran3DMap({
   }, [activeDistrictId]);
 
   // Style change handler
-  const handleStyleChange = (mode: "dark" | "cartoDark" | "positron") => {
+  const handleStyleChange = (mode: "brightDark" | "cartoDark" | "positron") => {
     if (!mapRef.current) return;
     setStyleMode(mode);
-    mapRef.current.setStyle(MAP_STYLES[mode]);
+    let target = MAP_STYLES[mode];
+    if (typeof window !== "undefined" && target.startsWith("/")) {
+      target = `${window.location.origin}${target}`;
+    }
+    mapRef.current.setStyle(target);
     mapRef.current.once("style.load", () => {
       if (mapRef.current) {
         configureBuildingLayers(mapRef.current);
@@ -483,6 +494,8 @@ export default function Tehran3DMap({
     }
   };
 
+  const selectedBuilding = buildings.find((b) => b.id === selectedBuildingId);
+
   return (
     <div
       ref={mapContainerRef}
@@ -528,18 +541,18 @@ export default function Tehran3DMap({
           )}
         </button>
 
-        {/* Dark Theme Selector */}
+        {/* Theme Selector (Bright Darkmode Default) */}
         <div className="hidden sm:flex bg-slate-950/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl pointer-events-auto">
           <button
-            onClick={() => handleStyleChange("dark")}
+            onClick={() => handleStyleChange("brightDark")}
             className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              styleMode === "dark"
+              styleMode === "brightDark"
                 ? "bg-amber-500 text-slate-950 shadow-md font-black"
                 : "text-slate-400 hover:text-white"
             }`}
-            title="نقشه تیره شهری مطابق تم سایت"
+            title="نقشه دارک‌مود شاد و رنگی با خیابان‌های درخشان و فضای سبز"
           >
-            دارک شهری
+            دارک‌مود درخشان
           </button>
           <button
             onClick={() => handleStyleChange("cartoDark")}
@@ -596,6 +609,22 @@ export default function Tehran3DMap({
         </button>
       </div>
 
+      {/* Prominent Floating Pill: "مشاهده نمای ۳ بعدی روبروی ساختمان" */}
+      {selectedBuilding && onOpen3DFront && (
+        <div className="absolute top-20 inset-x-0 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-4">
+          <button
+            onClick={onOpen3DFront}
+            className="pointer-events-auto flex items-center gap-2.5 px-4 sm:px-6 py-2.5 rounded-full bg-gradient-to-l from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm shadow-2xl shadow-amber-500/30 transition-all hover:scale-105 border border-amber-300/40"
+          >
+            <Box className="w-4 h-4 animate-bounce" />
+            <span>مشاهده نمای ۳ بعدی روبروی ساختمان: {selectedBuilding.name}</span>
+            <span className="text-xs bg-slate-950 text-amber-400 px-2 py-0.5 rounded-full">
+              {selectedBuilding.dimensions?.width || 18}م بر
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* Bottom Map Legend */}
       <div className="absolute bottom-4 right-4 z-20 pointer-events-none hidden md:flex items-center gap-3 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 text-[11px] shadow-xl">
         <div className="flex items-center gap-1.5">
@@ -612,7 +641,7 @@ export default function Tehran3DMap({
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-sm bg-slate-700 border border-slate-600" />
-          <span className="text-slate-400">پلاک‌های کاداستر شهری</span>
+          <span className="text-slate-400">ساختمان‌های ۳ بعدی تهران</span>
         </div>
       </div>
 
@@ -622,7 +651,7 @@ export default function Tehran3DMap({
         <span>
           {userRole === "seller_agent"
             ? "روی هر ساختمانی کلیک کنید تا دوربین به دید خیابانی برود و بتوانید بر ساختمان و واحدها را قیمت‌گذاری کنید"
-            : "روی هر پلاک کلیک کنید تا دوربین به دید خیابانی برود و نمای معمارانه بر ساختمان و واحدها باز شود"}
+            : "روی هر پلاک کلیک کنید تا دوربین به دید خیابانی برود و نمای ۳ بعدی روبروی ساختمان باز شود"}
         </span>
       </div>
     </div>

@@ -35,7 +35,8 @@ import {
   Phone,
   Ruler,
   Edit3,
-  Lock
+  Lock,
+  Box
 } from "lucide-react";
 
 interface BuildingInspectorDrawerProps {
@@ -47,6 +48,7 @@ interface BuildingInspectorDrawerProps {
   onEditBuilding?: () => void;
   onEditUnit?: (unit: BuildingUnit, floor: BuildingFloor) => void;
   onRequestAgentMode?: () => void;
+  onOpen3DFront?: () => void;
 }
 
 export default function BuildingInspectorDrawer({
@@ -57,7 +59,8 @@ export default function BuildingInspectorDrawer({
   userRole = "home_seeker",
   onEditBuilding,
   onEditUnit,
-  onRequestAgentMode
+  onRequestAgentMode,
+  onOpen3DFront
 }: BuildingInspectorDrawerProps) {
   const [selectedFloorNum, setSelectedFloorNum] = useState<number | "all">("all");
   const [activeTab, setActiveTab] = useState<"facade" | "list">("facade");
@@ -145,20 +148,29 @@ export default function BuildingInspectorDrawer({
           </button>
         </div>
 
-        {/* Action Button for Landlord/Agent */}
-        {userRole === "seller_agent" ? (
-          <button
-            onClick={onEditBuilding}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-colors"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>ویرایش مشخصات</span>
-          </button>
-        ) : (
-          <span className="text-[11px] text-slate-500 hidden sm:inline">
-            دید خیابانی
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {onOpen3DFront && (
+            <button
+              onClick={onOpen3DFront}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all hover:scale-105"
+              title="مشاهده نمای ۳ بعدی روبروی ساختمان (بر اصلی)"
+            >
+              <Box className="w-3.5 h-3.5" />
+              <span>دید ۳ بعدی نما</span>
+            </button>
+          )}
+
+          {/* Action Button for Landlord/Agent */}
+          {userRole === "seller_agent" && (
+            <button
+              onClick={onEditBuilding}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-colors"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>ویرایش ابعاد</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ==================== CONTENT BODY ==================== */}
