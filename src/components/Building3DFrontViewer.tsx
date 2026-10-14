@@ -5,8 +5,7 @@ import * as THREE from "three";
 import {
   TehranBuilding,
   BuildingFloor,
-  BuildingUnit,
-  getActiveUnitsInBuilding
+  BuildingUnit
 } from "@/data/buildings";
 import { formatPersianNumber, initialProperties } from "@/data/properties";
 import Link from "next/link";
@@ -21,12 +20,11 @@ import {
   Building2,
   Sparkles,
   Layers,
-  DoorOpen,
-  Car,
-  Maximize2,
-  Minimize2,
-  Check,
-  Info
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Key,
+  ShieldCheck
 } from "lucide-react";
 
 interface Building3DFrontViewerProps {
@@ -58,8 +56,8 @@ export default function Building3DFrontViewer({
     unit: BuildingUnit;
     floor: BuildingFloor;
   } | null>(null);
-  const [cameraView, setCameraView] = useState<"street" | "elevation" | "perspective" | "penthouse">("street");
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [cameraView, setCameraView] = useState<"elevation" | "street" | "perspective" | "penthouse">("elevation");
+  const [unitsPanelOpen, setUnitsPanelOpen] = useState<boolean>(false);
 
   // Building geometry metrics
   const frontageWidth = building.dimensions?.width || 18;
@@ -67,6 +65,10 @@ export default function Building3DFrontViewer({
   const floorHeight = 3.6;
   const buildingHeight = numFloors * floorHeight + 3.8; // Including ground floor lobby & parapet
   const buildingDepth = 14;
+
+  const targetCenterY = buildingHeight * 0.48;
+  const maxDim = Math.max(frontageWidth, buildingHeight);
+  const fitDistance = Math.max(30, maxDim * 1.65);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -77,17 +79,15 @@ export default function Building3DFrontViewer({
 
     // 1. Scene setup with soft atmospheric fog
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x090e1a);
-    scene.fog = new THREE.FogExp2(0x090e1a, 0.009);
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.007);
     sceneRef.current = scene;
 
-    // 2. Camera setup
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 200);
+    // 2. Camera setup with framed distance
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 300);
     cameraRef.current = camera;
-
-    // Initial position: Street level looking up at the front facade
-    camera.position.set(0, 3, frontageWidth * 1.6);
-    camera.lookAt(0, buildingHeight * 0.45, 0);
+    camera.position.set(0, targetCenterY, fitDistance);
+    camera.lookAt(0, targetCenterY, 0);
 
     // 3. Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -99,38 +99,38 @@ export default function Building3DFrontViewer({
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. Lighting: Golden hour / bright dark luxury architectural lighting
-    const ambientLight = new THREE.AmbientLight(0x38bdf8, 0.7); // Cyan sky ambient
+    // 4. Lighting: Architectural golden hour with cyan sky ambient
+    const ambientLight = new THREE.AmbientLight(0x7dd3fc, 0.8);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfef08a, 1.8); // Warm sun
-    sunLight.position.set(25, 45, 30);
+    const sunLight = new THREE.DirectionalLight(0xfef08a, 1.9);
+    sunLight.position.set(30, 50, 35);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
     sunLight.shadow.bias = -0.0005;
     scene.add(sunLight);
 
-    const streetLight = new THREE.PointLight(0xf59e0b, 1.2, 35); // Warm street glow
-    streetLight.position.set(0, 4, 12);
+    const streetLight = new THREE.PointLight(0xf59e0b, 1.4, 45);
+    streetLight.position.set(0, 4, 15);
     scene.add(streetLight);
 
-    const facadeUplight = new THREE.SpotLight(0x38bdf8, 1.4, 40, Math.PI / 4, 0.4);
-    facadeUplight.position.set(0, 0.5, 8);
-    facadeUplight.target.position.set(0, buildingHeight * 0.5, 0);
+    const facadeUplight = new THREE.SpotLight(0x38bdf8, 1.6, 50, Math.PI / 4, 0.4);
+    facadeUplight.position.set(0, 0.5, 12);
+    facadeUplight.target.position.set(0, targetCenterY, 0);
     scene.add(facadeUplight);
     scene.add(facadeUplight.target);
 
     // 5. Materials
     const asphaltMaterial = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
+      color: 0x1e293b,
       roughness: 0.9,
       metalness: 0.1
     });
 
     const sidewalkMaterial = new THREE.MeshStandardMaterial({
-      color: 0x334155,
-      roughness: 0.75,
+      color: 0x475569,
+      roughness: 0.7,
       metalness: 0.2
     });
 
@@ -139,15 +139,14 @@ export default function Building3DFrontViewer({
       roughness: 0.6
     });
 
-    // Travertine marble / Luxury dark architectural facade material
     const facadeMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
+      color: 0x243044,
       roughness: 0.35,
       metalness: 0.25
     });
 
     const stonePillarsMaterial = new THREE.MeshStandardMaterial({
-      color: 0x475569,
+      color: 0x64748b,
       roughness: 0.4,
       metalness: 0.3
     });
@@ -161,54 +160,50 @@ export default function Building3DFrontViewer({
       metalness: 0.8,
       ior: 1.5,
       emissive: 0x0284c7,
-      emissiveIntensity: 0.15
+      emissiveIntensity: 0.18
     });
 
     const warmGlassMaterial = new THREE.MeshStandardMaterial({
       color: 0xfef08a,
       emissive: 0xf59e0b,
-      emissiveIntensity: 0.6,
+      emissiveIntensity: 0.7,
       roughness: 0.2
     });
 
     const bronzeMetalMaterial = new THREE.MeshStandardMaterial({
       color: 0xd97706,
       roughness: 0.3,
-      metalness: 0.8
+      metalness: 0.85
     });
 
     const greeneryMaterial = new THREE.MeshStandardMaterial({
-      color: 0x059669,
+      color: 0x10b981,
       roughness: 0.8
     });
 
     // 6. Ground & Street Setup
-    // Asphalt Street
-    const streetGeo = new THREE.PlaneGeometry(80, 50);
+    const streetGeo = new THREE.PlaneGeometry(120, 70);
     const streetMesh = new THREE.Mesh(streetGeo, asphaltMaterial);
     streetMesh.rotation.x = -Math.PI / 2;
-    streetMesh.position.set(0, 0, 25);
+    streetMesh.position.set(0, 0, 35);
     streetMesh.receiveShadow = true;
     scene.add(streetMesh);
 
-    // Sidewalk
-    const sidewalkGeo = new THREE.BoxGeometry(frontageWidth + 12, 0.35, 8);
+    const sidewalkGeo = new THREE.BoxGeometry(frontageWidth + 16, 0.35, 10);
     const sidewalkMesh = new THREE.Mesh(sidewalkGeo, sidewalkMaterial);
-    sidewalkMesh.position.set(0, 0.175, 4);
+    sidewalkMesh.position.set(0, 0.175, 5);
     sidewalkMesh.receiveShadow = true;
     scene.add(sidewalkMesh);
 
-    // Sidewalk Curb (Curved yellow/black street border)
-    const curbGeo = new THREE.BoxGeometry(frontageWidth + 12, 0.4, 0.4);
+    const curbGeo = new THREE.BoxGeometry(frontageWidth + 16, 0.4, 0.4);
     const curbMesh = new THREE.Mesh(curbGeo, curbMaterial);
-    curbMesh.position.set(0, 0.2, 7.8);
+    curbMesh.position.set(0, 0.2, 9.8);
     scene.add(curbMesh);
 
-    // Building Group
+    // 7. Building Structure
     const buildingGroup = new THREE.Group();
     scene.add(buildingGroup);
 
-    // Main Building Mass
     const mainMassGeo = new THREE.BoxGeometry(frontageWidth, buildingHeight, buildingDepth);
     const mainMassMesh = new THREE.Mesh(mainMassGeo, facadeMaterial);
     mainMassMesh.position.set(0, buildingHeight / 2, -buildingDepth / 2);
@@ -216,7 +211,6 @@ export default function Building3DFrontViewer({
     mainMassMesh.receiveShadow = true;
     buildingGroup.add(mainMassMesh);
 
-    // Architectural Side Pillars (Frame of the Front Elevation)
     const pillarWidth = 0.9;
     const pillarDepth = 0.6;
     const leftPillarGeo = new THREE.BoxGeometry(pillarWidth, buildingHeight, pillarDepth);
@@ -229,10 +223,8 @@ export default function Building3DFrontViewer({
     rightPillar.position.set(frontageWidth / 2 - pillarWidth / 2, buildingHeight / 2, 0.3);
     buildingGroup.add(rightPillar);
 
-    // 7. Ground Floor: Entrance Lobby & Garage Gate
+    // Ground Floor: Lobby & Garage
     const lobbyHeight = 3.6;
-
-    // Double Glass Entrance Doors
     const doorFrameGeo = new THREE.BoxGeometry(3.4, 2.7, 0.25);
     const doorFrame = new THREE.Mesh(doorFrameGeo, bronzeMetalMaterial);
     doorFrame.position.set(-frontageWidth * 0.25, 1.35, 0.15);
@@ -243,101 +235,79 @@ export default function Building3DFrontViewer({
     glassDoor.position.set(-frontageWidth * 0.25, 1.35, 0.28);
     buildingGroup.add(glassDoor);
 
-    // Lobby Awning / Canopy
     const canopyGeo = new THREE.BoxGeometry(4.2, 0.2, 1.8);
     const canopy = new THREE.Mesh(canopyGeo, stonePillarsMaterial);
     canopy.position.set(-frontageWidth * 0.25, 2.85, 0.9);
     canopy.castShadow = true;
     buildingGroup.add(canopy);
 
-    // Automated Roll-Up Garage Gate
     const garageGateGeo = new THREE.BoxGeometry(4.6, 2.5, 0.15);
-    const garageGateMat = new THREE.MeshStandardMaterial({
-      color: 0x334155,
-      metalness: 0.85,
-      roughness: 0.3
-    });
+    const garageGateMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.85, roughness: 0.3 });
     const garageGate = new THREE.Mesh(garageGateGeo, garageGateMat);
     garageGate.position.set(frontageWidth * 0.25, 1.25, 0.1);
     buildingGroup.add(garageGate);
 
-    // Garage Warning LED Lamp
-    const garageLampGeo = new THREE.SphereGeometry(0.12, 16, 16);
-    const garageLampMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
-    const garageLamp = new THREE.Mesh(garageLampGeo, garageLampMat);
-    garageLamp.position.set(frontageWidth * 0.25, 2.7, 0.25);
-    buildingGroup.add(garageLamp);
-
-    // 8. Stack of Residential Floors (Floor 1 to Top Floor)
+    // Stack of Residential Floors
     const floorSlabGeo = new THREE.BoxGeometry(frontageWidth + 0.4, 0.35, 1.2);
 
     for (let f = 1; f <= numFloors; f++) {
       const floorY = lobbyHeight + (f - 1) * floorHeight;
-
-      // Floor Cornice / Slab Trim
       const slabMesh = new THREE.Mesh(floorSlabGeo, stonePillarsMaterial);
       slabMesh.position.set(0, floorY, 0.5);
       slabMesh.castShadow = true;
       slabMesh.receiveShadow = true;
       buildingGroup.add(slabMesh);
 
-      // Balconies on the front facade
       const balconyWidth = (frontageWidth - 3) / 2;
       const balconyDepth = 1.4;
       const balconyHeight = 1.05;
 
-      // Left Unit Balcony
+      // Left Unit
       const leftBalconyBaseGeo = new THREE.BoxGeometry(balconyWidth, 0.25, balconyDepth);
       const leftBalconyBase = new THREE.Mesh(leftBalconyBaseGeo, stonePillarsMaterial);
       leftBalconyBase.position.set(-frontageWidth * 0.25, floorY + 0.15, balconyDepth / 2);
       leftBalconyBase.castShadow = true;
       buildingGroup.add(leftBalconyBase);
 
-      // Left Balcony Glass Railing
       const leftRailingGeo = new THREE.BoxGeometry(balconyWidth, balconyHeight, 0.08);
       const leftRailing = new THREE.Mesh(leftRailingGeo, glassMaterial);
       leftRailing.position.set(-frontageWidth * 0.25, floorY + 0.15 + balconyHeight / 2, balconyDepth);
       buildingGroup.add(leftRailing);
 
-      // Left Panoramic Windows
       const leftWindowGeo = new THREE.PlaneGeometry(balconyWidth - 0.4, floorHeight - 0.9);
       const isLeftUnitLit = (f + 1) % 2 === 0;
       const leftWindow = new THREE.Mesh(leftWindowGeo, isLeftUnitLit ? warmGlassMaterial : glassMaterial);
       leftWindow.position.set(-frontageWidth * 0.25, floorY + floorHeight * 0.5, 0.05);
       buildingGroup.add(leftWindow);
 
-      // Right Unit Balcony
+      // Right Unit
       const rightBalconyBase = new THREE.Mesh(leftBalconyBaseGeo, stonePillarsMaterial);
       rightBalconyBase.position.set(frontageWidth * 0.25, floorY + 0.15, balconyDepth / 2);
       rightBalconyBase.castShadow = true;
       buildingGroup.add(rightBalconyBase);
 
-      // Right Balcony Glass Railing
       const rightRailing = new THREE.Mesh(leftRailingGeo, glassMaterial);
       rightRailing.position.set(frontageWidth * 0.25, floorY + 0.15 + balconyHeight / 2, balconyDepth);
       buildingGroup.add(rightRailing);
 
-      // Right Panoramic Windows
       const isRightUnitLit = f % 2 === 0;
       const rightWindow = new THREE.Mesh(leftWindowGeo, isRightUnitLit ? warmGlassMaterial : glassMaterial);
       rightWindow.position.set(frontageWidth * 0.25, floorY + floorHeight * 0.5, 0.05);
       buildingGroup.add(rightWindow);
     }
 
-    // 9. Rooftop Parapet, Penthouse Pergola & Roof Garden
+    // Rooftop Parapet
     const roofY = lobbyHeight + numFloors * floorHeight;
     const parapetGeo = new THREE.BoxGeometry(frontageWidth + 0.6, 1.2, 0.4);
     const parapetMesh = new THREE.Mesh(parapetGeo, stonePillarsMaterial);
     parapetMesh.position.set(0, roofY + 0.6, 0.2);
     buildingGroup.add(parapetMesh);
 
-    // Elevator Machine Room Penthouse
     const elevatorRoomGeo = new THREE.BoxGeometry(5, 3.2, 5);
     const elevatorRoom = new THREE.Mesh(elevatorRoomGeo, facadeMaterial);
     elevatorRoom.position.set(0, roofY + 1.6, -3);
     buildingGroup.add(elevatorRoom);
 
-    // Green Roof Garden Planters if building has roof garden
     if (building.amenities?.hasRoofGarden) {
       const planterGeo = new THREE.BoxGeometry(frontageWidth * 0.7, 0.6, 0.8);
       const planter = new THREE.Mesh(planterGeo, greeneryMaterial);
@@ -345,26 +315,26 @@ export default function Building3DFrontViewer({
       buildingGroup.add(planter);
     }
 
-    // 10. Street Trees & Planters
-    for (const xPos of [-frontageWidth / 2 - 2.5, frontageWidth / 2 + 2.5]) {
-      const trunkGeo = new THREE.CylinderGeometry(0.18, 0.25, 3, 8);
+    // Street Trees
+    for (const xPos of [-frontageWidth / 2 - 3, frontageWidth / 2 + 3]) {
+      const trunkGeo = new THREE.CylinderGeometry(0.18, 0.25, 3.5, 8);
       const trunkMat = new THREE.MeshStandardMaterial({ color: 0x451a03 });
       const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-      trunk.position.set(xPos, 1.5, 5);
+      trunk.position.set(xPos, 1.75, 6);
       scene.add(trunk);
 
-      const leavesGeo = new THREE.DodecahedronGeometry(1.6);
+      const leavesGeo = new THREE.DodecahedronGeometry(2);
       const leaves = new THREE.Mesh(leavesGeo, greeneryMaterial);
-      leaves.position.set(xPos, 3.8, 5);
+      leaves.position.set(xPos, 4.5, 6);
       scene.add(leaves);
     }
 
-    // 11. Mouse Orbit & Interaction Controls
+    // Mouse & Touch Controls
     let isDragging = false;
     let prevMouseX = 0;
     let prevMouseY = 0;
     let targetRotY = 0;
-    let targetPitchY = 3;
+    let targetPitchY = targetCenterY;
 
     const onMouseDown = (e: MouseEvent) => {
       isDragging = true;
@@ -379,8 +349,8 @@ export default function Building3DFrontViewer({
       prevMouseX = e.clientX;
       prevMouseY = e.clientY;
 
-      targetRotY += dx * 0.006;
-      targetPitchY = Math.max(1.5, Math.min(buildingHeight * 0.9, targetPitchY - dy * 0.04));
+      targetRotY += dx * 0.005;
+      targetPitchY = Math.max(2, Math.min(buildingHeight * 0.95, targetPitchY - dy * 0.04));
     };
 
     const onMouseUp = () => {
@@ -389,8 +359,8 @@ export default function Building3DFrontViewer({
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const currentDist = camera.position.distanceTo(new THREE.Vector3(0, buildingHeight * 0.45, 0));
-      const newDist = Math.max(12, Math.min(55, currentDist + e.deltaY * 0.03));
+      const currentDist = camera.position.distanceTo(new THREE.Vector3(0, targetCenterY, 0));
+      const newDist = Math.max(16, Math.min(80, currentDist + e.deltaY * 0.04));
       const dir = camera.position.clone().sub(new THREE.Vector3(0, targetPitchY, 0)).normalize();
       camera.position.copy(dir.multiplyScalar(newDist).add(new THREE.Vector3(0, targetPitchY, 0)));
     };
@@ -401,7 +371,7 @@ export default function Building3DFrontViewer({
     window.addEventListener("mouseup", onMouseUp);
     dom.addEventListener("wheel", onWheel, { passive: false });
 
-    // Touch support for mobile
+    // Touch support
     let prevTouchX = 0;
     let prevTouchY = 0;
     const onTouchStart = (e: TouchEvent) => {
@@ -417,8 +387,8 @@ export default function Building3DFrontViewer({
       const dy = e.touches[0].clientY - prevTouchY;
       prevTouchX = e.touches[0].clientX;
       prevTouchY = e.touches[0].clientY;
-      targetRotY += dx * 0.008;
-      targetPitchY = Math.max(1.5, Math.min(buildingHeight * 0.9, targetPitchY - dy * 0.05));
+      targetRotY += dx * 0.006;
+      targetPitchY = Math.max(2, Math.min(buildingHeight * 0.95, targetPitchY - dy * 0.05));
     };
     const onTouchEnd = () => {
       isDragging = false;
@@ -427,24 +397,22 @@ export default function Building3DFrontViewer({
     dom.addEventListener("touchmove", onTouchMove);
     dom.addEventListener("touchend", onTouchEnd);
 
-    // 12. Animation Loop
+    // Animation Loop
     let angle = 0;
     const animate = () => {
       reqIdRef.current = requestAnimationFrame(animate);
 
-      // Smooth camera interpolation
       angle += (targetRotY - angle) * 0.08;
-      const radius = frontageWidth * 1.55;
-      camera.position.x = Math.sin(angle) * radius;
-      camera.position.z = Math.cos(angle) * radius;
+      const currentRadius = fitDistance;
+      camera.position.x = Math.sin(angle) * currentRadius;
+      camera.position.z = Math.cos(angle) * currentRadius;
       camera.position.y += (targetPitchY - camera.position.y) * 0.08;
-      camera.lookAt(0, buildingHeight * 0.45, 0);
+      camera.lookAt(0, targetCenterY, 0);
 
       renderer.render(scene, camera);
     };
     animate();
 
-    // Resize handler
     const handleResize = () => {
       if (!container || !rendererRef.current || !cameraRef.current) return;
       const newW = container.clientWidth;
@@ -470,262 +438,297 @@ export default function Building3DFrontViewer({
         container.removeChild(renderer.domElement);
       }
     };
-  }, [building, frontageWidth, numFloors, buildingHeight]);
+  }, [building, frontageWidth, numFloors, buildingHeight, fitDistance, targetCenterY]);
 
-  // Set camera view angles
-  const applyCameraPreset = (view: "street" | "elevation" | "perspective" | "penthouse") => {
+  // Set camera view angles with proper framing
+  const applyCameraPreset = (view: "elevation" | "street" | "perspective" | "penthouse") => {
     setCameraView(view);
     const camera = cameraRef.current;
     if (!camera) return;
 
-    if (view === "street") {
-      camera.position.set(0, 2.5, frontageWidth * 1.6);
-      camera.lookAt(0, buildingHeight * 0.45, 0);
-    } else if (view === "elevation") {
-      camera.position.set(0, buildingHeight * 0.5, frontageWidth * 1.8);
-      camera.lookAt(0, buildingHeight * 0.5, 0);
+    if (view === "elevation") {
+      // Direct front elevation view framed cleanly
+      camera.position.set(0, targetCenterY, fitDistance);
+      camera.lookAt(0, targetCenterY, 0);
+    } else if (view === "street") {
+      // Pedestrian eye level across the street
+      camera.position.set(0, 2.2, fitDistance * 0.85);
+      camera.lookAt(0, targetCenterY * 0.8, 0);
     } else if (view === "perspective") {
-      camera.position.set(frontageWidth * 1.2, buildingHeight * 0.6, frontageWidth * 1.4);
-      camera.lookAt(0, buildingHeight * 0.4, 0);
+      // Dynamic 3/4 isometric perspective
+      camera.position.set(frontageWidth * 0.9, targetCenterY * 1.2, fitDistance * 0.9);
+      camera.lookAt(0, targetCenterY, 0);
     } else if (view === "penthouse") {
-      camera.position.set(0, buildingHeight * 0.95, frontageWidth * 1.1);
+      // Elevated penthouse & terrace angle
+      camera.position.set(0, buildingHeight * 0.95, fitDistance * 0.7);
       camera.lookAt(0, buildingHeight * 0.85, 0);
     }
   };
 
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
-
   return (
-    <div
-      className={`fixed z-40 bg-slate-950 border border-slate-800 shadow-2xl transition-all duration-300 flex flex-col overflow-hidden select-none animate-in fade-in ${
-        isFullscreen
-          ? "inset-0"
-          : "inset-x-2 sm:inset-x-8 bottom-3 sm:bottom-6 top-16 sm:top-20 rounded-3xl"
-      }`}
-    >
-      {/* ==================== 3D HEADER OVERLAY ==================== */}
-      <div className="absolute top-0 inset-x-0 z-30 p-3 sm:p-4 bg-gradient-to-b from-slate-950/95 via-slate-950/70 to-transparent flex items-center justify-between gap-3 pointer-events-none">
-        <div className="flex items-center gap-2.5 pointer-events-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col select-none overflow-hidden animate-in fade-in">
+      {/* ==================== CLEAN TOP NAVIGATION BAR ==================== */}
+      <header className="h-16 px-4 sm:px-6 bg-slate-950/95 border-b border-slate-800 backdrop-blur-xl flex items-center justify-between gap-3 shrink-0 z-30">
+        {/* Right side: Building Title, Plaque & Inline Frontage Badge */}
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
             <Building2 className="w-5 h-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
-                نمای ۳ بعدی روبروی ساختمان (بر اصلی)
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-sm sm:text-base font-extrabold text-white truncate">
+                {building.name}
+              </h1>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-medium">
+                {building.plaque}
               </span>
-              <span className="text-xs text-slate-400 hidden sm:inline">
-                {building.district} • {building.plaque}
+              {/* Inline Frontage Width Pill */}
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-bold flex items-center gap-1">
+                <Ruler className="w-3.5 h-3.5" />
+                <span>بر اصلی: {formatPersianNumber(frontageWidth)} متر</span>
+              </span>
+              <span className="text-[11px] text-slate-400 hidden lg:inline">
+                ({formatPersianNumber(numFloors)} طبقه • ارتفاع: {formatPersianNumber(Math.round(buildingHeight))}م)
               </span>
             </div>
-            <h2 className="text-sm sm:text-base font-black text-white mt-0.5">
-              {building.name}
-            </h2>
           </div>
         </div>
 
-        {/* Camera Preset Angles & Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
-          {/* Street Level View (Eye Level) */}
-          <button
-            onClick={() => applyCameraPreset("street")}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
-              cameraView === "street"
-                ? "bg-amber-500 text-slate-950 font-black shadow-md"
-                : "bg-slate-900/90 text-slate-300 hover:text-white border border-slate-800"
-            }`}
-            title="دید ناظر از پیاده‌رو (ارتفاع ۱.۷ متر)"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">دید از پیاده‌رو</span>
-          </button>
-
-          {/* Orthographic Elevation View */}
+        {/* Center: Camera Preset Switcher */}
+        <div className="hidden md:flex items-center gap-1 p-1 bg-slate-900 rounded-2xl border border-slate-800">
           <button
             onClick={() => applyCameraPreset("elevation")}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
               cameraView === "elevation"
-                ? "bg-amber-500 text-slate-950 font-black shadow-md"
-                : "bg-slate-900/90 text-slate-300 hover:text-white border border-slate-800"
+                ? "bg-amber-500 text-slate-950 shadow-md font-black"
+                : "text-slate-400 hover:text-white"
             }`}
-            title="دید روبروی نمای معمارانه"
           >
             <Camera className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">نمای مستقیم</span>
+            <span>نمای مستقیم</span>
           </button>
-
-          {/* Perspective 3D Orbit */}
+          <button
+            onClick={() => applyCameraPreset("street")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              cameraView === "street"
+                ? "bg-amber-500 text-slate-950 shadow-md font-black"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>دید پیاده‌رو</span>
+          </button>
           <button
             onClick={() => applyCameraPreset("perspective")}
-            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
               cameraView === "perspective"
-                ? "bg-amber-500 text-slate-950 font-black shadow-md"
-                : "bg-slate-900/90 text-slate-300 hover:text-white border border-slate-800"
+                ? "bg-amber-500 text-slate-950 shadow-md font-black"
+                : "text-slate-400 hover:text-white"
             }`}
-            title="دید پرسپکتیو ۳ بعدی و چرخش ۳۶۰ درجه"
           >
             <Layers className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">دید ۳ بعدی</span>
+            <span>دید پرسپکتیو</span>
           </button>
-
-          {/* Fullscreen Toggle */}
           <button
-            onClick={toggleFullscreen}
-            className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors"
-            title={isFullscreen ? "کوچک‌نمایی" : "تمام‌صفحه"}
+            onClick={() => applyCameraPreset("penthouse")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              cameraView === "penthouse"
+                ? "bg-amber-500 text-slate-950 shadow-md font-black"
+                : "text-slate-400 hover:text-white"
+            }`}
           >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>پنت‌هاوس</span>
           </button>
+        </div>
 
-          {/* Close 3D Viewer */}
+        {/* Left side: Role Action & Back to Map Button */}
+        <div className="flex items-center gap-2">
+          {userRole === "seller_agent" && onEditBuilding && (
+            <button
+              onClick={onEditBuilding}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-colors"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>ویرایش ابعاد ساختمان</span>
+            </button>
+          )}
+
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors"
-            title="بازگشت به نقشه"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs transition-all hover:scale-105 shadow-lg"
+            title="خروج از نمای ۳ بعدی و بازگشت به نقشه کاداستر"
           >
-            <X className="w-5 h-5" />
+            <ArrowRight className="w-4 h-4 text-amber-400" />
+            <span>بازگشت به نقشه</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* ==================== 3D CANVAS VIEWPORT ==================== */}
-      <div className="relative flex-1 w-full h-full">
+      {/* ==================== 100% UNOBSTRUCTED 3D VIEWPORT ==================== */}
+      <main className="relative flex-1 w-full h-full overflow-hidden">
+        {/* Three.js Canvas Mount */}
         <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
 
-        {/* Architectural Dimension Ruler Across the 3D Building Front */}
-        <div className="absolute top-16 sm:top-20 inset-x-4 sm:inset-x-12 z-20 pointer-events-none flex flex-col items-center">
-          <div className="w-full max-w-2xl flex items-center justify-between text-xs font-mono font-bold text-amber-300 bg-slate-950/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-amber-500/40 shadow-xl">
-            <div className="flex items-center gap-1.5">
-              <Ruler className="w-3.5 h-3.5 text-amber-400" />
-              <span>عرض بر اصلی رو به خیابان:</span>
-            </div>
-            <span className="text-amber-400 font-black text-sm">
-              ◀─── {formatPersianNumber(frontageWidth)} متر بر ساختمان ───▶
-            </span>
-            <span className="text-slate-300 font-normal hidden sm:inline">
-              ارتفاع: {formatPersianNumber(Math.round(buildingHeight))} متر • {formatPersianNumber(numFloors)} طبقه
-            </span>
+        {/* Mobile Camera Angle Quick Switcher */}
+        <div className="md:hidden absolute top-3 inset-x-3 z-20 flex justify-center pointer-events-none">
+          <div className="flex items-center gap-1 p-1 bg-slate-950/90 backdrop-blur-md rounded-xl border border-slate-800 shadow-xl pointer-events-auto">
+            <button
+              onClick={() => applyCameraPreset("elevation")}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
+                cameraView === "elevation" ? "bg-amber-500 text-slate-950" : "text-slate-300"
+              }`}
+            >
+              مستقیم
+            </button>
+            <button
+              onClick={() => applyCameraPreset("street")}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
+                cameraView === "street" ? "bg-amber-500 text-slate-950" : "text-slate-300"
+              }`}
+            >
+              پیاده‌رو
+            </button>
+            <button
+              onClick={() => applyCameraPreset("perspective")}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
+                cameraView === "perspective" ? "bg-amber-500 text-slate-950" : "text-slate-300"
+              }`}
+            >
+              ۳ بعدی
+            </button>
           </div>
         </div>
 
-        {/* Interactive 3D Floor & Unit Selector Overlay (Floating Sidebar) */}
-        <div className="absolute bottom-4 right-4 sm:right-6 z-20 w-80 max-h-[60%] sm:max-h-[70%] overflow-y-auto bg-slate-950/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-3 shadow-2xl space-y-2 pointer-events-auto">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-            <span className="text-xs font-black text-white flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>واحدهای روی نمای این ساختمان:</span>
-            </span>
-            <span className="text-[10px] text-slate-400">
-              {formatPersianNumber(building.unitsCount)} واحد
-            </span>
-          </div>
+        {/* Hint Pill at bottom-left */}
+        <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-slate-950/80 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-slate-800 text-[11px] text-slate-300 shadow-lg">
+          <RotateCcw className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span>با ماوس یا لمس بچرخانید • کل نمای ساختمان با بر {formatPersianNumber(frontageWidth)} متر در دسترس است</span>
+        </div>
 
-          <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-            {building.floors.map((floor) => (
-              <div key={floor.floorNumber} className="space-y-1">
-                <div className="text-[10px] font-bold text-slate-400 px-1 pt-1 flex items-center justify-between">
-                  <span>{floor.floorLabel}</span>
-                </div>
-                {floor.units.map((unit) => {
-                  const property = unit.propertyId
-                    ? initialProperties.find((p) => p.id === unit.propertyId)
-                    : undefined;
+        {/* ==================== COMPACT HORIZONTAL BOTTOM UNITS DOCK ==================== */}
+        <div className="absolute bottom-4 right-4 sm:right-6 z-20 pointer-events-auto max-w-xl flex flex-col items-end gap-2">
+          {/* Toggle Button */}
+          <button
+            onClick={() => setUnitsPanelOpen(!unitsPanelOpen)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 shadow-2xl backdrop-blur-md transition-all hover:border-amber-500/50"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>واحدهای این ساختمان ({formatPersianNumber(building.unitsCount)} واحد)</span>
+            {unitsPanelOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronUp className="w-4 h-4 text-slate-400" />}
+          </button>
 
-                  const isSelected = selectedUnit?.unit.id === unit.id;
+          {/* Expandable Horizontal Units Tray */}
+          {unitsPanelOpen && (
+            <div className="w-full bg-slate-950/95 backdrop-blur-2xl border border-slate-800 rounded-3xl p-3 shadow-2xl space-y-2 animate-in slide-in-from-bottom-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[11px] text-slate-400">
+                <span>انتخاب واحد جهت مشاهده یا قیمت‌گذاری:</span>
+                <span className="text-amber-400 font-bold">{building.district}</span>
+              </div>
 
-                  return (
-                    <div
-                      key={unit.id}
-                      onClick={() => {
-                        setSelectedUnit({ unit, floor });
-                        if (onSelectUnit) onSelectUnit(unit, floor);
-                      }}
-                      className={`p-2 rounded-xl border text-right cursor-pointer transition-all ${
-                        isSelected
-                          ? "bg-amber-500/20 border-amber-400 ring-2 ring-amber-400/30"
-                          : unit.status === "rent"
-                          ? "bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-500"
-                          : unit.status === "sale"
-                          ? "bg-amber-950/30 border-amber-500/40 hover:border-amber-500"
-                          : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-white truncate">{unit.unitNumber}</span>
+              {/* Horizontal Scrollable Units Cards */}
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                {building.floors.flatMap((fl) =>
+                  fl.units.map((unit) => {
+                    const property = unit.propertyId
+                      ? initialProperties.find((p) => p.id === unit.propertyId)
+                      : undefined;
+
+                    const isSelected = selectedUnit?.unit.id === unit.id;
+
+                    return (
+                      <div
+                        key={unit.id}
+                        onClick={() => {
+                          setSelectedUnit({ unit, floor: fl });
+                          if (onSelectUnit) onSelectUnit(unit, fl);
+                        }}
+                        className={`p-2.5 rounded-2xl border text-right cursor-pointer shrink-0 w-44 transition-all ${
+                          isSelected
+                            ? "bg-amber-500/20 border-amber-400 ring-2 ring-amber-400/40"
+                            : unit.status === "rent"
+                            ? "bg-emerald-950/30 border-emerald-500/40 hover:border-emerald-500"
+                            : unit.status === "sale"
+                            ? "bg-amber-950/30 border-amber-500/40 hover:border-amber-500"
+                            : "bg-slate-900/80 border-slate-800 hover:border-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="font-bold text-white truncate">{unit.unitNumber}</span>
+                          {unit.status === "rent" && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold">
+                              رهن
+                            </span>
+                          )}
+                          {unit.status === "sale" && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold">
+                              فروش
+                            </span>
+                          )}
+                          {unit.status === "occupied" && (
+                            <span className="text-[9px] text-slate-400">سکونت</span>
+                          )}
+                          {unit.status === "unlisted" && (
+                            <span className="text-[9px] text-indigo-300">ثبت نشده</span>
+                          )}
+                        </div>
+
+                        <div className="text-[10px] text-slate-400">
+                          {formatPersianNumber(unit.meters)} متر • ط {formatPersianNumber(fl.floorNumber)}
+                        </div>
+
                         {unit.status === "rent" && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                            رهن و اجاره
-                          </span>
+                          <div className="text-[10px] text-emerald-400 font-bold mt-1 truncate">
+                            {formatPersianNumber((unit.deposit || (property?.deposit ?? 0)) / 1000000)}م ودیعه
+                          </div>
                         )}
+
                         {unit.status === "sale" && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
-                            فروش
-                          </span>
-                        )}
-                        {unit.status === "occupied" && (
-                          <span className="text-[10px] text-slate-400">سکونت</span>
-                        )}
-                        {unit.status === "unlisted" && (
-                          <span className="text-[10px] text-indigo-300">ثبت نشده</span>
+                          <div className="text-[10px] text-amber-400 font-bold mt-1 truncate">
+                            {formatPersianNumber(((unit.totalPrice || (property?.totalPrice ?? 0)) / 1000000000).toFixed(1))} میلیارد
+                          </div>
                         )}
                       </div>
-
-                      {unit.status === "rent" && (
-                        <div className="text-[11px] text-emerald-400 font-bold mt-1">
-                          {formatPersianNumber((unit.deposit || (property?.deposit ?? 0)) / 1000000)}م ودیعه • {formatPersianNumber((unit.rent || (property?.rent ?? 0)) / 1000000)}م اجاره
-                        </div>
-                      )}
-
-                      {unit.status === "sale" && (
-                        <div className="text-[11px] text-amber-400 font-bold mt-1">
-                          {formatPersianNumber(((unit.totalPrice || (property?.totalPrice ?? 0)) / 1000000000).toFixed(1))} میلیارد تومان
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
-            ))}
-          </div>
 
-          {/* Unit Action Bar in 3D */}
-          {selectedUnit && (
-            <div className="pt-2 border-t border-slate-800 space-y-2">
-              {userRole === "seller_agent" ? (
-                <button
-                  onClick={() => onEditUnit && onEditUnit(selectedUnit.unit, selectedUnit.floor)}
-                  className="w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-500/20 flex items-center justify-center gap-1.5 transition-all"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>قیمت‌گذاری و مدیریت این واحد در ۳ بعدی</span>
-                </button>
-              ) : (
-                selectedUnit.unit.propertyId ? (
-                  <Link
-                    href={`/property/${selectedUnit.unit.propertyId}`}
-                    className="w-full py-2 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 text-slate-950 text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20"
-                  >
-                    <span>مشاهده کامل آگهی واحد</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </Link>
-                ) : (
-                  <div className="text-[11px] text-slate-400 text-center py-1">
-                    این واحد در حال حاضر ثبت یا آگهی نشده است
+              {/* Selected Unit Action Footer */}
+              {selectedUnit && (
+                <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
+                  <div className="text-xs">
+                    <span className="text-white font-bold">{selectedUnit.unit.unitNumber}:</span>{" "}
+                    <span className="text-slate-400">{formatPersianNumber(selectedUnit.unit.meters)} متر</span>
                   </div>
-                )
+
+                  {userRole === "seller_agent" ? (
+                    <button
+                      onClick={() => onEditUnit && onEditUnit(selectedUnit.unit, selectedUnit.floor)}
+                      className="px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-md shadow-amber-500/20"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>قیمت‌گذاری این واحد</span>
+                    </button>
+                  ) : selectedUnit.unit.propertyId ? (
+                    <Link
+                      href={`/property/${selectedUnit.unit.propertyId}`}
+                      className="px-3 py-1.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-md shadow-amber-500/20"
+                    >
+                      <span>مشاهده آگهی</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                  ) : (
+                    <span className="text-[11px] text-slate-500">
+                      {selectedUnit.unit.status === "occupied" ? "سکونت شخصی مالک" : "هنوز ثبت نشده"}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           )}
         </div>
-
-        {/* 3D Orbit Helper Hint */}
-        <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 text-[11px] text-slate-300 shadow-xl">
-          <RotateCcw className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span>با ماوس یا لمس صفحه بکشید تا دور نمای ۳ بعدی ساختمان بچرخید و ارتفاع را ببینید</span>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

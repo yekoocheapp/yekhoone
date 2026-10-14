@@ -78,7 +78,7 @@ export default function BuildingInspectorDrawer({
   return (
     <aside
       aria-label="شناسنامه دیجیتال ساختمان و نمای روبرو"
-      className="fixed inset-y-0 left-0 w-full sm:w-[500px] md:w-[560px] bg-slate-950/95 backdrop-blur-2xl border-r border-slate-800 shadow-2xl z-50 flex flex-col transition-all duration-300 animate-in slide-in-from-left"
+      className="fixed inset-y-0 left-0 w-full sm:w-[440px] md:w-[480px] bg-slate-950/95 backdrop-blur-2xl border-r border-slate-800 shadow-2xl z-40 flex flex-col transition-all duration-300 animate-in slide-in-from-left"
     >
       {/* ==================== TOP HEADER ==================== */}
       <div className="p-4 sm:p-5 border-b border-slate-800/80 bg-slate-900/60 flex items-start justify-between gap-3 shrink-0">

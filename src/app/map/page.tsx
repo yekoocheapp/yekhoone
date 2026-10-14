@@ -131,7 +131,11 @@ function MapPageContent() {
   return (
     <div className="relative w-screen h-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden font-sans select-none">
       {/* ==================== TOP NAVIGATION OVERLAY ==================== */}
-      <header className="absolute top-0 inset-x-0 z-30 pointer-events-none p-3 sm:p-4">
+      <header
+        className={`absolute top-0 inset-x-0 z-30 pointer-events-none p-3 sm:p-4 transition-all duration-300 ${
+          is3DFrontViewerOpen ? "opacity-0 -translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
+        }`}
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           {/* Logo & Back Link */}
           <div className="flex items-center gap-2 pointer-events-auto">
@@ -303,7 +307,7 @@ function MapPageContent() {
       </main>
 
       {/* ==================== 3D FRONT-OF-BUILDING ARCHITECTURAL VIEWER ==================== */}
-      {selectedBuilding && is3DFrontViewerOpen && (
+      {selectedBuilding && is3DFrontViewerOpen ? (
         <Building3DFrontViewer
           building={selectedBuilding}
           userRole={userRole}
@@ -315,24 +319,24 @@ function MapPageContent() {
             setManageModalOpen(true);
           }}
         />
+      ) : (
+        /* ==================== BUILDING FACADE & TWIN INSPECTOR DRAWER ==================== */
+        <BuildingInspectorDrawer
+          building={selectedBuilding}
+          onClose={() => {
+            setSelectedBuilding(null);
+            setIs3DFrontViewerOpen(false);
+          }}
+          userRole={userRole}
+          onEditBuilding={handleOpenEditBuilding}
+          onEditUnit={handleOpenEditUnit}
+          onOpen3DFront={() => setIs3DFrontViewerOpen(true)}
+          onRequestAgentMode={() => {
+            setUserRole("seller_agent");
+            setManageModalOpen(true);
+          }}
+        />
       )}
-
-      {/* ==================== BUILDING FACADE & TWIN INSPECTOR DRAWER ==================== */}
-      <BuildingInspectorDrawer
-        building={selectedBuilding}
-        onClose={() => {
-          setSelectedBuilding(null);
-          setIs3DFrontViewerOpen(false);
-        }}
-        userRole={userRole}
-        onEditBuilding={handleOpenEditBuilding}
-        onEditUnit={handleOpenEditUnit}
-        onOpen3DFront={() => setIs3DFrontViewerOpen(true)}
-        onRequestAgentMode={() => {
-          setUserRole("seller_agent");
-          setManageModalOpen(true);
-        }}
-      />
 
       {/* ==================== SELLER & AGENT MANAGEMENT MODAL ==================== */}
       {selectedBuilding && (
