@@ -31,6 +31,7 @@ import {
   Compass,
   Layers,
   ChevronLeft,
+  ChevronDown,
   UserCheck,
   Eye,
   Key,
@@ -43,6 +44,7 @@ function MapPageContent() {
   const [buildingsList, setBuildingsList] = useState<TehranBuilding[]>(TEHRAN_BUILDINGS);
   const [selectedBuilding, setSelectedBuilding] = useState<TehranBuilding | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<string>("saadat-abad");
+  const [districtDropdownOpen, setDistrictDropdownOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterOnlyActive, setFilterOnlyActive] = useState<boolean>(false);
 
@@ -128,102 +130,99 @@ function MapPageContent() {
     setManageModalOpen(true);
   };
 
+  const currentDistrict = TEHRAN_DISTRICTS.find((d) => d.id === activeDistrictId) || TEHRAN_DISTRICTS[0];
+
   return (
     <div className="relative w-screen h-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden font-sans select-none">
       {/* ==================== TOP NAVIGATION OVERLAY ==================== */}
       <header
-        className={`absolute top-0 inset-x-0 z-30 pointer-events-none p-3 sm:p-4 transition-all duration-300 ${
+        className={`absolute top-0 inset-x-0 z-30 pointer-events-none p-2.5 sm:p-4 transition-all duration-300 ${
           is3DFrontViewerOpen ? "opacity-0 -translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
         }`}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-          {/* Logo & Back Link */}
-          <div className="flex items-center gap-2 pointer-events-auto">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
+          {/* Right Section: Logo, Home, and District Selector Dropdown */}
+          <div className="flex items-center gap-2 pointer-events-auto shrink-0">
             <Link
               href="/"
-              className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-all backdrop-blur-md shadow-xl group"
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-2xl bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-all backdrop-blur-md shadow-xl group"
               title="بازگشت به صفحه اصلی یه خونه"
             >
               <ArrowRight className="w-4 h-4 text-amber-400 group-hover:-translate-x-0.5 transition-transform" />
-              <span className="text-xs font-bold hidden sm:inline">صفحه اصلی</span>
+              <span className="text-xs font-bold hidden md:inline">صفحه اصلی</span>
             </Link>
 
             <Link
               href="/"
-              className="flex items-center gap-2.5 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 shadow-xl"
+              className="flex items-center gap-2 bg-slate-950/90 backdrop-blur-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-2xl border border-slate-800 shadow-xl"
             >
-              <div className="relative w-7 h-7 rounded-xl overflow-hidden border border-amber-500/30">
+              <div className="relative w-6 h-6 sm:w-7 sm:h-7 rounded-xl overflow-hidden border border-amber-500/30">
                 <Image src="/logo.jpg" alt="یه خونه" fill className="object-cover" />
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-extrabold bg-gradient-to-l from-amber-400 to-white bg-clip-text text-transparent">
-                  یه خونه
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold hidden md:inline">
-                  کاداستر ۲ بعدی و نمای ۳ بعدی
-                </span>
-              </div>
+              <span className="text-xs sm:text-sm font-extrabold bg-gradient-to-l from-amber-400 to-white bg-clip-text text-transparent">
+                یه خونه
+              </span>
             </Link>
-          </div>
 
-          {/* District Quick Switcher Bar (Desktop) */}
-          <div className="hidden xl:flex items-center gap-1.5 bg-slate-950/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl pointer-events-auto">
-            {TEHRAN_DISTRICTS.map((dist) => (
+            {/* Compact District Selector Dropdown */}
+            <div className="relative">
               <button
-                key={dist.id}
-                onClick={() => {
-                  setActiveDistrictId(dist.id);
-                  setSelectedBuilding(null);
-                  setIs3DFrontViewerOpen(false);
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  activeDistrictId === dist.id
-                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black"
-                    : "text-slate-400 hover:text-white hover:bg-slate-900"
-                }`}
+                onClick={() => setDistrictDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-2xl bg-slate-950/90 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-slate-200 hover:text-white transition-all backdrop-blur-md shadow-xl text-xs font-bold"
+                title="تغییر محله نقشه تهران"
               >
-                {dist.name}
-              </button>
-            ))}
-          </div>
-
-          {/* User Role Switcher & Search (Desktop & Mobile) */}
-          <div className="flex items-center gap-2 pointer-events-auto">
-            {/* Strict Role Switcher: Home Seeker vs Seller/Agent */}
-            <div className="flex items-center bg-slate-950/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl">
-              <button
-                onClick={() => setUserRole("home_seeker")}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  userRole === "home_seeker"
-                    ? "bg-slate-800 text-white shadow-sm border border-slate-700"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-                title="حالت بازدید و جستجوی ملک برای خریداران و مستاجران"
-              >
-                <Eye className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">متقاضی مسکن</span>
-                <span className="sm:hidden">خریدار</span>
+                <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="max-w-[75px] sm:max-w-none truncate">{currentDistrict.name}</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+                    districtDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
 
-              <button
-                onClick={() => setUserRole("seller_agent")}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  userRole === "seller_agent"
-                    ? "bg-amber-500 text-slate-950 shadow-md font-black shadow-amber-500/20"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-                title="حالت مشاور املاک و مالک جهت تعیین بر ساختمان و قیمت‌گذاری واحدها"
-              >
-                <Key className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">مالک و مشاور</span>
-                <span className="sm:hidden">مشاور</span>
-              </button>
+              {districtDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setDistrictDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full mt-2 right-0 w-48 sm:w-52 bg-slate-950/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl p-1.5 z-50 flex flex-col gap-1 max-h-64 overflow-y-auto">
+                    <div className="px-2.5 py-1 text-[10px] font-bold text-slate-500">
+                      انتخاب محله تهران
+                    </div>
+                    {TEHRAN_DISTRICTS.map((dist) => (
+                      <button
+                        key={dist.id}
+                        onClick={() => {
+                          setActiveDistrictId(dist.id);
+                          setSelectedBuilding(null);
+                          setIs3DFrontViewerOpen(false);
+                          setDistrictDropdownOpen(false);
+                        }}
+                        className={`w-full text-right px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                          activeDistrictId === dist.id
+                            ? "bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20"
+                            : "text-slate-300 hover:text-white hover:bg-slate-900"
+                        }`}
+                      >
+                        <span>{dist.name}</span>
+                        {activeDistrictId === dist.id && (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-slate-950" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
+          </div>
 
+          {/* Left Section: Role Switcher & Search */}
+          <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
             {/* Search Box */}
             <div className="relative">
-              <div className="flex items-center bg-slate-950/90 backdrop-blur-md rounded-2xl border border-slate-800 px-3 py-1.5 shadow-xl w-36 sm:w-56 focus-within:w-64 focus-within:border-amber-500/50 transition-all">
-                <Search className="w-4 h-4 text-slate-400 shrink-0 ml-1.5" />
+              <div className="flex items-center bg-slate-950/90 backdrop-blur-md rounded-2xl border border-slate-800 px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-xl w-32 sm:w-44 md:w-56 focus-within:w-44 sm:focus-within:w-56 md:focus-within:w-64 focus-within:border-amber-500/50 transition-all">
+                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0 ml-1.5" />
                 <input
                   type="text"
                   placeholder="جستجوی پلاک یا کوچه..."
@@ -240,7 +239,7 @@ function MapPageContent() {
 
               {/* Search Autocomplete Dropdown */}
               {searchResults.length > 0 && (
-                <div className="absolute top-full right-0 mt-2 w-80 bg-slate-950/95 backdrop-blur-2xl border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 max-h-72 overflow-y-auto space-y-1">
+                <div className="absolute top-full left-0 sm:right-0 mt-2 w-72 sm:w-80 bg-slate-950/95 backdrop-blur-2xl border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 max-h-72 overflow-y-auto space-y-1">
                   <div className="px-2 py-1 text-[11px] font-bold text-slate-400">
                     ساختمان‌های منطبق در تهران:
                   </div>
@@ -269,28 +268,38 @@ function MapPageContent() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
 
-        {/* District Quick Switcher Bar (Mobile Carousel) */}
-        <div className="xl:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 pointer-events-auto">
-          {TEHRAN_DISTRICTS.map((dist) => (
-            <button
-              key={dist.id}
-              onClick={() => {
-                setActiveDistrictId(dist.id);
-                setSelectedBuilding(null);
-                setIs3DFrontViewerOpen(false);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all ${
-                activeDistrictId === dist.id
-                  ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black"
-                  : "bg-slate-950/90 backdrop-blur-md text-slate-400 border border-slate-800"
-              }`}
-            >
-              {dist.name}
-            </button>
-          ))}
+            {/* Strict Role Switcher: Home Seeker vs Seller/Agent */}
+            <div className="flex items-center bg-slate-950/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl">
+              <button
+                onClick={() => setUserRole("home_seeker")}
+                className={`px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 ${
+                  userRole === "home_seeker"
+                    ? "bg-slate-800 text-white shadow-sm border border-slate-700"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="حالت بازدید و جستجوی ملک برای خریداران و مستاجران"
+              >
+                <Eye className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">متقاضی مسکن</span>
+                <span className="sm:hidden">متقاضی</span>
+              </button>
+
+              <button
+                onClick={() => setUserRole("seller_agent")}
+                className={`px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 ${
+                  userRole === "seller_agent"
+                    ? "bg-amber-500 text-slate-950 shadow-md font-black shadow-amber-500/20"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                title="حالت مشاور املاک و مالک جهت تعیین بر ساختمان و قیمت‌گذاری واحدها"
+              >
+                <Key className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">مالک و مشاور</span>
+                <span className="sm:hidden">مشاور</span>
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 

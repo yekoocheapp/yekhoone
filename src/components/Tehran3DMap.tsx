@@ -501,8 +501,8 @@ export default function Tehran3DMap({
       ref={mapContainerRef}
       className="relative w-full h-full bg-slate-950 overflow-hidden select-none"
     >
-      {/* Top Left Navigation & Camera Modes */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 pointer-events-none">
+      {/* Top Left Navigation & Camera Modes (Moved to top-20 to sit comfortably below page header) */}
+      <div className="absolute top-20 left-4 z-20 flex items-center gap-2 pointer-events-none">
         {/* Compass */}
         <div
           onClick={() => {
@@ -579,8 +579,24 @@ export default function Tehran3DMap({
         </div>
       </div>
 
-      {/* Top Right Controls */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-auto">
+      {/* Prominent Floating Pill: "مشاهده نمای ۳ بعدی روبروی ساختمان" */}
+      {selectedBuilding && onOpen3DFront && (
+        <div className="absolute top-20 inset-x-0 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-4">
+          <button
+            onClick={onOpen3DFront}
+            className="pointer-events-auto flex items-center gap-2.5 px-4 sm:px-6 py-2.5 rounded-full bg-gradient-to-l from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm shadow-2xl shadow-amber-500/30 transition-all hover:scale-105 border border-amber-300/40"
+          >
+            <Box className="w-4 h-4 animate-bounce" />
+            <span>مشاهده نمای ۳ بعدی روبروی ساختمان: {selectedBuilding.name}</span>
+            <span className="text-xs bg-slate-950 text-amber-400 px-2 py-0.5 rounded-full">
+              {selectedBuilding.dimensions?.width || 18}م بر
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Standard Bottom-Right Navigation Stack (Reset, Zoom, Fullscreen) */}
+      <div className="absolute bottom-6 right-4 z-20 flex items-center gap-2 pointer-events-auto">
         {/* Reset to 2D Top View */}
         <button
           onClick={resetToFullTehran2D}
@@ -620,24 +636,8 @@ export default function Tehran3DMap({
         </button>
       </div>
 
-      {/* Prominent Floating Pill: "مشاهده نمای ۳ بعدی روبروی ساختمان" */}
-      {selectedBuilding && onOpen3DFront && (
-        <div className="absolute top-20 inset-x-0 z-20 flex justify-center pointer-events-none animate-in fade-in slide-in-from-top-4">
-          <button
-            onClick={onOpen3DFront}
-            className="pointer-events-auto flex items-center gap-2.5 px-4 sm:px-6 py-2.5 rounded-full bg-gradient-to-l from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm shadow-2xl shadow-amber-500/30 transition-all hover:scale-105 border border-amber-300/40"
-          >
-            <Box className="w-4 h-4 animate-bounce" />
-            <span>مشاهده نمای ۳ بعدی روبروی ساختمان: {selectedBuilding.name}</span>
-            <span className="text-xs bg-slate-950 text-amber-400 px-2 py-0.5 rounded-full">
-              {selectedBuilding.dimensions?.width || 18}م بر
-            </span>
-          </button>
-        </div>
-      )}
-
-      {/* Bottom Map Legend */}
-      <div className="absolute bottom-4 right-4 z-20 pointer-events-none hidden md:flex items-center gap-3 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 text-[11px] shadow-xl">
+      {/* Bottom Map Legend (Placed at Bottom Center-Left) */}
+      <div className="absolute bottom-6 left-4 z-20 pointer-events-none hidden md:flex items-center gap-3 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 text-[11px] shadow-xl">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20" />
           <span className="text-slate-300">رهن و اجاره</span>
@@ -649,10 +649,6 @@ export default function Tehran3DMap({
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-purple-400 ring-2 ring-purple-400/20" />
           <span className="text-slate-300">چندین واحد</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-slate-700 border border-slate-600" />
-          <span className="text-slate-400">ساختمان‌های ۳ بعدی تهران</span>
         </div>
       </div>
 
