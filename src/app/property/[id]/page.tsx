@@ -202,6 +202,15 @@ export default function PropertyDetailPage() {
               <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
               <span>{property.address}</span>
             </div>
+
+            <Link
+              href={`/map?propertyId=${property.id}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold transition-all shadow-sm group"
+            >
+              <Compass className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-45 transition-transform" />
+              <span>مشاهده پلاک این ساختمان در نقشه ۳ بعدی تهران</span>
+            </Link>
+
             <span className="text-slate-600 mr-2">•</span>
             <span className="text-slate-500">{property.createdAt}</span>
             {property.lastAlgorithmicBump && (
@@ -220,7 +229,7 @@ export default function PropertyDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Column 1 & 2: Gallery & Details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* 3-Way Media Mode Switcher (Photos / Video / 360 Virtual Tour) */}
+            {/* 3-Way Media Mode Switcher (Photos / Video / 360 Virtual Tour / 3D Map) */}
             <div className="bg-slate-900 border border-slate-800 p-2 rounded-2xl shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                 {/* Mode 1: Static Photos */}
@@ -267,6 +276,15 @@ export default function PropertyDetailPage() {
                     فوق‌پیشرفته
                   </span>
                 </button>
+
+                {/* Mode 4: 3D Map Cadastral Twin */}
+                <Link
+                  href={`/map?propertyId=${property.id}`}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-slate-950/80 text-amber-400 hover:text-white hover:bg-slate-800 border border-amber-500/30 shadow-sm"
+                >
+                  <Building2 className="w-4 h-4 text-amber-400" />
+                  <span>پلاک در نقشه ۳ بعدی</span>
+                </Link>
               </div>
 
               <div className="flex items-center gap-1.5 text-[11px] text-slate-400 px-2">

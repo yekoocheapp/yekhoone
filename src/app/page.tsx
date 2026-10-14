@@ -30,7 +30,8 @@ import {
   RotateCw,
   Cpu,
   Eye,
-  Video
+  Video,
+  Layers
 } from "lucide-react";
 
 export default function HomePage() {
@@ -113,6 +114,16 @@ export default function HomePage() {
             >
               خرید و فروش
             </button>
+            <Link
+              href="/map"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30 transition-all shadow-sm group"
+            >
+              <Compass className="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform" />
+              <span>نقشه ۳ بعدی تهران</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 font-black">
+                جدید
+              </span>
+            </Link>
             <button
               onClick={() => setCalculatorOpen(true)}
               className="flex items-center gap-1.5 hover:text-amber-400 transition-colors text-slate-300"
@@ -130,7 +141,15 @@ export default function HomePage() {
           </nav>
 
           {/* Actions & Submission CTA */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/map"
+              className="md:hidden p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:text-white"
+              title="نقشه ۳ بعدی تهران"
+            >
+              <Compass className="w-5 h-5" />
+            </Link>
+
             <button
               onClick={() => setCalculatorOpen(true)}
               className="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-amber-400"
@@ -288,6 +307,42 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ==================== 3D MAP HERO BANNER ==================== */}
+      <section className="px-4 lg:px-8 -mt-6 mb-4 relative z-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="rounded-3xl bg-gradient-to-r from-amber-500/10 via-indigo-950/40 to-slate-900 border border-amber-500/30 p-5 sm:p-6 backdrop-blur-xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 shrink-0">
+                <Layers className="w-7 h-7" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold border border-amber-500/30">
+                    قابلیت انقلابی «یه خونه»
+                  </span>
+                  <span className="text-xs text-slate-400">دیجیتال تویین پلاک‌به‌پلاک</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-white mt-1">
+                  نقشه ۳ بعدی هوشمند کل تهران (طبقه به طبقه)
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
+                  روی هر کوچه یا ساختمانی در تهران کلیک کنید؛ تعداد طبقات، واحدهای آماده برای رهن، اجاره و خرید، متراژ، قیمت و تور مجازی را در لحظه ببینید.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/map"
+              className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all hover:scale-105 flex items-center justify-center gap-2 shrink-0 group"
+            >
+              <span>ورود به نقشه ۳ بعدی تهران</span>
+              <Compass className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ==================== DISTRICT QUICK TABS ==================== */}
       <section className="px-4 lg:px-8 py-4 border-y border-slate-800/80 bg-slate-950/60">
         <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -435,6 +490,15 @@ export default function HomePage() {
                       </span>
                     </div>
                   )}
+
+                  {/* 3D Map Shortcut */}
+                  <Link
+                    href={`/map?propertyId=${prop.id}`}
+                    className="flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-amber-400 font-bold text-[11px] border border-amber-500/20 mb-2.5 transition-all hover:border-amber-500/50"
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>نمایش پلاک این ساختمان در نقشه ۳ بعدی</span>
+                  </Link>
 
                   {/* Action Buttons */}
                   <div className="grid grid-cols-2 gap-2">
