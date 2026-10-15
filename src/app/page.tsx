@@ -97,10 +97,10 @@ export default function HomePage() {
                   یه خونه
                 </span>
                 <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800 font-medium">
-                  کاداستر تهران
+                  املاک تهران
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">سامانه تخصصی املاک و نقشه ثبتی</p>
+              <p className="text-[11px] text-slate-400 hidden sm:block">سامانه هوشمند معاملات و نقشه تهران</p>
             </div>
           </Link>
 
@@ -111,7 +111,7 @@ export default function HomePage() {
               className="flex items-center gap-2 hover:text-amber-400 transition-colors group"
             >
               <Compass className="w-4 h-4 text-amber-400/80 group-hover:text-amber-400 transition-colors" />
-              <span>نقشه کاداستر</span>
+              <span>نقشه هوشمند تهران</span>
             </Link>
 
             <Link
@@ -156,7 +156,7 @@ export default function HomePage() {
             <Link
               href="/map"
               className="lg:hidden p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:text-white"
-              title="نقشه کاداستر"
+              title="نقشه هوشمند تهران"
             >
               <Compass className="w-4 h-4" />
             </Link>
@@ -197,7 +197,7 @@ export default function HomePage() {
           {/* Mission Tag - Professional, Authoritative */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-amber-500/25 text-amber-300 text-xs font-semibold mb-6 shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span>سامانه هوشمند کاداستر شهری و معاملات بدون واسطه مسکن در تهران</span>
+            <span>سامانه هوشمند املاک و معاملات بدون واسطه مسکن در تهران</span>
           </div>
 
           {/* Main Title - Dignified, Prestigious */}
@@ -205,12 +205,12 @@ export default function HomePage() {
             جستجوی مطمئن مسکن،
             <br className="hidden sm:inline" />{" "}
             <span className="bg-gradient-to-l from-amber-400 via-orange-300 to-amber-200 bg-clip-text text-transparent">
-              با شفافیت نقشه کاداستر تهران
+              روی نقشه هوشمند تهران
             </span>
           </h1>
 
           <p className="text-slate-300/90 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed mb-8">
-            دسترسی مستقیم به فایل‌های معتبر ملکی با استعلام پلاک ثبتی، تور ویدیویی ۳۶۰ درجه و اتاق نشست آنلاین قرارداد میان خریدار، فروشنده و سرپرست آژانس.
+            دسترسی مستقیم به فایل‌های معتبر ملکی با لوکیشن دقیق، تور ویدیویی ۳۶۰ درجه و اتاق نشست آنلاین قرارداد میان خریدار، فروشنده و سرپرست آژانس.
           </p>
 
           {/* Search Capsule / Command Center */}
@@ -306,8 +306,8 @@ export default function HomePage() {
             <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/70 flex items-center gap-2.5 text-right">
               <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white">کاداستر دقیق شهری</div>
-                <div className="text-[10px] text-slate-400">اطلاعات ثبتی و پلاک</div>
+                <div className="text-xs font-bold text-white">نقشه هوشمند تهران</div>
+                <div className="text-[10px] text-slate-400">لوکیشن دقیق پلاک‌به‌پلاک</div>
               </div>
             </div>
 
@@ -338,7 +338,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ==================== CADASTRE MAP HERO BANNER ==================== */}
+      {/* ==================== SMART TEHRAN MAP HERO BANNER ==================== */}
       <section className="px-4 lg:px-8 -mt-6 mb-4 relative z-20">
         <div className="max-w-7xl mx-auto">
           <div className="rounded-3xl bg-gradient-to-r from-amber-500/10 via-indigo-950/40 to-slate-900 border border-amber-500/30 p-5 sm:p-6 backdrop-blur-xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
@@ -352,13 +352,13 @@ export default function HomePage() {
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold border border-amber-500/30">
                     سامانه نقشه یکپارچه
                   </span>
-                  <span className="text-xs text-slate-400">تحلیل کاداستر پلاک‌به‌پلاک</span>
+                  <span className="text-xs text-slate-400">جستجوی پلاک‌به‌پلاک</span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-black text-white mt-1">
-                  نقشه هوشمند کاداستر شهری تهران (پلاک‌به‌پلاک)
+                  نقشه هوشمند تهران (پلاک‌به‌پلاک)
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
-                  روی هر کوچه یا ساختمانی در تهران کلیک کنید؛ مشخصات ثبتی، واحدهای آماده برای رهن، اجاره و خرید، متراژ، قیمت و تور ویدیویی را در لحظه مشاهده کنید.
+                  روی هر کوچه یا ساختمانی در تهران کلیک کنید؛ واحدهای آماده برای رهن، اجاره و خرید، متراژ، قیمت و تور ویدیویی را در لحظه مشاهده کنید.
                 </p>
               </div>
             </div>
@@ -367,7 +367,7 @@ export default function HomePage() {
               href="/map"
               className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all hover:scale-105 flex items-center justify-center gap-2 shrink-0 group"
             >
-              <span>ورود به نقشه کاداستر تهران</span>
+              <span>ورود به نقشه هوشمند تهران</span>
               <Compass className="w-5 h-5 group-hover:rotate-45 transition-transform" />
             </Link>
           </div>
@@ -565,11 +565,11 @@ export default function HomePage() {
             </div>
 
             <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
-              مدیریت حرفه‌ای فایلینگ، کاداستر شهری و اتاق نشست آنلاین
+              مدیریت حرفه‌ای فایلینگ، نقشه هوشمند تهران و اتاق نشست آنلاین
             </h3>
 
             <p className="text-slate-300 text-sm leading-relaxed mb-6">
-              سامانه «یه خونه» بستر یکپارچه و مدرنی را برای دفاتر معاملات ملکی فراهم ساخته است. انتشار نامحدود فایل‌ها، نمایش موقعیت ثبتی دقیق بر روی نقشه کاداستر، الگوریتم توزیع عادلانه نتایج، و امکان برگزاری نشست‌های ۴ نفره مجازی قرارداد میان خریدار، فروشنده، مشاور و سرپرست آژانس بدون نیاز به تردد شهری.
+              سامانه «یه خونه» بستر یکپارچه و مدرنی را برای دفاتر معاملات ملکی فراهم ساخته است. انتشار نامحدود فایل‌ها، نمایش موقعیت دقیق ملک بر روی نقشه هوشمند تهران، الگوریتم توزیع عادلانه نتایج، و امکان برگزاری نشست‌های ۴ نفره مجازی قرارداد میان خریدار، فروشنده، مشاور و سرپرست آژانس بدون نیاز به تردد شهری.
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -600,7 +600,7 @@ export default function HomePage() {
             </div>
             <div>
               <span className="font-bold text-white text-sm">یه خونه (YeKhoone)</span>
-              <p className="text-[11px] text-slate-500">سامانه هوشمند کاداستر شهری و معاملات املاک تهران</p>
+              <p className="text-[11px] text-slate-500">سامانه معاملات مسکن و نقشه هوشمند تهران</p>
             </div>
           </div>
 
@@ -726,7 +726,7 @@ export default function HomePage() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white">ثبت مستقیم فایل ملکی در سامانه</h3>
-                <p className="text-xs text-slate-400">انتشار در نقشه کاداستر شهری و دسترسی مستقیم متقاضیان</p>
+                <p className="text-xs text-slate-400">انتشار روی نقشه هوشمند تهران و دسترسی مستقیم متقاضیان</p>
               </div>
             </div>
 

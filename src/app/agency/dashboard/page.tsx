@@ -438,7 +438,7 @@ export default function AgencyDashboardPage() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white">ثبت فوری فایل جدید در سامانه</h3>
-                <p className="text-xs text-slate-400">فایل شما بلافاصله در سامانه و نقشه کاداستر شهری منتشر خواهد شد</p>
+                <p className="text-xs text-slate-400">فایل شما بلافاصله در سامانه و نقشه هوشمند تهران منتشر خواهد شد</p>
               </div>
             </div>
 

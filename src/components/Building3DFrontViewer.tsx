@@ -557,7 +557,7 @@ export default function Building3DFrontViewer({
           <button
             onClick={onClose}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs transition-all hover:scale-105 shadow-lg"
-            title="خروج از نمای ۳ بعدی و بازگشت به نقشه کاداستر"
+            title="بازگشت به نقشه هوشمند تهران"
           >
             <ArrowRight className="w-4 h-4 text-amber-400" />
             <span>بازگشت به نقشه</span>

@@ -263,7 +263,7 @@ export default function ProfilePage() {
                   href="/map"
                   className="text-xs text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1"
                 >
-                  <span>یافتن خانه روی نقشه کاداستر</span>
+                  <span>یافتن خانه روی نقشه هوشمند تهران</span>
                   <ChevronLeft className="w-4 h-4" />
                 </Link>
               </div>
@@ -633,7 +633,7 @@ export default function ProfilePage() {
             <div>
               <h2 className="text-2xl font-extrabold text-white mb-2">شما به عنوان کاربر مهمان وارد شده‌اید</h2>
               <p className="text-sm text-slate-400 leading-relaxed">
-                برای ذخیره خانه‌های مورد علاقه، مشاهده شناسنامه ۲ بعدی کاداستر و حضور در نشست قرارداد آنلاین، لطفاً نقش مورد نظر خود را انتخاب کنید:
+                برای ذخیره خانه‌های مورد علاقه، بررسی مشخصات روی نقشه هوشمند تهران و حضور در نشست قرارداد آنلاین، لطفاً نقش مورد نظر خود را انتخاب کنید:
               </p>
             </div>
 

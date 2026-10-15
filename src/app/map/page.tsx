@@ -359,7 +359,7 @@ export default function MapPage() {
             <Layers className="w-5 h-5" />
           </div>
           <span className="text-xs text-slate-400 font-bold">
-            در حال بارگذاری نقشه ۲ بعدی کاداستر تهران...
+            در حال بارگذاری نقشه هوشمند تهران...
           </span>
         </div>
       }

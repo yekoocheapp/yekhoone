@@ -170,7 +170,7 @@ export default function Tehran3DMap({
           district: "تهران (محدوده شهری)",
           street: "خیابان و کوچه ثبتی مجاور",
           plaque: `پلاک ${Math.round(clickedLng * 100) % 60 + 1}`,
-          fullAddress: `تهران، مختصات کاداستر شهری ${clickedLat.toFixed(4)}°N, ${clickedLng.toFixed(4)}°E`,
+          fullAddress: `تهران، مختصات جغرافیایی ${clickedLat.toFixed(4)}°N, ${clickedLng.toFixed(4)}°E`,
           totalFloors: estimatedFloors,
           unitsCount: estimatedFloors * 2,
           age: 4,
