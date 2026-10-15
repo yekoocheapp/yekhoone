@@ -34,7 +34,9 @@ import {
   UserCheck,
   Eye,
   Key,
-  Ruler
+  Ruler,
+  User,
+  Video
 } from "lucide-react";
 
 function MapPageContent() {
@@ -282,6 +284,25 @@ function MapPageContent() {
                 <span className="sm:hidden">مشاور</span>
               </button>
             </div>
+
+            {/* Direct Links to Neshasst & Profile */}
+            <Link
+              href="/neshasst"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl bg-red-600/20 hover:bg-red-600 border border-red-500/40 text-red-400 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-lg shrink-0"
+              title="اتاق نشست آنلاین (۴ نفره)"
+            >
+              <Video className="w-3.5 h-3.5 animate-pulse" />
+              <span className="hidden lg:inline">نشست</span>
+            </Link>
+
+            <Link
+              href="/profile"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl bg-slate-950/90 hover:bg-slate-900 border border-slate-800 text-amber-400 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-lg shrink-0"
+              title="پروفایل کاربری من"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">پروفایل</span>
+            </Link>
           </div>
         </div>
       </header>

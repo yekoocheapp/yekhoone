@@ -31,10 +31,14 @@ import {
   Cpu,
   Eye,
   Video,
-  Layers
+  Layers,
+  User,
+  Heart
 } from "lucide-react";
+import { useUser } from "@/context/UserContext";
 
 export default function HomePage() {
+  const { currentRole, isFavorite, toggleFavorite } = useUser();
   const [properties, setProperties] = useState<Property[]>(initialProperties);
   const [dealType, setDealType] = useState<"all" | "rent" | "sale">("rent");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("همه");
@@ -119,10 +123,22 @@ export default function HomePage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30 transition-all shadow-sm group"
             >
               <Compass className="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform" />
-              <span>نقشه ۳ بعدی تهران</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 font-black">
-                جدید
-              </span>
+              <span>نقشه ۲ بعدی تهران</span>
+            </Link>
+            <Link
+              href="/neshasst"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600/10 hover:bg-red-600/20 text-red-400 font-bold border border-red-500/30 transition-all shadow-sm group"
+              title="اتاق قرارداد آنلاین ۴ نفره (زوم صوتی و تصویری)"
+            >
+              <Video className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform animate-pulse" />
+              <span>نشست آنلاین</span>
+            </Link>
+            <Link
+              href="/profile"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white font-bold border border-slate-800 transition-all shadow-sm"
+            >
+              <User className="w-4 h-4 text-amber-400" />
+              <span>پروفایل کاربری</span>
             </Link>
             <button
               onClick={() => setCalculatorOpen(true)}
@@ -136,31 +152,39 @@ export default function HomePage() {
               className="flex items-center gap-1.5 hover:text-amber-400 transition-colors text-amber-400/90 font-semibold"
             >
               <Building2 className="w-4 h-4 text-amber-400" />
-              پنل همکاران و آژانس‌ها
+              پنل همکاران
             </Link>
           </nav>
 
           {/* Actions & Submission CTA */}
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
+              href="/neshasst"
+              className="md:hidden p-2 rounded-xl bg-red-600/20 border border-red-500/40 text-red-400 hover:text-white"
+              title="نشست آنلاین"
+            >
+              <Video className="w-5 h-5 animate-pulse" />
+            </Link>
+
+            <Link
+              href="/profile"
+              className="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-amber-400 hover:text-white"
+              title="پروفایل کاربری"
+            >
+              <User className="w-5 h-5" />
+            </Link>
+
+            <Link
               href="/map"
               className="md:hidden p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:text-white"
-              title="نقشه ۳ بعدی تهران"
+              title="نقشه ۲ بعدی تهران"
             >
               <Compass className="w-5 h-5" />
             </Link>
 
             <button
-              onClick={() => setCalculatorOpen(true)}
-              className="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-amber-400"
-              title="محاسبه‌گر رهن و اجاره"
-            >
-              <Calculator className="w-5 h-5 text-amber-400" />
-            </button>
-
-            <button
               onClick={() => setSubmitModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
+              className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
             >
               <PlusCircle className="w-4 h-4" />
               <span className="hidden sm:inline">ثبت رایگان ملک</span>

@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { UserProvider } from "@/context/UserContext";
+
 export default function RootLayout({
   children,
 }: {
@@ -29,7 +31,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#1e1b4b" />
       </head>
       <body className="min-h-full flex flex-col font-sans bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
-        {children}
+        <UserProvider>{children}</UserProvider>
       </body>
     </html>
   );
