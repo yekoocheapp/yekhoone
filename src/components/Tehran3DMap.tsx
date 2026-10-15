@@ -18,7 +18,6 @@ import {
   RotateCcw,
   Building2,
   MapPin,
-  Sparkles,
   Eye,
   Layers,
   Ruler,
@@ -442,7 +441,7 @@ export default function Tehran3DMap({
         </button>
       </div>
 
-      {/* Bottom Map Legend (Placed at Bottom Center-Left) */}
+      {/* Bottom Map Legend (Placed at Bottom Left) */}
       <div className="absolute bottom-6 left-4 z-20 pointer-events-none hidden md:flex items-center gap-3 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 text-[11px] shadow-xl">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20" />
@@ -456,16 +455,6 @@ export default function Tehran3DMap({
           <span className="w-2.5 h-2.5 rounded-full bg-purple-400 ring-2 ring-purple-400/20" />
           <span className="text-slate-300">چندین واحد</span>
         </div>
-      </div>
-
-      {/* Helper Notification Banner */}
-      <div className="absolute bottom-4 left-4 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 text-[11px] text-slate-300 shadow-xl">
-        <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-        <span>
-          {userRole === "seller_agent"
-            ? "روی هر ساختمانی کلیک کنید تا دوربین به دید خیابانی برود و بتوانید بر ساختمان و واحدها را قیمت‌گذاری کنید"
-            : "روی هر پلاک کلیک کنید تا دوربین به دید خیابانی برود و نمای ۳ بعدی روبروی ساختمان باز شود"}
-        </span>
       </div>
     </div>
   );
