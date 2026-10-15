@@ -78,11 +78,11 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* ==================== HEADER ==================== */}
-      <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3">
+      <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3.5 transition-all">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* Logo & Brand Name */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-amber-500/10 border border-amber-500/30 group-hover:scale-105 transition-transform">
+          {/* Logo & Brand Identity */}
+          <Link href="/" className="flex items-center gap-3 group shrink-0">
+            <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-amber-500/10 border border-amber-500/30 group-hover:scale-105 transition-transform">
               <Image
                 src="/logo.jpg"
                 alt="لوگو یه خونه"
@@ -92,141 +92,137 @@ export default function HomePage() {
               />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl font-extrabold tracking-tight bg-gradient-to-l from-amber-400 via-orange-300 to-white bg-clip-text text-transparent">
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-black tracking-tight bg-gradient-to-l from-amber-400 via-amber-300 to-white bg-clip-text text-transparent">
                   یه خونه
                 </span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold">
-                  ۱۰۰٪ رایگان
+                <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800 font-medium">
+                  کاداستر تهران
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">سامانه هوشمند املاک ایران (YeKhoone)</p>
+              <p className="text-[11px] text-slate-400 hidden sm:block">سامانه تخصصی املاک و نقشه ثبتی</p>
             </div>
           </Link>
 
-          {/* Center Nav Links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
-            <button
-              onClick={() => setDealType("rent")}
-              className={`hover:text-amber-400 transition-colors ${dealType === "rent" ? "text-amber-400 font-bold" : ""}`}
-            >
-              رهن و اجاره
-            </button>
-            <button
-              onClick={() => setDealType("sale")}
-              className={`hover:text-amber-400 transition-colors ${dealType === "sale" ? "text-amber-400 font-bold" : ""}`}
-            >
-              خرید و فروش
-            </button>
+          {/* Clean Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-slate-300">
             <Link
               href="/map"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30 transition-all shadow-sm group"
+              className="flex items-center gap-2 hover:text-amber-400 transition-colors group"
             >
-              <Compass className="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform" />
-              <span>نقشه ۲ بعدی تهران</span>
+              <Compass className="w-4 h-4 text-amber-400/80 group-hover:text-amber-400 transition-colors" />
+              <span>نقشه کاداستر</span>
             </Link>
+
             <Link
               href="/neshasst"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600/10 hover:bg-red-600/20 text-red-400 font-bold border border-red-500/30 transition-all shadow-sm group"
-              title="اتاق قرارداد آنلاین ۴ نفره (زوم صوتی و تصویری)"
+              className="flex items-center gap-2 hover:text-red-400 transition-colors group"
             >
-              <Video className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform animate-pulse" />
-              <span>نشست آنلاین</span>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              </span>
+              <Video className="w-4 h-4 text-red-400" />
+              <span>نشست آنلاین (قرارداد)</span>
             </Link>
-            <Link
-              href="/profile"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white font-bold border border-slate-800 transition-all shadow-sm"
-            >
-              <User className="w-4 h-4 text-amber-400" />
-              <span>پروفایل کاربری</span>
-            </Link>
+
             <button
               onClick={() => setCalculatorOpen(true)}
-              className="flex items-center gap-1.5 hover:text-amber-400 transition-colors text-slate-300"
+              className="flex items-center gap-2 hover:text-amber-400 transition-colors text-slate-300"
             >
-              <Calculator className="w-4 h-4 text-amber-400" />
-              تبدیل رهن و اجاره
+              <Calculator className="w-4 h-4 text-slate-400" />
+              <span>تبدیل رهن و اجاره</span>
             </button>
+
             <Link
               href="/agency/dashboard"
-              className="flex items-center gap-1.5 hover:text-amber-400 transition-colors text-amber-400/90 font-semibold"
+              className="flex items-center gap-2 text-slate-400 hover:text-amber-400 transition-colors"
             >
-              <Building2 className="w-4 h-4 text-amber-400" />
-              پنل همکاران
+              <Building2 className="w-4 h-4 text-slate-400" />
+              <span>پنل آژانس‌ها</span>
             </Link>
           </nav>
 
-          {/* Actions & Submission CTA */}
+          {/* User Profile Pill & Primary Action CTA */}
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/neshasst"
-              className="md:hidden p-2 rounded-xl bg-red-600/20 border border-red-500/40 text-red-400 hover:text-white"
-              title="نشست آنلاین"
+              className="lg:hidden p-2 rounded-xl bg-red-600/10 border border-red-500/30 text-red-400 hover:text-white"
+              title="اتاق نشست آنلاین"
             >
-              <Video className="w-5 h-5 animate-pulse" />
-            </Link>
-
-            <Link
-              href="/profile"
-              className="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-amber-400 hover:text-white"
-              title="پروفایل کاربری"
-            >
-              <User className="w-5 h-5" />
+              <Video className="w-4 h-4 animate-pulse" />
             </Link>
 
             <Link
               href="/map"
-              className="md:hidden p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:text-white"
-              title="نقشه ۲ بعدی تهران"
+              className="lg:hidden p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:text-white"
+              title="نقشه کاداستر"
             >
-              <Compass className="w-5 h-5" />
+              <Compass className="w-4 h-4" />
             </Link>
 
+            {/* Profile Pill with Active Role */}
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 hover:text-white transition-all shadow-sm"
+              title="پروفایل و تنظیم نقش کاربری"
+            >
+              <User className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline font-medium">
+                {currentRole === "buyer" && "متقاضی"}
+                {currentRole === "seller" && "مالک"}
+                {currentRole === "agent" && "مشاور"}
+                {currentRole === "agency" && "آژانس"}
+                {currentRole === "guest" && "مهمان"}
+              </span>
+            </Link>
+
+            {/* Register Property Button */}
             <button
               onClick={() => setSubmitModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-l from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all hover:scale-105"
             >
               <PlusCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">ثبت رایگان ملک</span>
-              <span className="sm:hidden">ثبت ملک</span>
+              <span>ثبت ملک</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* ==================== HERO SECTION ==================== */}
-      <section className="relative pt-12 pb-16 px-4 lg:px-8 overflow-hidden bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_center,rgba(245,158,11,0.08),transparent_50%)] pointer-events-none" />
+      <section className="relative pt-12 pb-14 px-4 lg:px-8 overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900/40 to-slate-950">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_center,rgba(245,158,11,0.06),transparent_60%)] pointer-events-none" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          {/* Mission Tag */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-6 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>پایان هزینه‌های دیوار؛ ثبت نامحدود و رایگان برای تمام مشاوران کشور</span>
+          {/* Mission Tag - Professional, Authoritative */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-amber-500/25 text-amber-300 text-xs font-semibold mb-6 shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>سامانه هوشمند کاداستر شهری و معاملات بدون واسطه مسکن در تهران</span>
           </div>
 
-          {/* Main Title */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight mb-4">
-            دنبال <span className="bg-gradient-to-l from-amber-400 to-orange-400 bg-clip-text text-transparent">یه خونه‌</span>ای؟
-            <br />
-            پیداش کردی!
+          {/* Main Title - Dignified, Prestigious */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white leading-tight mb-4">
+            جستجوی مطمئن مسکن،
+            <br className="hidden sm:inline" />{" "}
+            <span className="bg-gradient-to-l from-amber-400 via-orange-300 to-amber-200 bg-clip-text text-transparent">
+              با شفافیت نقشه کاداستر تهران
+            </span>
           </h1>
 
-          <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed mb-8">
-            سامانه بدون واسطه مسکن ایران با دسترسی مستقیم به بهترین مشاورین و مالکین.
-            فایل‌های واقعی، لوکیشن دقیق روی نقشه، بدون هزینه ثبت آگهی.
+          <p className="text-slate-300/90 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed mb-8">
+            دسترسی مستقیم به فایل‌های معتبر ملکی با استعلام پلاک ثبتی، تور ویدیویی ۳۶۰ درجه و اتاق نشست آنلاین قرارداد میان خریدار، فروشنده و سرپرست آژانس.
           </p>
 
-          {/* Search Box */}
-          <div className="bg-slate-900/90 border border-slate-800 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-slate-950/80 backdrop-blur-xl">
-            {/* Top Deal Tabs & Virtual Tour Filter */}
-            <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-800/80 text-xs font-semibold overflow-x-auto">
-              <div className="flex items-center gap-1.5 shrink-0">
+          {/* Search Capsule / Command Center */}
+          <div className="bg-slate-900/90 border border-slate-800/90 p-3 sm:p-4 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-xl">
+            {/* Top Row: Deal Type Selector + Virtual Tour Toggle */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-800/70 text-xs font-semibold">
+              <div className="flex items-center gap-1.5 bg-slate-950/60 p-1 rounded-xl border border-slate-800/60">
                 <button
                   onClick={() => setDealType("rent")}
-                  className={`px-4 py-1.5 rounded-lg transition-all ${
+                  className={`px-3.5 py-1.5 rounded-lg transition-all ${
                     dealType === "rent"
-                      ? "bg-amber-500 text-slate-950 font-bold shadow"
+                      ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
@@ -234,19 +230,19 @@ export default function HomePage() {
                 </button>
                 <button
                   onClick={() => setDealType("sale")}
-                  className={`px-4 py-1.5 rounded-lg transition-all ${
+                  className={`px-3.5 py-1.5 rounded-lg transition-all ${
                     dealType === "sale"
-                      ? "bg-amber-500 text-slate-950 font-bold shadow"
+                      ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
-                  خرید آپارتمان
+                  خرید و فروش
                 </button>
                 <button
                   onClick={() => setDealType("all")}
-                  className={`px-4 py-1.5 rounded-lg transition-all ${
+                  className={`px-3.5 py-1.5 rounded-lg transition-all ${
                     dealType === "all"
-                      ? "bg-amber-500 text-slate-950 font-bold shadow"
+                      ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
@@ -257,81 +253,92 @@ export default function HomePage() {
               {/* 360 Virtual Tour Filter Pill */}
               <button
                 onClick={() => setOnlyVirtualTour(!onlyVirtualTour)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all shrink-0 text-xs ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all text-xs ${
                   onlyVirtualTour
-                    ? "bg-gradient-to-l from-indigo-500 to-amber-500 text-white font-bold shadow-lg shadow-indigo-500/30"
-                    : "bg-slate-950/80 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700"
+                    ? "bg-indigo-600/30 text-indigo-300 font-bold border border-indigo-500/50 shadow-sm"
+                    : "bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800"
                 }`}
               >
-                <Eye className="w-3.5 h-3.5 text-amber-400" />
-                <span>فقط تور مجازی ۳۶۰°</span>
+                <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                <span>فقط واحدهای با تور ویدیویی</span>
                 {onlyVirtualTour && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
               </button>
             </div>
 
-            {/* Main Input Row */}
-            <div className="flex flex-col sm:flex-row items-center gap-2">
-              <div className="relative flex-1 w-full">
-                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            {/* Main Input Row: Neighborhood Selector + Keyword Search */}
+            <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
+              <div className="sm:w-48 shrink-0">
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => setSelectedDistrict(e.target.value)}
+                  className="w-full h-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
+                >
+                  <option value="همه">همه محله‌های تهران</option>
+                  {districts.filter(d => d !== "همه").map((d) => (
+                    <option key={d} value={d}>محله {d}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative flex-1">
+                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="نام محله (مثلاً: سعادت‌آباد، پونک، نیاوران...)"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pr-11 pl-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/70 transition-colors"
+                  placeholder="جستجوی عنوان، خیابان یا مشخصات ملک..."
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pr-10 pl-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
                 />
               </div>
 
-              <div className="w-full sm:w-auto flex items-center gap-2">
-                <button
-                  onClick={() => setCalculatorOpen(true)}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-sm font-medium border border-slate-700/60 transition-colors whitespace-nowrap"
-                >
-                  <ArrowRightLeft className="w-4 h-4 text-amber-400" />
-                  تبدیل رهن
-                </button>
-              </div>
+              <button
+                onClick={() => setCalculatorOpen(true)}
+                className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700/60 transition-colors shrink-0"
+              >
+                <ArrowRightLeft className="w-4 h-4 text-amber-400" />
+                <span>تبدیل رهن</span>
+              </button>
             </div>
           </div>
 
-          {/* Quick Pillars */}
+          {/* Quick Value Pillars */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
-            <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/60 flex items-center gap-2.5 text-right">
-              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/70 flex items-center gap-2.5 text-right">
+              <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white">۱۰۰٪ رایگان</div>
-                <div className="text-[10px] text-slate-400">بدون هزینه ثبت فایل</div>
+                <div className="text-xs font-bold text-white">کاداستر دقیق شهری</div>
+                <div className="text-[10px] text-slate-400">اطلاعات ثبتی و پلاک</div>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/60 flex items-center gap-2.5 text-right">
-              <MapPin className="w-5 h-5 text-amber-400 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/70 flex items-center gap-2.5 text-right">
+              <Eye className="w-5 h-5 text-indigo-400 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white">لوکیشن دقیق</div>
-                <div className="text-[10px] text-slate-400">جستجوی محله‌محور</div>
+                <div className="text-xs font-bold text-white">تور ویدیویی املاک</div>
+                <div className="text-[10px] text-slate-400">بازدید پیش از حضور</div>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/60 flex items-center gap-2.5 text-right">
-              <Phone className="w-5 h-5 text-blue-400 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/70 flex items-center gap-2.5 text-right">
+              <Video className="w-5 h-5 text-red-400 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white">تماس مستقیم</div>
-                <div className="text-[10px] text-slate-400">بدون واسطه اضافی</div>
+                <div className="text-xs font-bold text-white">نشست آنلاین قرارداد</div>
+                <div className="text-[10px] text-slate-400">مذاکره ۴ نفره مجازی</div>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/60 flex items-center gap-2.5 text-right">
-              <Building2 className="w-5 h-5 text-purple-400 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/70 flex items-center gap-2.5 text-right">
+              <Building2 className="w-5 h-5 text-emerald-400 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white">حمایت از مشاورین</div>
-                <div className="text-[10px] text-slate-400">پنل ویژه آژانس‌ها</div>
+                <div className="text-xs font-bold text-white">مشاوران رسمی</div>
+                <div className="text-[10px] text-slate-400">ارتباط مستقیم و مطمئن</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ==================== 3D MAP HERO BANNER ==================== */}
+      {/* ==================== CADASTRE MAP HERO BANNER ==================== */}
       <section className="px-4 lg:px-8 -mt-6 mb-4 relative z-20">
         <div className="max-w-7xl mx-auto">
           <div className="rounded-3xl bg-gradient-to-r from-amber-500/10 via-indigo-950/40 to-slate-900 border border-amber-500/30 p-5 sm:p-6 backdrop-blur-xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
@@ -343,15 +350,15 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold border border-amber-500/30">
-                    قابلیت انقلابی «یه خونه»
+                    سامانه نقشه یکپارچه
                   </span>
-                  <span className="text-xs text-slate-400">دیجیتال تویین پلاک‌به‌پلاک</span>
+                  <span className="text-xs text-slate-400">تحلیل کاداستر پلاک‌به‌پلاک</span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-black text-white mt-1">
-                  نقشه ۳ بعدی هوشمند کل تهران (طبقه به طبقه)
+                  نقشه هوشمند کاداستر شهری تهران (پلاک‌به‌پلاک)
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
-                  روی هر کوچه یا ساختمانی در تهران کلیک کنید؛ تعداد طبقات، واحدهای آماده برای رهن، اجاره و خرید، متراژ، قیمت و تور مجازی را در لحظه ببینید.
+                  روی هر کوچه یا ساختمانی در تهران کلیک کنید؛ مشخصات ثبتی، واحدهای آماده برای رهن، اجاره و خرید، متراژ، قیمت و تور ویدیویی را در لحظه مشاهده کنید.
                 </p>
               </div>
             </div>
@@ -360,7 +367,7 @@ export default function HomePage() {
               href="/map"
               className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all hover:scale-105 flex items-center justify-center gap-2 shrink-0 group"
             >
-              <span>ورود به نقشه ۳ بعدی تهران</span>
+              <span>ورود به نقشه کاداستر تهران</span>
               <Compass className="w-5 h-5 group-hover:rotate-45 transition-transform" />
             </Link>
           </div>
@@ -547,39 +554,37 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* ==================== UNCLE'S AGENCY RECRUITMENT BANNER ==================== */}
-        <section className="mt-16 p-6 sm:p-10 rounded-3xl bg-gradient-to-l from-indigo-950 via-slate-900 to-slate-950 border border-amber-500/30 relative overflow-hidden shadow-2xl">
+        {/* ==================== AGENCY & AGENT PARTNERSHIP SECTION ==================== */}
+        <section className="mt-16 p-6 sm:p-10 rounded-3xl bg-gradient-to-l from-indigo-950/60 via-slate-900 to-slate-950 border border-amber-500/30 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 left-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold mb-4">
               <Building className="w-4 h-4" />
-              ویژه مشاورین و آژانس‌های معاملات ملکی سراسر کشور
+              زیرساخت اختصاصی دفاتر و آژانس‌های املاک تهران
             </div>
 
             <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
-              خسته از پرداخت هزینه‌های سنگین به دیوار؟
-              <br />
-              در <span className="text-amber-400">«یه خونه»</span> تمام فایل‌هایتان را رایگان ثبت کنید!
+              مدیریت حرفه‌ای فایلینگ، کاداستر شهری و اتاق نشست آنلاین
             </h3>
 
             <p className="text-slate-300 text-sm leading-relaxed mb-6">
-              ما پلتفرم «یه خونه» را برای حمایت از صنف مشاورین املاک ساختیم. هیچ پولی برای هر آگهی، ثبت فایل یا نردبان از شما گرفته نمی‌شود و سیستم به صورت کاملاً خودکار و عادلانه هر ۴ تا ۶ ساعت تمام فایل‌ها را به صدر نتایج هدایت می‌کند. مشتریان واقعی و بدون واسطه مستقیماً با آژانس شما تماس می‌گیرند.
+              سامانه «یه خونه» بستر یکپارچه و مدرنی را برای دفاتر معاملات ملکی فراهم ساخته است. انتشار نامحدود فایل‌ها، نمایش موقعیت ثبتی دقیق بر روی نقشه کاداستر، الگوریتم توزیع عادلانه نتایج، و امکان برگزاری نشست‌های ۴ نفره مجازی قرارداد میان خریدار، فروشنده، مشاور و سرپرست آژانس بدون نیاز به تردد شهری.
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/agency/dashboard"
-                className="px-6 py-3 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 flex items-center gap-2"
+                className="px-6 py-3 rounded-xl bg-gradient-to-l from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-bold text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-105 flex items-center gap-2"
               >
                 <Building2 className="w-4 h-4" />
-                <span>ورود به پنل آژانس و مدیریت فایل‌ها</span>
+                <span>ورود به پنل آژانس و مدیریت همکاران</span>
               </Link>
               <button
                 onClick={() => setSubmitModalOpen(true)}
                 className="px-6 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-white font-semibold text-sm border border-slate-700 transition-colors"
               >
-                + ثبت فوری فایل ملکی
+                + ثبت مستقیم فایل ملکی
               </button>
             </div>
           </div>
@@ -595,7 +600,7 @@ export default function HomePage() {
             </div>
             <div>
               <span className="font-bold text-white text-sm">یه خونه (YeKhoone)</span>
-              <p className="text-[11px] text-slate-500">پلتفرم هوشمند و رایگان معاملات مسکن در ایران</p>
+              <p className="text-[11px] text-slate-500">سامانه هوشمند کاداستر شهری و معاملات املاک تهران</p>
             </div>
           </div>
 
@@ -716,19 +721,19 @@ export default function HomePage() {
             </button>
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
                 <PlusCircle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">ثبت ۱۰۰٪ رایگان فایل ملکی</h3>
-                <p className="text-xs text-slate-400">بدون نیاز به پرداخت ریالی هزینه به پلتفرم</p>
+                <h3 className="text-lg font-bold text-white">ثبت مستقیم فایل ملکی در سامانه</h3>
+                <p className="text-xs text-slate-400">انتشار در نقشه کاداستر شهری و دسترسی مستقیم متقاضیان</p>
               </div>
             </div>
 
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                alert("فایل شما با موفقیت به صورت رایگان در سامانه یه خونه ثبت شد!");
+                alert("فایل شما با موفقیت در سامانه یه خونه ثبت و منتشر شد.");
                 setSubmitModalOpen(false);
               }}
               className="space-y-4 text-xs"
@@ -825,9 +830,9 @@ export default function HomePage() {
 
               <button
                 type="submit"
-                className="w-full mt-4 py-3 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition-all"
+                className="w-full mt-4 py-3 rounded-xl bg-gradient-to-l from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition-all"
               >
-                ثبت نهایی و انتشار رایگان در «یه خونه»
+                ثبت نهایی و انتشار فایل در «یه خونه»
               </button>
             </form>
           </div>

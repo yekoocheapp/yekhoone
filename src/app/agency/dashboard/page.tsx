@@ -139,7 +139,7 @@ export default function AgencyDashboardPage() {
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>+ ثبت رایگان فایل جدید</span>
+              <span>+ ثبت فایل ملکی جدید</span>
             </button>
             <Link
               href="/"
@@ -209,20 +209,20 @@ export default function AgencyDashboardPage() {
               </div>
               <div>
                 <span className="text-xs text-emerald-400 font-bold block mb-0.5">
-                  گزارش صرفه‌جویی اقتصادی این ماه
+                  گزارش سیستماتیک فایل‌های آژانس
                 </span>
                 <h3 className="text-lg sm:text-xl font-black text-white">
-                  تاکنون <span className="text-emerald-400 font-extrabold">۶,۸۰۰,۰۰۰ تومان</span> در هزینه‌های آگهی و نردبان صرفه‌جویی کرده‌اید!
+                  تمام <span className="text-emerald-400 font-extrabold">{properties.length} فایل ملکی</span> شما در چرخه به‌روزرسانی فعال قرار دارند
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  در دیوار بابت ثبت {properties.length} فایل و نردبان‌های مکرر روزانه باید میلیون‌ها تومان پول می‌دادید. در «یه خونه» نردبان به صورت کاملاً خودکار، سیستماتیک و الگوریتمی هر ۴ تا ۶ ساعت برای تمام فایل‌ها بدون ۱ ریال هزینه اعمال می‌شود.
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  الگوریتم هوشمند «یه خونه» فایل‌های معتبر آژانس شما را هر ۴ تا ۶ ساعت یکبار به صورت خودکار و زمان‌بندی‌شده به‌روزرسانی کرده و در صدر نتایج متقاضیان قرار می‌دهد.
                 </p>
               </div>
             </div>
 
             <div className="bg-slate-950/80 px-4 py-3 rounded-2xl border border-slate-800 text-center shrink-0">
-              <span className="text-[11px] text-slate-400 block mb-1">هزینه پرداختی به یه خونه</span>
-              <span className="text-xl font-black text-emerald-400">۰ تومان</span>
+              <span className="text-[11px] text-slate-400 block mb-1">وضعیت اشتراک حرفه‌ای</span>
+              <span className="text-sm font-black text-emerald-400">فعال و نامحدود</span>
             </div>
           </div>
         </div>
@@ -438,7 +438,7 @@ export default function AgencyDashboardPage() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white">ثبت فوری فایل جدید در سامانه</h3>
-                <p className="text-xs text-slate-400">فایل شما بلافاصله و ۱۰۰٪ رایگان منتشر خواهد شد</p>
+                <p className="text-xs text-slate-400">فایل شما بلافاصله در سامانه و نقشه کاداستر شهری منتشر خواهد شد</p>
               </div>
             </div>
 
@@ -583,7 +583,7 @@ export default function AgencyDashboardPage() {
               <div className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-start gap-2.5">
                 <Cpu className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
                 <div className="text-[11px] leading-relaxed">
-                  <span className="font-bold text-indigo-300 block mb-0.5">چرخه نردبان ۱۰۰٪ سیستمی و الگوریتمی</span>
+                  <span className="font-bold text-indigo-300 block mb-0.5">چرخه به‌روزرسانی هوشمند و الگوریتمی</span>
                   <span className="text-slate-400">
                     این فایل به صورت خودکار هر ۴ الی ۶ ساعت در صدر نتایج قرار خواهد گرفت. نیازی به پرداخت هزینه یا زدن مکرر دکمه نردبان نیست.
                   </span>
@@ -594,7 +594,7 @@ export default function AgencyDashboardPage() {
                 type="submit"
                 className="w-full mt-4 py-3 rounded-xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 text-slate-950 font-bold text-sm shadow-xl shadow-amber-500/20"
               >
-                انتشار رایگان در یه خونه
+                ثبت و انتشار در سامانه «یه خونه»
               </button>
             </form>
           </div>
@@ -629,7 +629,7 @@ export default function AgencyDashboardPage() {
                   <span>۱. عدالت کامل برای تمام مشاوران و مالکین</span>
                 </div>
                 <p className="text-slate-400">
-                  در دیوار، آژانس‌هایی که بودجه‌های میلیونی دارند، با خرید مکرر نردبان، تمام ردیف‌های اول را قبضه می‌کنند و فایل مشاورین کم‌درآمدتر زیر آوار پنهان می‌شود. در «یه خونه»، نردبان سیستمی است و تمام فایل‌های معتبر بر اساس صف ریاضی چرخشی (Round-Robin) هر ۴ الی ۶ ساعت یکبار به صورت کاملاً برابر به صدر صفحه می‌آیند.
+                  در «یه خونه»، نمایش فایل‌ها بر اساس صف ریاضی چرخشی (Round-Robin) مدیریت می‌شود. تمام فایل‌های معتبر آژانس‌ها و مشاورین هر ۴ الی ۶ ساعت یکبار به صورت کاملاً عادلانه و یکنواخت به صدر نتایج جستجو هدایت می‌شوند.
                 </p>
               </div>
 
@@ -649,7 +649,7 @@ export default function AgencyDashboardPage() {
                   <span>۳. ریشه‌کن شدن ربات‌ها، افزونه‌ها و اسپم</span>
                 </div>
                 <p className="text-slate-400">
-                  در سامانه‌هایی با دکمه نردبان رایگان دستی، افراد از ربات‌ها و افزونه‌های خودکار برای کلیک مدام استفاده می‌کردند که تجربه کاربری را تخریب می‌کرد. سیستماتیک بودن نردبان در «یه خونه» هرگونه امکان سوءاستفاده یا تقلب را از ریشه می‌بندد.
+                  در روش‌های سنتی با دکمه‌های دستی به‌روزرسانی، افراد از ربات‌ها و افزونه‌های خودکار برای کلیک مدام استفاده می‌کردند که تجربه کاربری را تخریب می‌کرد. سیستماتیک بودن نردبان در «یه خونه» هرگونه امکان سوءاستفاده یا تقلب را از ریشه می‌بندد.
                 </p>
               </div>
 
