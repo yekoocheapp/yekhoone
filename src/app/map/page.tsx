@@ -263,7 +263,7 @@ function MapPageContent() {
                     ? "bg-slate-800 text-white shadow-sm border border-slate-700"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
-                title="حالت بازدید و جستجوی ملک برای خریداران و مستاجران"
+                title="حالت بازدید و جستجوی ملک برای متقاضیان مسکن"
               >
                 <Eye className="w-3.5 h-3.5 text-amber-400" />
                 <span className="hidden sm:inline">متقاضی مسکن</span>

@@ -36,9 +36,19 @@ import {
   Heart
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
+import AuthModal from "@/components/AuthModal";
 
 export default function HomePage() {
-  const { currentRole, isFavorite, toggleFavorite } = useUser();
+  const {
+    currentRole,
+    baseUser,
+    buyerProfile,
+    sellerProfile,
+    agentProfile,
+    agencyProfile,
+    isFavorite,
+    toggleFavorite
+  } = useUser();
   const [properties, setProperties] = useState<Property[]>(initialProperties);
   const [dealType, setDealType] = useState<"all" | "rent" | "sale">("rent");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("همه");
@@ -47,6 +57,10 @@ export default function HomePage() {
   const [calculatorOpen, setCalculatorOpen] = useState<boolean>(false);
   const [submitModalOpen, setSubmitModalOpen] = useState<boolean>(false);
   const [contactModalProperty, setContactModalProperty] = useState<Property | null>(null);
+
+  // Auth modal states
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+  const [authNotice, setAuthNotice] = useState<string | undefined>(undefined);
 
   // Rahn-Ejareh Calculator states
   const [calcDeposit, setCalcDeposit] = useState<number>(500); // 500 million
@@ -78,29 +92,79 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* ==================== HEADER ==================== */}
-      <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3 transition-all">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative">
+      <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3.5 sm:py-4 transition-all">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative min-h-[52px]">
           {/* User Sign-in / Profile Pill & Action CTA (Right side in RTL) */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 z-10">
             {/* Sign in / Profile Pill */}
-            <Link
-              href="/profile"
-              className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 hover:text-white transition-all shadow-sm"
-              title="پروفایل کاربری و ورود"
-            >
-              <User className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-medium">
-                {currentRole === "guest" ? "ورود / ثبت‌نام" : (
-                  currentRole === "buyer" ? "متقاضی" :
-                  currentRole === "seller" ? "مالک" :
-                  currentRole === "agent" ? "مشاور" : "آژانس"
-                )}
-              </span>
-            </Link>
+            {currentRole === "guest" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthNotice(undefined);
+                  setAuthModalOpen(true);
+                }}
+                className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 hover:text-white transition-all shadow-sm group"
+                title="ورود و ثبت‌نام در سامانه"
+              >
+                <User className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold">ورود / ثبت‌نام</span>
+              </button>
+            ) : currentRole === "member" ? (
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 text-xs text-slate-200 hover:text-white transition-all shadow-sm group"
+                title="تکمیل رسته کاربری در پروفایل"
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                <span className="font-bold max-w-[120px] truncate text-white">
+                  {baseUser?.fullName || "کاربر گرامی"}
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                  تکمیل رسته
+                </span>
+              </Link>
+            ) : (
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-emerald-500/40 text-xs text-slate-200 hover:text-white transition-all shadow-sm group"
+                title="مشاهده پروفایل کاربری"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-bold max-w-[120px] truncate text-white">
+                  {baseUser?.fullName ||
+                    (currentRole === "buyer"
+                      ? buyerProfile.name
+                      : currentRole === "seller"
+                      ? sellerProfile.name
+                      : currentRole === "agent"
+                      ? agentProfile.name
+                      : agencyProfile.name) || "کاربر گرامی"}
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-amber-400 font-bold">
+                  {currentRole === "buyer"
+                    ? "متقاضی"
+                    : currentRole === "seller"
+                    ? "مالک"
+                    : currentRole === "agent"
+                    ? "مشاور"
+                    : "آژانس"}
+                </span>
+              </Link>
+            )}
 
             {/* Register Property Button */}
             <button
-              onClick={() => setSubmitModalOpen(true)}
+              onClick={() => {
+                if (currentRole === "guest") {
+                  setAuthNotice("برای ثبت فایل یا ملک جدید در سامانه یه خونه، لطفاً ابتدا ثبت‌نام فرمایید.");
+                  setAuthModalOpen(true);
+                } else if (currentRole === "member") {
+                  window.location.href = "/profile";
+                } else {
+                  setSubmitModalOpen(true);
+                }
+              }}
               className="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-l from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all hover:scale-105"
             >
               <PlusCircle className="w-4 h-4" />
@@ -108,21 +172,24 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Middle: Brand Name [یه خونه] & Introduction of the App */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center text-center pointer-events-auto">
-            <Link href="/" className="group">
-              <span className="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-l from-amber-400 via-amber-300 to-white bg-clip-text text-transparent">
+          {/* Middle: Brand Name [یه خونه] & Introduction of the App in One Single Line at Same Font Size */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center whitespace-nowrap pointer-events-auto">
+            <Link href="/" className="group inline-flex items-center gap-2 sm:gap-3 text-lg sm:text-xl md:text-2xl font-bold text-slate-100 select-none">
+              <span className="text-amber-400 font-black inline-block drop-shadow-sm">
                 یه خونه
               </span>
+              <span className="hidden sm:inline-block text-slate-600 font-light">
+                |
+              </span>
+              <span className="hidden sm:inline-block text-slate-100 group-hover:text-amber-300 transition-colors">
+                سامانه هوشمند معاملات مسکن تهران
+              </span>
             </Link>
-            <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium whitespace-nowrap">
-              سامانه هوشمند معاملات مسکن تهران
-            </p>
           </div>
 
           {/* Left side in RTL: Standalone Logo Only (No text beside it) */}
           <Link href="/" className="group shrink-0 z-10" title="صفحه اصلی یه خونه">
-            <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-amber-500/10 border border-amber-500/30 group-hover:scale-105 transition-transform">
+            <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl overflow-hidden shadow-lg shadow-amber-500/10 border border-amber-500/30 group-hover:scale-105 transition-transform">
               <Image
                 src="/logo.jpg"
                 alt="لوگو یه خونه"
@@ -156,7 +223,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-slate-300/90 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed mb-8">
-            دسترسی مستقیم به فایل‌های معتبر ملکی با لوکیشن دقیق، تور ویدیویی ۳۶۰ درجه و اتاق نشست آنلاین قرارداد میان خریدار، فروشنده و سرپرست آژانس.
+            دسترسی مستقیم به فایل‌های معتبر ملکی با لوکیشن دقیق، تور ویدیویی ۳۶۰ درجه و اتاق نشست آنلاین قرارداد میان متقاضی مسکن، مالک و سرپرست آژانس.
           </p>
 
           {/* Search Capsule / Command Center */}
@@ -515,7 +582,7 @@ export default function HomePage() {
             </h3>
 
             <p className="text-slate-300 text-sm leading-relaxed mb-6">
-              سامانه «یه خونه» بستر یکپارچه و مدرنی را برای دفاتر معاملات ملکی فراهم ساخته است. انتشار نامحدود فایل‌ها، نمایش موقعیت دقیق ملک بر روی نقشه هوشمند تهران، الگوریتم توزیع عادلانه نتایج، و امکان برگزاری نشست‌های ۴ نفره مجازی قرارداد میان خریدار، فروشنده، مشاور و سرپرست آژانس بدون نیاز به تردد شهری.
+              سامانه «یه خونه» بستر یکپارچه و مدرنی را برای دفاتر معاملات ملکی فراهم ساخته است. انتشار نامحدود فایل‌ها، نمایش موقعیت دقیق ملک بر روی نقشه هوشمند تهران، الگوریتم توزیع عادلانه نتایج، و امکان برگزاری نشست‌های ۴ نفره مجازی قرارداد میان متقاضی مسکن، مالک، مشاور و سرپرست آژانس بدون نیاز به تردد شهری.
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -758,7 +825,7 @@ export default function HomePage() {
                 <input
                   required
                   type="text"
-                  placeholder="مثال: املاک نوین سعادت‌آباد - مشاور مهرداد حیدری"
+                  placeholder="مثال: دفتر معاملات سعادت‌آباد - مشاور رسمی"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
                 />
               </div>
@@ -840,6 +907,13 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* ==================== AUTHENTICATION MODAL ==================== */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        notice={authNotice}
+      />
     </div>
   );
 }

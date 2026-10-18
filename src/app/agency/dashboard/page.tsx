@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useUser } from "@/context/UserContext";
 import { initialProperties, Property, formatPersianNumber } from "@/data/properties";
 import {
   ArrowRight,
@@ -29,6 +30,7 @@ import {
 } from "lucide-react";
 
 export default function AgencyDashboardPage() {
+  const { agencyProfile, agentProfile, currentRole } = useUser();
   const [properties, setProperties] = useState<Property[]>(initialProperties);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"all" | "active" | "deals">("all");
@@ -75,13 +77,13 @@ export default function AgencyDashboardPage() {
       deposit: Number(newDeposit.replace(/,/g, "")) || 500000000,
       rent: Number(newRent.replace(/,/g, "")) || 20000000,
       totalPrice: Number(newTotalSale.replace(/,/g, "")) || 0,
-      agencyName: "املاک نوین سعادت‌آباد",
-      agencyPhone: "۰۲۱۲۲۳۳۴۴۵۵",
-      agentName: "مهرداد حیدری",
-      agentRole: "مشاور ارشد",
-      agentPhone: "۰۹۱۲۳۴۵۶۷۸۹",
-      agentRating: 4.9,
-      agentDealsCount: 53,
+      agencyName: agencyProfile.name || "دفتر معاملات رسمی",
+      agencyPhone: agencyProfile.phone || "۰۲۱۲۲۰۰۰۰۰۰",
+      agentName: agentProfile.name || agencyProfile.managerName || "مشاور رسمی سامانه",
+      agentRole: "مشاور ارشد پرونده",
+      agentPhone: agentProfile.phone || agencyProfile.phone || "۰۹۱۲۰۰۰۰۰۰۰",
+      agentRating: 5.0,
+      agentDealsCount: 1,
       isVerified: true,
       hasVirtualTour: newHasTour,
       videoUrl: newHasTour
@@ -165,20 +167,22 @@ export default function AgencyDashboardPage() {
         <div className="p-6 rounded-3xl bg-gradient-to-l from-slate-900 via-slate-900 to-indigo-950/40 border border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-black text-2xl shrink-0">
-              م
+              {agencyProfile.name ? agencyProfile.name.slice(0, 1) : "آ"}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-white">املاک نوین سعادت‌آباد</h1>
+                <h1 className="text-xl sm:text-2xl font-black text-white">
+                  {agencyProfile.name || "دفتر کارگزاری و آژانس املاک رسمی"}
+                </h1>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">
                   آژانس رسمی تایید شده
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                مدیر و کارشناس ارشد: <strong className="text-slate-200">مهرداد حیدری</strong> • تلفن مستقیم: <span dir="ltr" className="text-slate-300">۰۹۱۲۳۴۵۶۷۸۹</span>
+                مدیر مسئول: <strong className="text-slate-200">{agencyProfile.managerName || "مدیریت آژانس"}</strong> • سرپرست قرارداد: <strong className="text-amber-400">{agencyProfile.supervisorName || "سرپرست حقوقی"}</strong> • تلفن: <span dir="ltr" className="text-slate-300">{agencyProfile.phone || "۰۲۱۲۲۰۰۰۰۰۰"}</span>
               </p>
               <p className="text-[11px] text-amber-400 font-medium mt-1">
-                امتیاز اعتبار: ★ ۴.۹ (۵۲ معامله موفق در منطقه ۲ تهران)
+                پروانه کسب: {agencyProfile.licenseNumber || "معتبر اتحادیه املاک تهران"}
               </p>
             </div>
           </div>

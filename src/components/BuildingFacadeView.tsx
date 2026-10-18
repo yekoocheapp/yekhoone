@@ -124,7 +124,7 @@ export default function BuildingFacadeView({
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
                 <Eye className="w-3.5 h-3.5 text-slate-500" />
-                <span>حالت بازدیدکننده و خریدار (فقط خواندنی)</span>
+                <span>حالت بازدیدکننده و متقاضی مسکن (فقط خواندنی)</span>
               </div>
               {onRequestAgentMode && (
                 <button

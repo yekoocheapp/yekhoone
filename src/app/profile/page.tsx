@@ -37,20 +37,26 @@ import {
   Compass,
   Briefcase,
   SlidersHorizontal,
-  ChevronLeft
+  ChevronLeft,
+  LogOut
 } from "lucide-react";
+import ClassicSignUpForm from "@/components/ClassicSignUpForm";
+import CategoryCompletionForm from "@/components/CategoryCompletionForm";
 
 export default function ProfilePage() {
   const {
     currentRole,
     setCurrentRole,
+    baseUser,
     buyerProfile,
     sellerProfile,
     agentProfile,
     agencyProfile,
     currentNeshasst,
     toggleFavorite,
-    isFavorite
+    isFavorite,
+    resetCategory,
+    logout
   } = useUser();
 
   const [activeTab, setActiveTab] = useState<string>("overview");
@@ -116,101 +122,88 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      {/* ==================== ROLE SWITCHER HERO BAR ==================== */}
-      <section className="bg-slate-900/60 border-b border-slate-800/80 px-4 sm:px-8 py-5">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <span className="text-xs text-amber-400 font-bold block mb-1">
-              تفکیک سطح دسترسی و نقش کاربری:
-            </span>
-            <p className="text-sm text-slate-300">
-              می‌توانید به سادگی بین نقش‌های سامانه جابجا شده و پروفایل اختصاصی هر نقش را بررسی کنید.
-            </p>
-          </div>
-
-          {/* 4 Distinct Role Switcher Buttons */}
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto no-scrollbar">
-            {/* 1. Buyer */}
-            <button
-              onClick={() => setCurrentRole("buyer")}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
-                currentRole === "buyer"
-                  ? "bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <Heart className="w-3.5 h-3.5" />
-              <span>خریدار / متقاضی</span>
-            </button>
-
-            {/* 2. Seller */}
-            <button
-              onClick={() => setCurrentRole("seller")}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
-                currentRole === "seller"
-                  ? "bg-purple-500 text-white font-black shadow-lg shadow-purple-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <Key className="w-3.5 h-3.5" />
-              <span>مالک و فروشنده</span>
-            </button>
-
-            {/* 3. Agent */}
-            <button
-              onClick={() => setCurrentRole("agent")}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
-                currentRole === "agent"
-                  ? "bg-blue-500 text-white font-black shadow-lg shadow-blue-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>مشاور املاک</span>
-            </button>
-
-            {/* 4. Agency */}
-            <button
-              onClick={() => setCurrentRole("agency")}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
-                currentRole === "agency"
-                  ? "bg-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/20"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>آژانس املاک</span>
-            </button>
-
-            {/* 5. Guest */}
-            <button
-              onClick={() => setCurrentRole("guest")}
-              className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
-                currentRole === "guest"
-                  ? "bg-slate-700 text-white font-black shadow-sm"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <span>کاربر مهمان</span>
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* ==================== MAIN PROFILE CONTENT ==================== */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8">
+        {/* Active Account Status & Logout Header (When Signed In) */}
+        {currentRole !== "guest" && (
+          <div className="mb-6 p-4 sm:p-5 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-xl flex items-center justify-between gap-4 flex-wrap animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+              <div>
+                <span className="text-xs text-slate-400 block">
+                  {baseUser ? `خوش آمدید، ${baseUser.fullName}` : "حساب کاربری فعال در سامانه یه خونه:"}
+                  {baseUser?.contact ? ` • تماس/ایمیل: ${baseUser.contact}` : ""}
+                </span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-sm font-extrabold text-white">
+                    {baseUser?.fullName ||
+                      (currentRole === "buyer"
+                        ? buyerProfile.name
+                        : currentRole === "seller"
+                        ? sellerProfile.name
+                        : currentRole === "agent"
+                        ? agentProfile.name
+                        : currentRole === "agency"
+                        ? agencyProfile.name
+                        : "کاربر عضو سامانه")}
+                  </span>
+                  <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
+                    {currentRole === "buyer"
+                      ? "متقاضی مسکن"
+                      : currentRole === "seller"
+                      ? "مالک و فروشنده"
+                      : currentRole === "agent"
+                      ? "مشاور املاک"
+                      : currentRole === "agency"
+                      ? "آژانس املاک"
+                      : "عضو سامانه (در انتظار تکمیل رسته)"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              {currentRole !== "member" && (
+                <button
+                  onClick={resetCategory}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all shadow-sm group"
+                  title="تغییر یا ویرایش رسته کاربری"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-45 transition-transform" />
+                  <span>تغییر رسته کاربری</span>
+                </button>
+              )}
+
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-300 border border-red-500/30 text-xs font-bold transition-all shadow-sm group"
+                title="خروج از حساب کاربری و بازگشت به حالت مهمان"
+              >
+                <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                <span>خروج از حساب</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ==================== 1. BUYER PROFILE VIEW ==================== */}
         {currentRole === "buyer" && (
           <div className="space-y-6 animate-in fade-in">
             {/* Buyer Header Card */}
             <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-xl">
-                  <Image src={buyerProfile.avatar} alt={buyerProfile.name} fill className="object-cover" />
+                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-xl bg-slate-950 shrink-0 flex items-center justify-center">
+                  {buyerProfile.avatar ? (
+                    <Image src={buyerProfile.avatar} alt={buyerProfile.name} fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-emerald-950/60 flex items-center justify-center text-emerald-400 text-2xl font-black">
+                      {buyerProfile.name ? buyerProfile.name.slice(0, 1) : <User className="w-8 h-8" />}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-xl font-extrabold text-white">{buyerProfile.name}</h2>
+                    <h2 className="text-xl font-extrabold text-white">{buyerProfile.name || "متقاضی مسکن"}</h2>
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
                       متقاضی مسکن
                     </span>
@@ -352,12 +345,18 @@ export default function ProfilePage() {
             {/* Seller Header Card */}
             <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-purple-500/40 shadow-xl">
-                  <Image src={sellerProfile.avatar} alt={sellerProfile.name} fill className="object-cover" />
+                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-purple-500/40 shadow-xl bg-slate-950 shrink-0 flex items-center justify-center">
+                  {sellerProfile.avatar ? (
+                    <Image src={sellerProfile.avatar} alt={sellerProfile.name} fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-purple-950/60 flex items-center justify-center text-purple-400 text-2xl font-black">
+                      {sellerProfile.name ? sellerProfile.name.slice(0, 1) : <Key className="w-8 h-8" />}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-xl font-extrabold text-white">{sellerProfile.name}</h2>
+                    <h2 className="text-xl font-extrabold text-white">{sellerProfile.name || "مالک مسکن"}</h2>
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold">
                       مالک و فروشنده
                     </span>
@@ -368,9 +367,9 @@ export default function ProfilePage() {
                   </div>
                   <p className="text-xs text-slate-400 flex items-center gap-2">
                     <Phone className="w-3.5 h-3.5 text-slate-500" />
-                    <span>شماره تماس: {sellerProfile.phone}</span>
+                    <span>شماره تماس: {sellerProfile.phone || "ثبت نشده"}</span>
                     <span>•</span>
-                    <span>تعداد املاک ثبت‌شده: ۲ ملک فعال</span>
+                    <span>تعداد املاک ثبت‌شده: {formatPersianNumber(sellerProperties.length)} ملک</span>
                   </p>
                 </div>
               </div>
@@ -382,7 +381,7 @@ export default function ProfilePage() {
                   className="px-5 py-3 rounded-2xl bg-gradient-to-l from-red-600 to-rose-600 hover:from-red-500 text-white font-extrabold text-xs shadow-xl shadow-red-600/20 transition-all hover:scale-105 flex items-center gap-2"
                 >
                   <Video className="w-4 h-4 animate-pulse" />
-                  <span>ورود به نشست قرارداد آنلاین با خریدار</span>
+                  <span>ورود به نشست قرارداد آنلاین با متقاضی مسکن</span>
                 </Link>
               </div>
             </div>
@@ -392,7 +391,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Home className="w-5 h-5 text-purple-400" />
-                  <h3 className="text-lg font-bold text-white">املاک و آپارتمان‌های تحت مالکیت من</h3>
+                  <h3 className="text-lg font-bold text-white">املاک و آپارتمان‌های تحت مالکیت من ({formatPersianNumber(sellerProperties.length)})</h3>
                 </div>
                 <Link
                   href="/map"
@@ -402,50 +401,63 @@ export default function ProfilePage() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                {sellerProperties.map((p) => (
-                  <div
-                    key={p.id}
-                    className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl flex flex-col justify-between gap-4"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-800">
-                        <Image src={p.images[0]} alt={p.title} fill className="object-cover" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-bold">
-                            {p.district}
-                          </span>
-                          <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-bold">
-                            فایل فعال
-                          </span>
+              {sellerProperties.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  {sellerProperties.map((p) => (
+                    <div
+                      key={p.id}
+                      className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl flex flex-col justify-between gap-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-800">
+                          <Image src={p.images[0]} alt={p.title} fill className="object-cover" />
                         </div>
-                        <h4 className="text-sm font-bold text-white truncate">{p.title}</h4>
-                        <p className="text-xs text-slate-400 truncate mt-0.5">{p.address}</p>
-                        <p className="text-xs text-amber-400 font-black mt-2">
-                          {p.type === "rent"
-                            ? `رهن: ${formatPersianNumber(p.deposit / 1000000)} م • اجاره: ${formatPersianNumber(p.rent / 1000000)} م`
-                            : `قیمت فروش: ${formatPersianNumber((p.totalPrice || 0) / 1000000000)} میلیارد تومان`}
-                        </p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-bold">
+                              {p.district}
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-bold">
+                              فایل فعال
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-white truncate">{p.title}</h4>
+                          <p className="text-xs text-slate-400 truncate mt-0.5">{p.address}</p>
+                          <p className="text-xs text-amber-400 font-black mt-2">
+                            {p.type === "rent"
+                              ? `رهن: ${formatPersianNumber(p.deposit / 1000000)} م • اجاره: ${formatPersianNumber(p.rent / 1000000)} م`
+                              : `قیمت فروش: ${formatPersianNumber((p.totalPrice || 0) / 1000000000)} میلیارد تومان`}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
-                      <span className="text-xs text-slate-400">مشاور پرونده: {p.agentName}</span>
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href="/neshasst"
-                          className="px-3 py-1.5 rounded-xl bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/30 text-xs font-bold transition-all flex items-center gap-1"
-                        >
-                          <Video className="w-3.5 h-3.5" />
-                          نشست اختصاصی
-                        </Link>
+                      <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                        <span className="text-xs text-slate-400">مشاور پرونده: {p.agentName}</span>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href="/neshasst"
+                            className="px-3 py-1.5 rounded-xl bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/30 text-xs font-bold transition-all flex items-center gap-1"
+                          >
+                            <Video className="w-3.5 h-3.5" />
+                            نشست اختصاصی
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-10 text-center">
+                  <Home className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <p className="text-sm text-slate-400 mb-4">هنوز ملکی را به عنوان مالک ثبت نکرده‌اید.</p>
+                  <Link
+                    href="/map"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/20 transition-all hover:scale-105"
+                  >
+                    <span>+ ثبت پلاک یا آپارتمان روی نقشه هوشمند تهران</span>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -456,22 +468,28 @@ export default function ProfilePage() {
             {/* Agent Header Card */}
             <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-blue-500/40 shadow-xl">
-                  <Image src={agentProfile.avatar} alt={agentProfile.name} fill className="object-cover" />
+                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-blue-500/40 shadow-xl bg-slate-950 shrink-0 flex items-center justify-center">
+                  {agentProfile.avatar ? (
+                    <Image src={agentProfile.avatar} alt={agentProfile.name} fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-blue-950/60 flex items-center justify-center text-blue-400 text-2xl font-black">
+                      {agentProfile.name ? agentProfile.name.slice(0, 1) : <Briefcase className="w-8 h-8" />}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-xl font-extrabold text-white">{agentProfile.name}</h2>
+                    <h2 className="text-xl font-extrabold text-white">{agentProfile.name || "مشاور املاک"}</h2>
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">
-                      مشاور ارشد رنج فروش
+                      مشاور ارشد رنج معاملات
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">
-                      کد صنفی: {agentProfile.licenseCode}
+                      کد صنفی: {agentProfile.licenseCode || "در دست استعلام"}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 flex items-center gap-2">
                     <Building2 className="w-3.5 h-3.5 text-slate-500" />
-                    <span>آژانس همکار: {agentProfile.agencyName}</span>
+                    <span>آژانس همکار: {agentProfile.agencyName || "دفتر معاملات مسکن"}</span>
                     <span>•</span>
                     <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                     <span>امتیاز: {agentProfile.rating} / ۵ ({agentProfile.dealsCount} معامله موفق)</span>
@@ -485,7 +503,7 @@ export default function ProfilePage() {
                 className="px-5 py-3 rounded-2xl bg-gradient-to-l from-red-600 to-rose-600 hover:from-red-500 text-white font-extrabold text-xs shadow-xl shadow-red-600/20 transition-all hover:scale-105 flex items-center gap-2"
               >
                 <Video className="w-4 h-4 animate-pulse" />
-                <span>ورود به نشست قرارداد با خریدار و مالک</span>
+                <span>ورود به نشست قرارداد با متقاضی مسکن و مالک</span>
               </Link>
             </div>
 
@@ -505,37 +523,50 @@ export default function ProfilePage() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-                {agentProperties.map((p) => (
-                  <div
-                    key={p.id}
-                    className="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between"
+              {agentProperties.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                  {agentProperties.map((p) => (
+                    <div
+                      key={p.id}
+                      className="bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between"
+                    >
+                      <div className="relative h-44 w-full">
+                        <Image src={p.images[0]} alt={p.title} fill className="object-cover" />
+                        <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-lg bg-slate-950/80 backdrop-blur-md text-amber-400 text-xs font-bold">
+                          {p.district}
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h4 className="text-sm font-bold text-white truncate">{p.title}</h4>
+                        <p className="text-xs text-amber-400 font-black mt-1">
+                          {p.type === "rent" ? "رهن و اجاره" : `${formatPersianNumber((p.totalPrice || 0) / 1000000000)} میلیارد تومان`}
+                        </p>
+                        <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                          <span className="text-slate-400">طرفین: آماده نشست</span>
+                          <Link
+                            href="/neshasst"
+                            className="text-red-400 font-bold hover:underline flex items-center gap-1"
+                          >
+                            <Video className="w-3.5 h-3.5" />
+                            ورود به نشست
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-10 text-center">
+                  <Briefcase className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <p className="text-sm text-slate-400 mb-4">هنوز فایل ملکی جدیدی ثبت نکرده‌اید.</p>
+                  <Link
+                    href="/agency/dashboard"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/20 transition-all hover:scale-105"
                   >
-                    <div className="relative h-44 w-full">
-                      <Image src={p.images[0]} alt={p.title} fill className="object-cover" />
-                      <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-lg bg-slate-950/80 backdrop-blur-md text-amber-400 text-xs font-bold">
-                        {p.district}
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h4 className="text-sm font-bold text-white truncate">{p.title}</h4>
-                      <p className="text-xs text-amber-400 font-black mt-1">
-                        {p.type === "rent" ? "رهن و اجاره" : `${formatPersianNumber((p.totalPrice || 0) / 1000000000)} میلیارد تومان`}
-                      </p>
-                      <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
-                        <span className="text-slate-400">طرفین: آماده نشست</span>
-                        <Link
-                          href="/neshasst"
-                          className="text-red-400 font-bold hover:underline flex items-center gap-1"
-                        >
-                          <Video className="w-3.5 h-3.5" />
-                          ورود به نشست
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    <span>ورود به پنل فایلینگ و ثبت فایل جدید</span>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -546,27 +577,33 @@ export default function ProfilePage() {
             {/* Agency Corporate Header */}
             <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-xl bg-slate-950 p-2 flex items-center justify-center">
-                  <Image src="/logo.jpg" alt="لوگو آژانس" fill className="object-cover" />
+                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-xl bg-slate-950 shrink-0 flex items-center justify-center">
+                  {agencyProfile.logo ? (
+                    <Image src={agencyProfile.logo} alt="لوگو آژانس" fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-amber-950/60 flex items-center justify-center text-amber-400 text-2xl font-black">
+                      {agencyProfile.name ? agencyProfile.name.slice(0, 1) : <Building2 className="w-8 h-8" />}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h2 className="text-xl font-extrabold text-white">{agencyProfile.name}</h2>
+                    <h2 className="text-xl font-extrabold text-white">{agencyProfile.name || "آژانس املاک"}</h2>
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-black">
                       آژانس املاک عضو اتحادیه
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">
-                      پروانه کسب: {agencyProfile.licenseNumber}
+                      پروانه کسب: {agencyProfile.licenseNumber || "در دست ثبت"}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 flex items-center gap-2 flex-wrap">
-                    <span>مدیر مسئول: {agencyProfile.managerName}</span>
+                    <span>مدیر مسئول: {agencyProfile.managerName || "مدیریت آژانس"}</span>
                     <span>•</span>
-                    <span className="text-amber-400 font-bold">سرپرست و مدیر قرارداد: {agencyProfile.supervisorName}</span>
+                    <span className="text-amber-400 font-bold">سرپرست و مدیر قرارداد: {agencyProfile.supervisorName || "سرپرست حقوقی"}</span>
                   </p>
                   <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
                     <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span>{agencyProfile.address} • تلفن: {agencyProfile.phone}</span>
+                    <span>{agencyProfile.address || "تهران"} • تلفن: {agencyProfile.phone || "ثبت نشده"}</span>
                   </p>
                 </div>
               </div>
@@ -598,74 +635,85 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-                {agencyProfile.members.map((member) => (
-                  <div
-                    key={member.id}
-                    className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl flex items-center gap-4"
-                  >
-                    <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-slate-700 shrink-0">
-                      <Image src={member.avatar} alt={member.name} fill className="object-cover" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <h4 className="text-sm font-bold text-white truncate">{member.name}</h4>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
-                          {member.dealsCount} معامله
-                        </span>
+              {agencyProfile.members.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                  {agencyProfile.members.map((member) => (
+                    <div
+                      key={member.id}
+                      className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl flex items-center gap-4"
+                    >
+                      <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-slate-700 bg-slate-950 shrink-0 flex items-center justify-center">
+                        {member.avatar ? (
+                          <Image src={member.avatar} alt={member.name} fill className="object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-slate-800 flex items-center justify-center text-amber-400 font-bold text-lg">
+                            {member.name ? member.name.slice(0, 1) : <User className="w-6 h-6" />}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
-                      <p className="text-xs text-slate-400 mt-1">تلفن: {member.phone}</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1 mb-0.5">
+                          <h4 className="text-sm font-bold text-white truncate">{member.name}</h4>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                            {member.dealsCount} معامله
+                          </span>
+                        </div>
+                        <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
+                        <p className="text-xs text-slate-400 mt-1">تلفن: {member.phone}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 text-center">
+                  <Users className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+                  <p className="text-xs text-slate-400">هنوز مشاوری به آژانس شما متصل نشده است. می‌توانید با ارسال دعوت‌نامه، مشاوران خود را اضافه نمایید.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* ==================== 5. GUEST USER VIEW ==================== */}
-        {currentRole === "guest" && (
-          <div className="max-w-2xl mx-auto py-12 text-center space-y-6 animate-in fade-in">
-            <div className="w-20 h-20 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-amber-400 mx-auto shadow-xl">
-              <User className="w-10 h-10" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-extrabold text-white mb-2">شما به عنوان کاربر مهمان وارد شده‌اید</h2>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                برای ذخیره خانه‌های مورد علاقه، بررسی مشخصات روی نقشه هوشمند تهران و حضور در نشست قرارداد آنلاین، لطفاً نقش مورد نظر خود را انتخاب کنید:
+        {/* ==================== 5. MEMBER CATEGORY COMPLETION VIEW ==================== */}
+        {currentRole === "member" && (
+          <div className="max-w-3xl mx-auto py-6 space-y-6 animate-in fade-in">
+            <div className="text-center space-y-2 mb-4">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-1">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <span>گام دوم: انتخاب و تکمیل رسته کاربری</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-white">
+                {baseUser?.fullName ? `${baseUser.fullName} عزیز، رسته فعالیت خود را انتخاب فرمایید` : "تعیین رسته کاربری در سامانه «یه خونه»"}
+              </h1>
+              <p className="text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
+                مشخص نمایید به عنوان متقاضی مسکن، مالک، مشاور یا آژانس در سامانه فعالیت خواهید داشت تا امکانات و ابزارهای مرتبط با رسته شما فعال گردد:
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
-              <button
-                onClick={() => setCurrentRole("buyer")}
-                className="p-4 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-emerald-500/30 text-center transition-all group"
-              >
-                <Heart className="w-6 h-6 text-emerald-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-white block">خریدار مسکن</span>
-              </button>
-              <button
-                onClick={() => setCurrentRole("seller")}
-                className="p-4 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-purple-500/30 text-center transition-all group"
-              >
-                <Key className="w-6 h-6 text-purple-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-white block">مالک و فروشنده</span>
-              </button>
-              <button
-                onClick={() => setCurrentRole("agent")}
-                className="p-4 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-blue-500/30 text-center transition-all group"
-              >
-                <User className="w-6 h-6 text-blue-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-white block">مشاور املاک</span>
-              </button>
-              <button
-                onClick={() => setCurrentRole("agency")}
-                className="p-4 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-center transition-all group"
-              >
-                <Building2 className="w-6 h-6 text-amber-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-white block">آژانس املاک</span>
-              </button>
+            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+              <CategoryCompletionForm />
+            </div>
+          </div>
+        )}
+
+        {/* ==================== 6. GUEST USER VIEW (CLASSIC SIGN-UP WITH SMART CAPTCHA) ==================== */}
+        {currentRole === "guest" && (
+          <div className="max-w-xl mx-auto py-6 space-y-6 animate-in fade-in">
+            <div className="text-center space-y-2 mb-4">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold mb-1">
+                <ShieldCheck className="w-4 h-4" />
+                <span>سامانه احراز هویت امن «یه خونه»</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-white">
+                ورود و ثبت‌نام کاربر
+              </h1>
+              <p className="text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+                ابتدا مشخصات اولیه شامل نام، نام خانوادگی، شماره همراه یا ایمیل و کد امنیتی را وارد فرمایید؛ سپس در پروفایل رسته فعالیت خود را مشخص نمایید:
+              </p>
+            </div>
+
+            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+              <ClassicSignUpForm />
             </div>
           </div>
         )}

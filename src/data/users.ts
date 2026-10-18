@@ -1,6 +1,19 @@
 import { Property, initialProperties } from "./properties";
 
-export type UserRole = "buyer" | "seller" | "agent" | "agency" | "guest";
+export type UserRole = "buyer" | "seller" | "agent" | "agency" | "member" | "guest";
+
+export interface BaseUserProfile {
+  id: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  contact: string;
+  email?: string;
+  phone?: string;
+  registeredAt: string;
+  isCategoryCompleted: boolean;
+  selectedCategory?: "buyer" | "seller" | "agent" | "agency";
+}
 
 export interface BuyerProfile {
   id: string;
@@ -8,6 +21,7 @@ export interface BuyerProfile {
   name: string;
   phone: string;
   avatar: string;
+  demandType?: "buy" | "rent";
   budgetLabel: string;
   desiredDistricts: string[];
   favoritePropertyIds: number[];
@@ -20,7 +34,10 @@ export interface SellerProfile {
   name: string;
   phone: string;
   avatar: string;
+  nationalId?: string;
   nationalIdVerified: boolean;
+  propertyType?: string;
+  district?: string;
   ownedPropertyIds: number[];
   upcomingNeshasstId?: string;
 }
@@ -32,6 +49,7 @@ export interface AgentProfile {
   phone: string;
   avatar: string;
   licenseCode: string;
+  specialtyDistrict?: string;
   rating: number;
   dealsCount: number;
   agencyId: string;
@@ -58,6 +76,7 @@ export interface AgencyProfile {
   managerName: string;
   supervisorName: string;
   phone: string;
+  officePhone?: string;
   address: string;
   logo: string;
   members: AgencyAgentMember[];
@@ -82,102 +101,80 @@ export interface NeshasstSession {
   status: "live" | "scheduled" | "completed";
 }
 
-// Initial Mock Neshasst Room (The Active Session)
+// Standard Generic Neshasst Room
 export const INITIAL_NESHASST: NeshasstSession = {
-  id: "neshasst-1403-76",
-  title: "نشست اتاق قرارداد آنلاین - آپارتمان ۱۶۵ متری سعادت‌آباد",
+  id: "neshasst-live-01",
+  title: "نشست آنلاین اتاق قرارداد",
   propertyId: 1,
-  propertyTitle: "آپارتمان ۱۶۵ متری ۳ خوابه کلیدنخورده",
-  propertyAddress: "تهران، سعادت‌آباد، میدان کاج، خیابان سرو غربی، پلاک ۲۴",
+  propertyTitle: "آپارتمان نوساز علامه شمالی",
+  propertyAddress: "تهران، سعادت‌آباد، میدان کاج، خیابان سرو غربی",
   propertyPrice: "۱۸,۵۰۰,۰۰۰,۰۰۰ تومان",
-  agencyName: "املاک نوین سعادت‌آباد",
-  supervisorName: "مهندس کامران شایسته (سرپرست قرارداد)",
-  agentName: "مهرداد حیدری (مشاور ارشد پرونده)",
-  buyerName: "آقای دکتر پارسا کیانی (خریدار)",
-  sellerName: "مهندس علیرضا سهرابی (مالک و فروشنده)",
-  scheduledTime: "هم‌اکنون در حال برگزاری",
+  agencyName: "دفتر املاک رسمی",
+  supervisorName: "سرپرست قرارداد",
+  agentName: "مشاور ارشد پرونده",
+  buyerName: "متقاضی مسکن",
+  sellerName: "مالک ملک",
+  scheduledTime: "در حال برگزاری",
   status: "live"
 };
 
-// Initial Mock Profiles
-export const INITIAL_BUYER_PROFILE: BuyerProfile = {
-  id: "buyer-01",
+// Clean Empty Profile Initializers (Zero Mock Data)
+export const DEFAULT_EMPTY_BUYER_PROFILE: BuyerProfile = {
+  id: "buyer-empty",
   role: "buyer",
-  name: "دکتر پارسا کیانی",
-  phone: "۰۹۱۲۱۱۱۴۳۲۱",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
-  budgetLabel: "تا ۲۰ میلیارد تومان",
-  desiredDistricts: ["سعادت‌آباد", "شهرک غرب", "نیاوران"],
-  favoritePropertyIds: [1, 2, 4],
-  upcomingNeshasstId: "neshasst-1403-76"
+  name: "",
+  phone: "",
+  avatar: "",
+  budgetLabel: "تعیین نشده",
+  desiredDistricts: [],
+  favoritePropertyIds: [],
+  upcomingNeshasstId: undefined
 };
 
-export const INITIAL_SELLER_PROFILE: SellerProfile = {
-  id: "seller-01",
+export const DEFAULT_EMPTY_SELLER_PROFILE: SellerProfile = {
+  id: "seller-empty",
   role: "seller",
-  name: "مهندس علیرضا سهرابی",
-  phone: "۰۹۱۲۸۸۸۹۹۰۰",
-  avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-  nationalIdVerified: true,
-  ownedPropertyIds: [1, 3],
-  upcomingNeshasstId: "neshasst-1403-76"
+  name: "",
+  phone: "",
+  avatar: "",
+  nationalIdVerified: false,
+  ownedPropertyIds: [],
+  upcomingNeshasstId: undefined
 };
 
-export const INITIAL_AGENT_PROFILE: AgentProfile = {
-  id: "agent-01",
+export const DEFAULT_EMPTY_AGENT_PROFILE: AgentProfile = {
+  id: "agent-empty",
   role: "agent",
-  name: "مهرداد حیدری",
-  phone: "۰۹۱۲۳۴۵۶۷۸۹",
-  avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
-  licenseCode: "UN-94821",
-  rating: 4.9,
-  dealsCount: 53,
-  agencyId: "agency-novin",
-  agencyName: "املاک نوین سعادت‌آباد",
-  managedPropertyIds: [1, 2, 3],
-  upcomingNeshasstId: "neshasst-1403-76"
+  name: "",
+  phone: "",
+  avatar: "",
+  licenseCode: "",
+  rating: 5.0,
+  dealsCount: 0,
+  agencyId: "",
+  agencyName: "",
+  managedPropertyIds: [],
+  upcomingNeshasstId: undefined
 };
 
-export const INITIAL_AGENCY_PROFILE: AgencyProfile = {
-  id: "agency-novin",
+export const DEFAULT_EMPTY_AGENCY_PROFILE: AgencyProfile = {
+  id: "agency-empty",
   role: "agency",
-  name: "املاک نوین سعادت‌آباد",
-  licenseNumber: "ص/۸۸۳۴۲۱ اتحادیه املاک تهران",
-  managerName: "حاج محمود شایسته",
-  supervisorName: "مهندس کامران شایسته (مدیر قرارداد)",
-  phone: "۰۲۱-۲۲۳۳۴۴۵۵",
-  address: "تهران، سعادت‌آباد، میدان کاج، نبش خیابان مروارید، پلاک ۱۲",
+  name: "",
+  licenseNumber: "",
+  managerName: "",
+  supervisorName: "",
+  phone: "",
+  address: "",
   logo: "/logo.jpg",
-  totalManagedProperties: 28,
-  activeNeshasstRooms: 2,
-  upcomingNeshasstId: "neshasst-1403-76",
-  members: [
-    {
-      id: "agent-01",
-      name: "مهرداد حیدری",
-      phone: "۰۹۱۲۳۴۵۶۷۸۹",
-      role: "مشاور ارشد رنج فروش",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
-      activeListingsCount: 8,
-      dealsCount: 53
-    },
-    {
-      id: "agent-02",
-      name: "سارا فرهمند",
-      phone: "۰۹۱۲۷۷۷۶۵۴۳",
-      role: "مشاور تخصصی رهن و اجاره",
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
-      activeListingsCount: 12,
-      dealsCount: 38
-    },
-    {
-      id: "agent-03",
-      name: "امیرحسین رضوی",
-      phone: "۰۹۱۲۴۴۴۳۳۲۲",
-      role: "مشاور املاک و مستغلات کلنگی",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80",
-      activeListingsCount: 6,
-      dealsCount: 29
-    }
-  ]
+  totalManagedProperties: 0,
+  activeNeshasstRooms: 0,
+  upcomingNeshasstId: undefined,
+  members: []
 };
+
+// Backwards-compatible aliases pointing to clean empty states
+export const INITIAL_BUYER_PROFILE = DEFAULT_EMPTY_BUYER_PROFILE;
+export const INITIAL_SELLER_PROFILE = DEFAULT_EMPTY_SELLER_PROFILE;
+export const INITIAL_AGENT_PROFILE = DEFAULT_EMPTY_AGENT_PROFILE;
+export const INITIAL_AGENCY_PROFILE = DEFAULT_EMPTY_AGENCY_PROFILE;

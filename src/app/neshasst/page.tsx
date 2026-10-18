@@ -76,7 +76,7 @@ export default function NeshasstCallPage() {
     {
       id: "buyer",
       name: currentNeshasst.buyerName,
-      roleTitle: "خریدار / متقاضی",
+      roleTitle: "متقاضی مسکن",
       roleBadgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
       isSpeaking: false,
