@@ -80,8 +80,39 @@ export default function HomePage() {
       {/* ==================== HEADER ==================== */}
       <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3.5 transition-all">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* Logo & Brand Identity */}
+          {/* User Sign-in / Profile Pill & Action CTA (Swapped to Right side) */}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Sign in / Profile Pill */}
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 hover:text-white transition-all shadow-sm"
+              title="پروفایل کاربری و ورود"
+            >
+              <User className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-medium">
+                {currentRole === "guest" ? "ورود / ثبت‌نام" : (
+                  currentRole === "buyer" ? "متقاضی" :
+                  currentRole === "seller" ? "مالک" :
+                  currentRole === "agent" ? "مشاور" : "آژانس"
+                )}
+              </span>
+            </Link>
+
+            {/* Register Property Button */}
+            <button
+              onClick={() => setSubmitModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-l from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all hover:scale-105"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>ثبت ملک</span>
+            </button>
+          </div>
+
+          {/* Logo & Brand Identity (Swapped to Left side - Only Logo and Name) */}
           <Link href="/" className="flex items-center gap-3 group shrink-0">
+            <span className="text-xl font-black tracking-tight bg-gradient-to-l from-amber-400 via-amber-300 to-white bg-clip-text text-transparent">
+              یه خونه
+            </span>
             <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-amber-500/10 border border-amber-500/30 group-hover:scale-105 transition-transform">
               <Image
                 src="/logo.jpg"
@@ -91,101 +122,7 @@ export default function HomePage() {
                 priority
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-black tracking-tight bg-gradient-to-l from-amber-400 via-amber-300 to-white bg-clip-text text-transparent">
-                  یه خونه
-                </span>
-                <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800 font-medium">
-                  املاک تهران
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">سامانه هوشمند معاملات و نقشه تهران</p>
-            </div>
           </Link>
-
-          {/* Clean Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-slate-300">
-            <Link
-              href="/map"
-              className="flex items-center gap-2 hover:text-amber-400 transition-colors group"
-            >
-              <Compass className="w-4 h-4 text-amber-400/80 group-hover:text-amber-400 transition-colors" />
-              <span>نقشه هوشمند تهران</span>
-            </Link>
-
-            <Link
-              href="/neshasst"
-              className="flex items-center gap-2 hover:text-red-400 transition-colors group"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-              </span>
-              <Video className="w-4 h-4 text-red-400" />
-              <span>نشست آنلاین (قرارداد)</span>
-            </Link>
-
-            <button
-              onClick={() => setCalculatorOpen(true)}
-              className="flex items-center gap-2 hover:text-amber-400 transition-colors text-slate-300"
-            >
-              <Calculator className="w-4 h-4 text-slate-400" />
-              <span>تبدیل رهن و اجاره</span>
-            </button>
-
-            <Link
-              href="/agency/dashboard"
-              className="flex items-center gap-2 text-slate-400 hover:text-amber-400 transition-colors"
-            >
-              <Building2 className="w-4 h-4 text-slate-400" />
-              <span>پنل آژانس‌ها</span>
-            </Link>
-          </nav>
-
-          {/* User Profile Pill & Primary Action CTA */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/neshasst"
-              className="lg:hidden p-2 rounded-xl bg-red-600/10 border border-red-500/30 text-red-400 hover:text-white"
-              title="اتاق نشست آنلاین"
-            >
-              <Video className="w-4 h-4 animate-pulse" />
-            </Link>
-
-            <Link
-              href="/map"
-              className="lg:hidden p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:text-white"
-              title="نقشه هوشمند تهران"
-            >
-              <Compass className="w-4 h-4" />
-            </Link>
-
-            {/* Profile Pill with Active Role */}
-            <Link
-              href="/profile"
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 hover:text-white transition-all shadow-sm"
-              title="پروفایل و تنظیم نقش کاربری"
-            >
-              <User className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline font-medium">
-                {currentRole === "buyer" && "متقاضی"}
-                {currentRole === "seller" && "مالک"}
-                {currentRole === "agent" && "مشاور"}
-                {currentRole === "agency" && "آژانس"}
-                {currentRole === "guest" && "مهمان"}
-              </span>
-            </Link>
-
-            {/* Register Property Button */}
-            <button
-              onClick={() => setSubmitModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-l from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all hover:scale-105"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>ثبت ملک</span>
-            </button>
-          </div>
         </div>
       </header>
 
