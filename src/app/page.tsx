@@ -78,14 +78,14 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* ==================== HEADER ==================== */}
-      <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3.5 transition-all">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* User Sign-in / Profile Pill & Action CTA (Swapped to Right side) */}
-          <div className="flex items-center gap-3 shrink-0">
+      <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3 transition-all">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 relative">
+          {/* User Sign-in / Profile Pill & Action CTA (Right side in RTL) */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 z-10">
             {/* Sign in / Profile Pill */}
             <Link
               href="/profile"
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 hover:text-white transition-all shadow-sm"
+              className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 hover:text-white transition-all shadow-sm"
               title="پروفایل کاربری و ورود"
             >
               <User className="w-3.5 h-3.5 text-amber-400" />
@@ -101,18 +101,27 @@ export default function HomePage() {
             {/* Register Property Button */}
             <button
               onClick={() => setSubmitModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-l from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all hover:scale-105"
+              className="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-l from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all hover:scale-105"
             >
               <PlusCircle className="w-4 h-4" />
               <span>ثبت ملک</span>
             </button>
           </div>
 
-          {/* Logo & Brand Identity (Swapped to Left side - Only Logo and Name) */}
-          <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <span className="text-xl font-black tracking-tight bg-gradient-to-l from-amber-400 via-amber-300 to-white bg-clip-text text-transparent">
-              یه خونه
-            </span>
+          {/* Middle: Brand Name [یه خونه] & Introduction of the App */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center text-center pointer-events-auto">
+            <Link href="/" className="group">
+              <span className="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-l from-amber-400 via-amber-300 to-white bg-clip-text text-transparent">
+                یه خونه
+              </span>
+            </Link>
+            <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium whitespace-nowrap">
+              سامانه هوشمند معاملات مسکن تهران
+            </p>
+          </div>
+
+          {/* Left side in RTL: Standalone Logo Only (No text beside it) */}
+          <Link href="/" className="group shrink-0 z-10" title="صفحه اصلی یه خونه">
             <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-amber-500/10 border border-amber-500/30 group-hover:scale-105 transition-transform">
               <Image
                 src="/logo.jpg"
