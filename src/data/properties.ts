@@ -1,18 +1,39 @@
+export type PropertyCategory =
+  | "آپارتمان"
+  | "ویلایی"
+  | "زمین"
+  | "باغ"
+  | "کلنگی"
+  | "آپارتمان مسکونی"
+  | "ویلایی / خانه"
+  | "مستغلات"
+  | "اداری و تجاری";
+
+export type DealType = "rent" | "sale" | "barter";
+
+export interface BarterTerms {
+  targetAsset: "apartment" | "land" | "villa" | "car" | "demolition" | "other" | "any";
+  targetAssetLabel: string; // e.g. "معاوضه با ۲ یا ۳ واحد آپارتمان نوساز" یا "معاوضه با خودروهای خارجی"
+  cashDeltaTomans?: number; // سقف دریافت سرک نقدی (به تومان)
+  isDirectSwap?: boolean;   // تهاتر سر به سر
+  notes?: string;
+}
+
 export interface Property {
   id: number;
   title: string;
   slug: string;
   district: string;
   address: string;
-  type: "rent" | "sale";
-  propertyType: "آپارتمان مسکونی" | "ویلایی / خانه" | "مستغلات" | "اداری و تجاری";
+  type: DealType;
+  propertyType: PropertyCategory;
   meters: number;
   bedrooms: number;
   floor: number;
   totalFloors: number;
   unitsPerFloor: number;
   age: number; // Building age in years (0 = نوساز)
-  orientation: "شمالی" | "جنوبی" | "دوکله" | "شرقی-غربی" | "شمالی-جنوبی";
+  orientation: "شمالی" | "جنوبی" | "دوکله" | "شرقی-غربی" | "شمالی-جنوبی" | "چهارجهت";
   hasParking: boolean;
   hasElevator: boolean;
   hasStorage: boolean;
@@ -44,6 +65,16 @@ export interface Property {
   hasVirtualTour?: boolean;
   videoUrl?: string;
   virtualTour?: VirtualTourData;
+  // فیلدهای تخصصی تهاتر و معاوضه
+  isBarter?: boolean;
+  barterTerms?: BarterTerms;
+  // فیلدهای تخصصی زمین، باغ و کلنگی
+  frontageMeters?: number; // طول بر زمین / گذر
+  streetWidth?: number;    // عرض کوچه یا خیابان (گذر)
+  densityPermit?: string;  // تراکم مصوب / جواز ساخت / دستور نقشه
+  waterQuota?: string;     // سهمیه آب چاه یا قنات (برای باغ)
+  buildingArea?: number;   // متراژ ویلا یا بنای احداثی در باغ
+  treesCount?: number;     // تعداد درختان مثمر
 }
 
 export interface TourHotspot {
@@ -529,6 +560,233 @@ export const initialProperties: Property[] = [
     createdAt: "۴ روز پیش",
     lastAlgorithmicBump: "۴ ساعت پیش",
     nextAlgorithmicBump: "۲ ساعت دیگر",
+    bumpIntervalHours: 6
+  },
+  {
+    id: 7,
+    title: "زمین مسکونی ۴۵۰ متری، بر ۱۵ متر با گذر ۱۴ متری، سعادت‌آباد",
+    slug: "land-450m-saadat-abad-barter",
+    district: "سعادت‌آباد",
+    address: "سعادت‌آباد، بالای میدان کاج، خیابان مروارید، کوچه ششم",
+    type: "barter",
+    propertyType: "زمین",
+    meters: 450,
+    bedrooms: 0,
+    floor: 0,
+    totalFloors: 5,
+    unitsPerFloor: 2,
+    age: 0,
+    orientation: "جنوبی",
+    hasParking: true,
+    hasElevator: false,
+    hasStorage: true,
+    hasBalcony: false,
+    coolingSystem: "ندارد (موقعیت ساخت)",
+    heatingSystem: "ندارد (موقعیت ساخت)",
+    flooring: "عرصه خاکی آماده گودبرداری",
+    deedStatus: "سند تک‌برگ ۶ دانگ ملکی بدون ریشه",
+    deposit: 0,
+    rent: 0,
+    totalPrice: 85000000000,
+    pricePerMeter: 188888000,
+    isBarter: true,
+    barterTerms: {
+      targetAsset: "apartment",
+      targetAssetLabel: "معاوضه با ۲ الی ۳ واحد آپارتمان نوساز در منطقه ۲ یا ۵",
+      cashDeltaTomans: 20000000000,
+      notes: "قابلیت تهاتر کامل یا تهاتر ترکیبی با دریافت تا ۲۰ میلیارد تومان وجه نقد."
+    },
+    frontageMeters: 15,
+    streetWidth: 14,
+    densityPermit: "تراکم مصوب R122 (۵ طبقه مسکونی روی پیلوت)",
+    agencyName: "دپارتمان املاک سرمایه‌گذاری سعادت‌آباد",
+    agencyPhone: "۰۲۱۲۲۱۱۴۴۰۰",
+    agentName: "مهندس فرهمند",
+    agentRole: "کارشناس ارشد پروژه‌های مشارکتی و تهاتر",
+    agentPhone: "۰۹۱۲۱۱۱۴۴۰۰",
+    agentRating: 4.9,
+    agentDealsCount: 74,
+    isVerified: true,
+    images: [
+      "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80"
+    ],
+    tags: ["سند تک‌برگ ملکی", "گذر عریض ۱۴ متری", "آماده جواز ساخت", "قابلیت تهاتر با آپارتمان"],
+    description: "زمین مسکونی ارزنده در یکی از اعیان‌نشین‌ترین کوچه‌های سعادت‌آباد. بر ۱۵ متر استاندارد مستطیلی بدون قناسی، گذر ۱۴ متری بن‌بست و خلوت. استعلامات ثبت و شهرداری به روز و بدون خلافی. آماده انعقاد قرارداد تهاتر با آپارتمان نوساز یا فروش نقدی.",
+    coordinates: { lat: 35.7912, lng: 51.3789 },
+    createdAt: "امروز",
+    lastAlgorithmicBump: "۱ ساعت پیش",
+    nextAlgorithmicBump: "۳ ساعت دیگر",
+    bumpIntervalHours: 4
+  },
+  {
+    id: 8,
+    title: "ملک کلنگی ۵۰۰ متری دوکله، دارای دستور نقشه ۶ طبقه، نیاوران",
+    slug: "demolition-500m-niavaran-barter",
+    district: "نیاوران",
+    address: "نیاوران، خیابان یاسر، کوچه مژده، پلاک ۸",
+    type: "barter",
+    propertyType: "کلنگی",
+    meters: 500,
+    bedrooms: 0,
+    floor: 0,
+    totalFloors: 6,
+    unitsPerFloor: 2,
+    age: 38,
+    orientation: "دوکله",
+    hasParking: true,
+    hasElevator: false,
+    hasStorage: true,
+    hasBalcony: false,
+    coolingSystem: "ندارد (کلنگی تخریبی)",
+    heatingSystem: "ندارد (کلنگی تخریبی)",
+    flooring: "موزاییک قدیمی",
+    deedStatus: "سند تک‌برگ شش‌دانگ شاهنشاهی ریشه‌دار پاک",
+    deposit: 0,
+    rent: 0,
+    totalPrice: 135000000000,
+    pricePerMeter: 270000000,
+    isBarter: true,
+    barterTerms: {
+      targetAsset: "any",
+      targetAssetLabel: "تهاتر تا ۵۰٪ ارزش با آپارتمان منطقه ۱ یا خودروهای وارداتی صفر",
+      cashDeltaTomans: 65000000000,
+      notes: "امکان تهاتر بخشی از مبلغ با خودروهای لوکس پلاک ملی یا واحدهای کوچک‌تر نوساز."
+    },
+    frontageMeters: 18,
+    streetWidth: 16,
+    densityPermit: "دستور نقشه تایید شده شهرداری منطقه ۱ (۶ طبقه روی لابی)",
+    agencyName: "گروه مهندسی و املاک نیاوران",
+    agencyPhone: "۰۲۱۲۲۷۷۰۰۹۹",
+    agentName: "مهندس شایسته",
+    agentRole: "مشاور تخصصی املاک کلنگی و مشارکت",
+    agentPhone: "۰۹۱۲۲۲۲۰۰۹۹",
+    agentRating: 4.9,
+    agentDealsCount: 88,
+    isVerified: true,
+    images: [
+      "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
+    ],
+    tags: ["موقعیت استثنایی دوکله", "دستور نقشه ۶ طبقه", "گذر ۱۶ متری", "تهاتر با ملک و خودرو"],
+    description: "ملک کلنگی بی‌نظیر ۵۰۰ متری در دنج‌ترین فرعی نیاوران. دسترسی دو طرفه به دو گذر ۱۶ و ۱۲ متری. بدون ریشه اوقاف و بنیاد، سند تک‌برگ شخصی مفاصاحساب کامل. ایده‌آل برای سازندگان برند منطقه یک.",
+    coordinates: { lat: 35.8145, lng: 51.4688 },
+    createdAt: "دیروز",
+    lastAlgorithmicBump: "۲ ساعت پیش",
+    nextAlgorithmicBump: "۲ ساعت دیگر",
+    bumpIntervalHours: 4
+  },
+  {
+    id: 9,
+    title: "باغ مثمر ۱۵۰۰ متری با عمارت سنگی ۲۲۰ متری، لواسانات باستی",
+    slug: "garden-villa-1500m-lavasan",
+    district: "لواسانات",
+    address: "لواسانات، انتهای بلوار باستی، خیابان سروستان",
+    type: "barter",
+    propertyType: "باغ",
+    meters: 1500,
+    bedrooms: 3,
+    floor: 1,
+    totalFloors: 2,
+    unitsPerFloor: 1,
+    age: 6,
+    orientation: "چهارجهت",
+    hasParking: true,
+    hasElevator: false,
+    hasStorage: true,
+    hasBalcony: true,
+    coolingSystem: "کولر گازی و تهویه کوهستانی",
+    heatingSystem: "گرمایش از کف و شومینه هیزمی",
+    flooring: "سنگ لاشه طبیعی و چوب گردو",
+    deedStatus: "سند شش‌دانگ منگوله‌دار ثبتی با نامه جهاد کشاورزی",
+    deposit: 0,
+    rent: 0,
+    totalPrice: 62000000000,
+    pricePerMeter: 41333000,
+    isBarter: true,
+    barterTerms: {
+      targetAsset: "apartment",
+      targetAssetLabel: "معاوضه ۵۰٪ الی ۱۰۰٪ با آپارتمان در مناطق ۲، ۳ و ۵ تهران یا خودرو",
+      cashDeltaTomans: 30000000000,
+      notes: "مالک منعطف؛ آماده تهاتر سر به سر با ۲ واحد مرغوب در تهران یا تهاتر ترکیبی با خودرو."
+    },
+    waterQuota: "سهمیه رسمی چاه ۳ ساعت در هفته با کنتور برق سه فاز",
+    buildingArea: 220,
+    treesCount: 45,
+    agencyName: "دفتر املاک و مستغلات لواسان",
+    agencyPhone: "۰۲۱۲۶۵۵۱۱۰۰",
+    agentName: "حاج کمال لواسانی",
+    agentRole: "کارشناس تخصصی باغات و ویلاهای شمیرانات",
+    agentPhone: "۰۹۱۲۳۳۳۱۱۰۰",
+    agentRating: 4.8,
+    agentDealsCount: 62,
+    isVerified: true,
+    images: [
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80"
+    ],
+    tags: ["حق‌آبه چاه ثبت‌شده", "۴۵ اصله درخت گردو و گیلاس", "عمارت سنگی مبله", "قابلیت تهاتر کامل با تهران"],
+    description: "باغ رویایی با درختان کهنسال گردو، گیلاس و آلبالو. محوطه‌سازی مهندسی، آب‌نما، باربیکیو و آلاچیق سنگی. ویلای دوبلکس ۲۲۰ متری فول مبله با تراس مشرف به سد لتیان. دارای کنتور گاز، برق سه فاز و سهمیه آب چاه ثبت شده. امکان معاوضه با آپارتمان در تهران.",
+    coordinates: { lat: 35.8234, lng: 51.6123 },
+    createdAt: "امروز",
+    lastAlgorithmicBump: "۳ ساعت پیش",
+    nextAlgorithmicBump: "۱ ساعت دیگر",
+    bumpIntervalHours: 4
+  },
+  {
+    id: 10,
+    title: "ویلای مستقل دوبلکس ۴۰۰ متری، شهرک غرب فاز ۲ با استخر روباز",
+    slug: "luxury-villa-400m-shahrak-gharb",
+    district: "شهرک غرب",
+    address: "شهرک غرب، فاز ۲، خیابان هرمزان، کوچه نسترن، پلاک ۴",
+    type: "sale",
+    propertyType: "ویلایی",
+    meters: 400,
+    bedrooms: 4,
+    floor: 1,
+    totalFloors: 2,
+    unitsPerFloor: 1,
+    age: 8,
+    orientation: "شمالی-جنوبی",
+    hasParking: true,
+    hasElevator: false,
+    hasStorage: true,
+    hasBalcony: true,
+    coolingSystem: "داکت اسپلیت دوگانه",
+    heatingSystem: "موتورخانه مرکزی و گرمایش از کف",
+    flooring: "پارکت چوب بلوط کانادا",
+    deedStatus: "سند تک‌برگ ملکی عرصه و اعیان",
+    deposit: 0,
+    rent: 0,
+    totalPrice: 160000000000,
+    pricePerMeter: 400000000,
+    isBarter: true,
+    barterTerms: {
+      targetAsset: "apartment",
+      targetAssetLabel: "تهاتر تا سقف ۶۰ میلیارد تومان با آپارتمان نوساز در منطقه ۲",
+      cashDeltaTomans: 100000000000,
+      notes: "فروش نقدی یا تهاتر تا سقف ۴۰ درصد ارزش کل."
+    },
+    frontageMeters: 16,
+    streetWidth: 12,
+    agencyName: "دپارتمان املاک ویلایی شهرک غرب",
+    agencyPhone: "۰۲۱۸۸۰۸۸۸۰۰",
+    agentName: "مهندس رضوانی",
+    agentRole: "کارشناس تخصصی ویلاهای منطقه ۲",
+    agentPhone: "۰۹۱۲۴۴۴۸۸۰۰",
+    agentRating: 4.9,
+    agentDealsCount: 51,
+    isVerified: true,
+    images: [
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
+    ],
+    tags: ["ویلای مستقل", "استخر چهارفصل آبگرم", "حیاط مشجر اختصاصی", "امکان تهاتر جزئی"],
+    description: "ویلای اصیل در اعیان‌نشین‌ترین فاز شهرک غرب. زمین ۴۰۰ متری با ۳۰۰ متر زیربنای دوبلکس بازسازی شده به سبک مدرن نئوکلاسیک. حیاط اختصاصی با استخر آب‌گرم، جکوزی و آلاچیق. ۴ اتاق خواب تماماً مستر.",
+    coordinates: { lat: 35.7567, lng: 51.3712 },
+    createdAt: "۳ روز پیش",
+    lastAlgorithmicBump: "۵ ساعت پیش",
+    nextAlgorithmicBump: "۱ ساعت دیگر",
     bumpIntervalHours: 6
   }
 ];

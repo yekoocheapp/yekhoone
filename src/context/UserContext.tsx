@@ -33,14 +33,14 @@ interface UserContextType {
   signInClassic: (data: { contact: string; password?: string }) => { success: boolean; error?: string; userName?: string };
 
   // Category completion in Profile
-  completeBuyerCategory: (data: { demandType?: "buy" | "rent"; budgetLabel?: string; desiredDistricts?: string[] }) => void;
-  completeSellerCategory: (data: { nationalId?: string; propertyType?: string; district?: string }) => void;
+  completeBuyerCategory: (data: { demandType?: "buy" | "rent" | "barter"; budgetLabel?: string; desiredDistricts?: string[] }) => void;
+  completeSellerCategory: (data: { nationalId?: string; propertyType?: string; district?: string; isBarterAccepted?: boolean; barterTargetDescription?: string }) => void;
   completeAgentCategory: (data: { licenseCode?: string; agencyName?: string; specialtyDistrict?: string }) => void;
   completeAgencyCategory: (data: { name: string; managerName: string; supervisorName: string; phone?: string; officePhone?: string; licenseNumber?: string; address?: string }) => void;
   resetCategory: () => void;
 
   // Direct quick sign-ups (backwards-compatible)
-  signUpBuyer: (data: { name: string; phone: string; demandType?: "buy" | "rent"; budgetLabel?: string; desiredDistricts?: string[] }) => void;
+  signUpBuyer: (data: { name: string; phone: string; demandType?: "buy" | "rent" | "barter"; budgetLabel?: string; desiredDistricts?: string[] }) => void;
   signUpSeller: (data: { name: string; phone: string; nationalId?: string; propertyType?: string; district?: string }) => void;
   signUpAgent: (data: { name: string; phone: string; licenseCode?: string; agencyName?: string; specialtyDistrict?: string }) => void;
   signUpAgency: (data: { name: string; managerName: string; supervisorName: string; phone: string; officePhone?: string; licenseNumber?: string; address?: string }) => void;
@@ -274,7 +274,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Step 2: In Profile, fill category: متقاضی مسکن
-  const completeBuyerCategory = (data: { demandType?: "buy" | "rent"; budgetLabel?: string; desiredDistricts?: string[] }) => {
+  const completeBuyerCategory = (data: { demandType?: "buy" | "rent" | "barter"; budgetLabel?: string; desiredDistricts?: string[] }) => {
     const currentName = baseUser ? baseUser.fullName : "متقاضی مسکن";
     const currentPhone = baseUser ? (baseUser.phone || baseUser.contact) : "۰۹۱۲۰۰۰۰۰۰۰";
 
@@ -325,7 +325,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Step 2: In Profile, fill category: مالک مسکن
-  const completeSellerCategory = (data: { nationalId?: string; propertyType?: string; district?: string }) => {
+  const completeSellerCategory = (data: { nationalId?: string; propertyType?: string; district?: string; isBarterAccepted?: boolean; barterTargetDescription?: string }) => {
     const currentName = baseUser ? baseUser.fullName : "مالک مسکن";
     const currentPhone = baseUser ? (baseUser.phone || baseUser.contact) : "۰۹۱۲۰۰۰۰۰۰۰";
 
@@ -360,6 +360,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       nationalIdVerified: Boolean(data.nationalId),
       propertyType: data.propertyType || "آپارتمان مسکونی",
       district: data.district || "تهران",
+      isBarterAccepted: data.isBarterAccepted,
+      barterTargetDescription: data.barterTargetDescription,
       ownedPropertyIds: sellerProfile.ownedPropertyIds || [],
       upcomingNeshasstId: undefined
     };
@@ -498,7 +500,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Backwards-compatible direct sign ups
-  const signUpBuyer = (data: { name: string; phone: string; demandType?: "buy" | "rent"; budgetLabel?: string; desiredDistricts?: string[] }) => {
+  const signUpBuyer = (data: { name: string; phone: string; demandType?: "buy" | "rent" | "barter"; budgetLabel?: string; desiredDistricts?: string[] }) => {
     const names = data.name.split(" ");
     signUpClassic({
       firstName: names[0] || data.name,

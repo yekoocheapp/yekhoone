@@ -50,7 +50,8 @@ export default function HomePage() {
     toggleFavorite
   } = useUser();
   const [properties, setProperties] = useState<Property[]>(initialProperties);
-  const [dealType, setDealType] = useState<"all" | "rent" | "sale">("rent");
+  const [dealType, setDealType] = useState<"all" | "rent" | "sale" | "barter">("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("همه");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("همه");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [onlyVirtualTour, setOnlyVirtualTour] = useState<boolean>(false);
@@ -72,10 +73,16 @@ export default function HomePage() {
   // Convert Rahn to full Rent (assuming 100M deposit minimum)
   const fullRentEquivalent = (fullRahnEquivalent - 100) * (calcRate / 100);
 
-  const districts = ["همه", "سعادت‌آباد", "شهرک غرب", "پونک", "مرزداران", "نیاوران", "صادقیه", "تهرانپارس", "پاسداران", "یوسف‌آباد"];
+  const districts = ["همه", "سعادت‌آباد", "شهرک غرب", "پونک", "مرزداران", "نیاوران", "صادقیه", "تهرانپارس", "پاسداران", "یوسف‌آباد", "لواسانات"];
+  const categories = ["همه", "آپارتمان", "ویلایی", "زمین", "باغ", "کلنگی"];
 
   const filteredProperties = properties.filter((item) => {
-    if (dealType !== "all" && item.type !== dealType) return false;
+    if (dealType === "barter") {
+      if (!item.isBarter && item.type !== "barter") return false;
+    } else if (dealType !== "all" && item.type !== dealType) {
+      return false;
+    }
+    if (selectedCategory !== "همه" && !item.propertyType.includes(selectedCategory)) return false;
     if (selectedDistrict !== "همه" && item.district !== selectedDistrict) return false;
     if (onlyVirtualTour && !item.hasVirtualTour) return false;
     if (searchQuery.trim() !== "") {
@@ -83,7 +90,8 @@ export default function HomePage() {
       return (
         item.title.toLowerCase().includes(q) ||
         item.district.toLowerCase().includes(q) ||
-        item.address.toLowerCase().includes(q)
+        item.address.toLowerCase().includes(q) ||
+        (item.barterTerms?.targetAssetLabel && item.barterTerms.targetAssetLabel.toLowerCase().includes(q))
       );
     }
     return true;
@@ -230,20 +238,20 @@ export default function HomePage() {
           <div className="bg-slate-900/90 border border-slate-800/90 p-3 sm:p-4 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-xl">
             {/* Top Row: Deal Type Selector + Virtual Tour Toggle */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-800/70 text-xs font-semibold">
-              <div className="flex items-center gap-1.5 bg-slate-950/60 p-1 rounded-xl border border-slate-800/60">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/60 p-1 rounded-xl border border-slate-800/60">
                 <button
-                  onClick={() => setDealType("rent")}
-                  className={`px-3.5 py-1.5 rounded-lg transition-all ${
-                    dealType === "rent"
+                  onClick={() => setDealType("all")}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                    dealType === "all"
                       ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
-                  رهن و اجاره
+                  همه فایل‌ها
                 </button>
                 <button
                   onClick={() => setDealType("sale")}
-                  className={`px-3.5 py-1.5 rounded-lg transition-all ${
+                  className={`px-3 py-1.5 rounded-lg transition-all ${
                     dealType === "sale"
                       ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
                       : "text-slate-400 hover:text-white"
@@ -252,14 +260,25 @@ export default function HomePage() {
                   خرید و فروش
                 </button>
                 <button
-                  onClick={() => setDealType("all")}
-                  className={`px-3.5 py-1.5 rounded-lg transition-all ${
-                    dealType === "all"
+                  onClick={() => setDealType("rent")}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                    dealType === "rent"
                       ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
-                  همه فایل‌ها
+                  رهن و اجاره
+                </button>
+                <button
+                  onClick={() => setDealType("barter")}
+                  className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    dealType === "barter"
+                      ? "bg-sky-500 text-slate-950 font-extrabold shadow-md shadow-sky-500/20"
+                      : "text-sky-400 hover:text-sky-300 hover:bg-sky-950/30 border border-sky-500/30"
+                  }`}
+                >
+                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  <span>تهاتر و معاوضه</span>
                 </button>
               </div>
 
@@ -276,6 +295,24 @@ export default function HomePage() {
                 <span>فقط واحدهای با تور ویدیویی</span>
                 {onlyVirtualTour && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
               </button>
+            </div>
+
+            {/* Second Row: Property Category Chips (Apartment, Villa, Land, Garden, Demolition) */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2.5 mb-2.5 border-b border-slate-800/50 scrollbar-none text-xs">
+              <span className="text-slate-400 font-semibold pl-1 whitespace-nowrap">دسته‌بندی:</span>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-xs ${
+                    selectedCategory === cat
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold shadow-sm"
+                      : "bg-slate-950/50 text-slate-400 border border-slate-800/80 hover:text-white hover:border-slate-700"
+                  }`}
+                >
+                  {cat === "همه" ? "همه دسته‌ها" : cat === "باغ" ? "باغ و باغچه" : cat}
+                </button>
+              ))}
             </div>
 
             {/* Main Input Row: Neighborhood Selector + Keyword Search */}
@@ -445,11 +482,20 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30" />
 
                 {/* Deal Tag & Virtual Tour Badge */}
-                <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                <div className="absolute top-3 right-3 flex items-center gap-1.5 flex-wrap">
+                  {prop.isBarter && (
+                    <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 shadow flex items-center gap-1">
+                      <ArrowRightLeft className="w-3 h-3" />
+                      <span>تهاتر</span>
+                    </span>
+                  )}
                   <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow">
-                    {prop.type === "rent" ? "رهن و اجاره" : "فروش"}
+                    {prop.type === "rent" ? "رهن و اجاره" : prop.type === "barter" ? "تهاتر ملکی" : "فروش"}
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-950/70 backdrop-blur-md text-white border border-white/10">
+                  <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-slate-950/70 backdrop-blur-md text-white border border-white/10">
+                    {prop.propertyType}
+                  </span>
+                  <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-slate-950/70 backdrop-blur-md text-slate-300 border border-white/10">
                     {prop.district}
                   </span>
                   {prop.hasVirtualTour && (
@@ -492,21 +538,64 @@ export default function HomePage() {
                     <span className="line-clamp-1">{prop.address}</span>
                   </p>
 
-                  {/* Specs Pill row */}
-                  <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-slate-800/80 text-xs text-slate-300 mb-4">
+                  {/* Specs Pill row (Dynamically tailored to Property Category) */}
+                  <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-slate-800/80 text-xs text-slate-300 mb-3">
                     <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
                       <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
                       <span>{formatPersianNumber(prop.meters)} متر</span>
                     </div>
-                    <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
-                      <BedDouble className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{formatPersianNumber(prop.bedrooms)} خواب</span>
-                    </div>
-                    <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
-                      <Car className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{prop.hasParking ? "پارکینگ" : "بی‌پارکینگ"}</span>
-                    </div>
+
+                    {prop.propertyType === "زمین" || prop.propertyType === "کلنگی" ? (
+                      <>
+                        <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
+                          <Compass className="w-3.5 h-3.5 text-amber-400" />
+                          <span>گذر {formatPersianNumber(prop.streetWidth || 12)}م</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
+                          <Building2 className="w-3.5 h-3.5 text-amber-400" />
+                          <span>بر {formatPersianNumber(prop.frontageMeters || 15)}م</span>
+                        </div>
+                      </>
+                    ) : prop.propertyType === "باغ" ? (
+                      <>
+                        <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
+                          <Home className="w-3.5 h-3.5 text-amber-400" />
+                          <span>بنا {formatPersianNumber(prop.buildingArea || 0)}م</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
+                          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                          <span className="text-[10px]">حق‌آبه ثبتی</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
+                          <BedDouble className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{formatPersianNumber(prop.bedrooms)} خواب</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5 bg-slate-950/40 py-1.5 rounded-lg">
+                          <Car className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{prop.hasParking ? "پارکینگ" : "بی‌پارکینگ"}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
+
+                  {/* Structured Barter Terms Box */}
+                  {prop.isBarter && prop.barterTerms && (
+                    <div className="p-2.5 rounded-xl bg-sky-950/30 border border-sky-500/30 mb-3 text-xs">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-sky-400 mb-1">
+                        <span className="flex items-center gap-1">
+                          <ArrowRightLeft className="w-3 h-3" />
+                          <span>شرایط تهاتر:</span>
+                        </span>
+                        <span className="text-amber-400">{prop.propertyType}</span>
+                      </div>
+                      <p className="text-slate-300 text-[11px] leading-relaxed line-clamp-2">
+                        {prop.barterTerms.targetAssetLabel}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Price & Action */}
@@ -525,6 +614,21 @@ export default function HomePage() {
                           {prop.rent === 0 ? "رهن کامل" : `${formatPersianNumber(prop.rent)} تومان`}
                         </span>
                       </div>
+                    </div>
+                  ) : prop.type === "barter" ? (
+                    <div className="space-y-1 mb-4">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400">ارزش کارشناسی تهاتر:</span>
+                        <span className="font-extrabold text-sky-400 text-base">
+                          {formatPersianNumber(prop.totalPrice || 0)} تومان
+                        </span>
+                      </div>
+                      {prop.barterTerms?.cashDeltaTomans ? (
+                        <div className="flex items-center justify-between text-[11px] text-slate-400">
+                          <span>سقف سرک نقدی:</span>
+                          <span className="text-amber-300 font-semibold">تا {formatPersianNumber(prop.barterTerms.cashDeltaTomans)} تومان</span>
+                        </div>
+                      ) : null}
                     </div>
                   ) : (
                     <div className="flex items-center justify-between mb-4">

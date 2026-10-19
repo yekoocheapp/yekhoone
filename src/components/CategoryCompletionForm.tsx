@@ -61,7 +61,7 @@ export default function CategoryCompletionForm({
   );
 
   // Form State: Buyer
-  const [buyerDemandType, setBuyerDemandType] = useState<"buy" | "rent">("buy");
+  const [buyerDemandType, setBuyerDemandType] = useState<"buy" | "rent" | "barter">("buy");
   const [buyerBudget, setBuyerBudget] = useState(BUYER_BUDGETS[1]);
   const [buyerDistricts, setBuyerDistricts] = useState<string[]>(["سعادت‌آباد", "شهرک غرب"]);
 
@@ -69,6 +69,8 @@ export default function CategoryCompletionForm({
   const [sellerNationalId, setSellerNationalId] = useState("");
   const [sellerPropertyType, setSellerPropertyType] = useState("آپارتمان مسکونی");
   const [sellerDistrict, setSellerDistrict] = useState("سعادت‌آباد");
+  const [sellerIsBarter, setSellerIsBarter] = useState(false);
+  const [sellerBarterTarget, setSellerBarterTarget] = useState("");
 
   // Form State: Agent
   const [agentLicense, setAgentLicense] = useState("");
@@ -106,7 +108,9 @@ export default function CategoryCompletionForm({
       completeSellerCategory({
         nationalId: sellerNationalId.trim(),
         propertyType: sellerPropertyType,
-        district: sellerDistrict.trim()
+        district: sellerDistrict.trim(),
+        isBarterAccepted: sellerIsBarter,
+        barterTargetDescription: sellerBarterTarget.trim()
       });
       setSuccessNotice("رسته «مالک مسکن» با موفقیت فعال گردید.");
     } else if (selectedCategory === "agent") {
@@ -280,7 +284,7 @@ export default function CategoryCompletionForm({
             {/* Demand Type */}
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1.5">نوع تقاضا</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setBuyerDemandType("buy")}
@@ -290,7 +294,7 @@ export default function CategoryCompletionForm({
                       : "bg-slate-950 text-slate-400 border-slate-800 hover:text-white"
                   }`}
                 >
-                  خرید مسکونی / سرمایه‌گذاری
+                  خرید نقدی مسکونی
                 </button>
                 <button
                   type="button"
@@ -302,6 +306,17 @@ export default function CategoryCompletionForm({
                   }`}
                 >
                   رهن و اجاره
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBuyerDemandType("barter")}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                    buyerDemandType === "barter"
+                      ? "bg-sky-500/20 text-sky-300 border-sky-500/50 font-black"
+                      : "bg-slate-950 text-sky-400/80 border-slate-800 hover:text-sky-300"
+                  }`}
+                >
+                  <span>تهاتر و معاوضه</span>
                 </button>
               </div>
             </div>
@@ -402,15 +417,15 @@ export default function CategoryCompletionForm({
 
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1.5">نوع ملک تحت مالکیت</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {["آپارتمان مسکونی", "ویلایی / عمارت", "اداری / مطب", "مستغلات / کلنگی"].map((t) => (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {["آپارتمان مسکونی", "ویلایی و عمارت", "زمین مسکونی", "باغ و باغچه", "کلنگی و تجمیع"].map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setSellerPropertyType(t)}
                     className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-center ${
                       sellerPropertyType === t
-                        ? "bg-purple-500/20 text-purple-300 border-purple-500"
+                        ? "bg-purple-500/20 text-purple-300 border-purple-500 font-black"
                         : "bg-slate-950 text-slate-400 border-slate-800 hover:text-white"
                     }`}
                   >
@@ -418,6 +433,33 @@ export default function CategoryCompletionForm({
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Barter Options for Seller */}
+            <div className="p-3.5 rounded-2xl bg-purple-950/20 border border-purple-500/30 space-y-2.5">
+              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-purple-200">
+                <input
+                  type="checkbox"
+                  checked={sellerIsBarter}
+                  onChange={(e) => setSellerIsBarter(e.target.checked)}
+                  className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-purple-500 focus:ring-0"
+                />
+                <span>مایل به تهاتر یا معاوضه ملک خود (با ملک دیگر یا خودرو) هستم</span>
+              </label>
+              {sellerIsBarter && (
+                <div className="space-y-1.5 pt-1 animate-in fade-in">
+                  <label className="text-[11px] text-slate-400 block">
+                    دارایی مدنظر جهت معاوضه (مثال: ۲ واحد نوساز در منطقه ۲ یا خودرو خارجی + مابقی نقد):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="شروط و دارایی‌های مدنظر برای تهاتر را بنویسید..."
+                    value={sellerBarterTarget}
+                    onChange={(e) => setSellerBarterTarget(e.target.value)}
+                    className="w-full bg-slate-950 border border-purple-500/40 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400"
+                  />
+                </div>
+              )}
             </div>
 
             <button

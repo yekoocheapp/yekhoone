@@ -21,7 +21,7 @@ export interface BuyerProfile {
   name: string;
   phone: string;
   avatar: string;
-  demandType?: "buy" | "rent";
+  demandType?: "buy" | "rent" | "barter";
   budgetLabel: string;
   desiredDistricts: string[];
   favoritePropertyIds: number[];
@@ -38,6 +38,8 @@ export interface SellerProfile {
   nationalIdVerified: boolean;
   propertyType?: string;
   district?: string;
+  isBarterAccepted?: boolean;
+  barterTargetDescription?: string;
   ownedPropertyIds: number[];
   upcomingNeshasstId?: string;
 }

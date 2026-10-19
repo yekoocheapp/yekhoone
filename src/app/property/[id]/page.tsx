@@ -12,6 +12,7 @@ import {
 } from "@/data/properties";
 import {
   ArrowRight,
+  ArrowRightLeft,
   MapPin,
   Building2,
   Calendar,
@@ -575,7 +576,7 @@ export default function PropertyDetailPage() {
             {/* Price Box */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl sticky top-20">
               <div className="mb-6 pb-6 border-b border-slate-800">
-                <span className="text-xs text-slate-400 block mb-1">شرایط مالی قرارداد</span>
+                <span className="text-xs text-slate-400 block mb-1">شرایط مالی و حقوقی قرارداد</span>
                 {property.type === "rent" ? (
                   <div className="space-y-3">
                     <div>
@@ -591,6 +592,38 @@ export default function PropertyDetailPage() {
                         {property.rent === 0 ? "رهن کامل" : `${formatPersianNumber(property.rent)} تومان`}
                       </span>
                     </div>
+                  </div>
+                ) : property.type === "barter" || property.isBarter ? (
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-xs text-slate-400 block">ارزش کارشناسی ملک جهت تهاتر:</span>
+                      <span className="text-2xl font-black text-sky-400">
+                        {formatPersianNumber(property.totalPrice || 0)}
+                        <span className="text-xs font-normal text-slate-400 mr-1.5">تومان</span>
+                      </span>
+                      {property.pricePerMeter && (
+                        <span className="text-xs text-slate-500 block mt-1">
+                          ارزش متری: {formatPersianNumber(property.pricePerMeter)} تومان
+                        </span>
+                      )}
+                    </div>
+
+                    {property.barterTerms && (
+                      <div className="p-3 rounded-2xl bg-sky-950/40 border border-sky-500/40 space-y-1.5 text-xs">
+                        <div className="flex items-center gap-1.5 text-sky-400 font-bold">
+                          <ArrowRightLeft className="w-4 h-4" />
+                          <span>شروط مشخص معاوضه:</span>
+                        </div>
+                        <p className="text-slate-200 leading-relaxed text-xs">
+                          {property.barterTerms.targetAssetLabel}
+                        </p>
+                        {property.barterTerms.cashDeltaTomans ? (
+                          <div className="text-[11px] text-amber-300 pt-1 border-t border-sky-500/20">
+                            سقف سرک نقدی: {formatPersianNumber(property.barterTerms.cashDeltaTomans)} تومان
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div>
