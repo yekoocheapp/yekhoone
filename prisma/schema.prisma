@@ -1,0 +1,203 @@
+// Prisma Schema for YeKhoone (سامانه معاملات مسکن، تهاتر و مشارکت در ساخت)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  firstName    String
+  lastName     String
+  fullName     String
+  contact      String   @unique
+  phone        String?
+  email        String?
+  passwordHash String
+  role         String   @default("buyer") // buyer, seller, agent, agency, admin
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  buyerProfile  BuyerProfile?
+  sellerProfile SellerProfile?
+  agentProfile  AgentProfile?
+  agency        Agency?        @relation(fields: [agencyId], references: [id])
+  agencyId      String?
+
+  properties Property[]
+  favorites  Favorite[]
+}
+
+model BuyerProfile {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  demandType       String? // buy, rent, barter
+  budgetLabel      String?
+  desiredDistricts String? // JSON string array
+}
+
+model SellerProfile {
+  id                      String  @id @default(cuid())
+  userId                  String  @unique
+  user                    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nationalId              String?
+  nationalIdVerified      Boolean @default(false)
+  propertyType            String?
+  district                String?
+  isBarterAccepted        Boolean @default(false)
+  barterTargetDescription String?
+}
+
+model AgentProfile {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  licenseCode       String?
+  agencyName        String?
+  agencyId          String?
+  agency            Agency? @relation(fields: [agencyId], references: [id])
+  specialtyDistrict String?
+  rating            Float   @default(4.8)
+  dealsCount        Int     @default(0)
+}
+
+model Agency {
+  id             String         @id @default(cuid())
+  name           String
+  managerName    String
+  supervisorName String?
+  licenseNumber  String?
+  phone          String
+  officePhone    String?
+  address        String?
+  isVerified     Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+
+  agents     AgentProfile[]
+  users      User[]
+  properties Property[]
+}
+
+model Property {
+  id                  Int      @id @default(autoincrement())
+  title               String
+  slug                String   @unique
+  district            String
+  address             String
+  type                String   // rent, sale, barter, partnership
+  propertyType        String   // آپارتمان, ویلایی, زمین, باغ, کلنگی
+  meters              Float
+  bedrooms            Int      @default(0)
+  floor               Int      @default(0)
+  totalFloors         Int      @default(1)
+  unitsPerFloor       Int      @default(1)
+  age                 Int      @default(0)
+  orientation         String?
+  hasParking          Boolean  @default(false)
+  hasElevator         Boolean  @default(false)
+  hasStorage          Boolean  @default(false)
+  hasBalcony          Boolean  @default(false)
+  coolingSystem       String?
+  heatingSystem       String?
+  flooring            String?
+  deedStatus          String?
+  deposit             String?  // Stored as formatted/raw string to avoid int overflows
+  rent                String?
+  totalPrice          String?
+  pricePerMeter       String?
+  hasVirtualTour      Boolean  @default(false)
+  virtualTourData     String?  // JSON string
+  videoTourUrl        String?
+  isBarter            Boolean  @default(false)
+  isPartnership       Boolean  @default(false)
+  frontageMeters      Float?
+  streetWidth         Float?
+  densityPermit       String?
+  agencyName          String?
+  agencyPhone         String?
+  agencyId            String?
+  agency              Agency?  @relation(fields: [agencyId], references: [id])
+  agentName           String?
+  agentPhone          String?
+  agentRole           String?
+  agentRating         Float    @default(4.9)
+  agentDealsCount     Int      @default(0)
+  isVerified          Boolean  @default(true)
+  images              String   // JSON string array of URLs
+  tags                String   // JSON string array of tags
+  description         String
+  lat                 Float
+  lng                 Float
+  lastAlgorithmicBump String?
+  nextAlgorithmicBump String?
+  bumpIntervalHours   Int      @default(6)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  barterTerms      BarterTerms?
+  partnershipTerms PartnershipTerms?
+  favorites        Favorite[]
+  neshasstSessions NeshasstSession[]
+}
+
+model BarterTerms {
+  id               Int      @id @default(autoincrement())
+  propertyId       Int      @unique
+  property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  targetAsset      String   // apartment, land, villa, car, demolition, other, any
+  targetAssetLabel String
+  cashDeltaTomans  String?
+  isDirectSwap     Boolean  @default(false)
+  notes            String?
+}
+
+model PartnershipTerms {
+  id                     Int      @id @default(autoincrement())
+  propertyId             Int      @unique
+  property               Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  ownerSharePercent      Int      @default(60)
+  builderSharePercent    Int      @default(40)
+  belaAvazTomans         String?
+  projectDurationMonths  Int?
+  permitStatus           String?
+  builderReputationNotes String?
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId Int
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model NeshasstSession {
+  id              String   @id @default(cuid())
+  propertyId      Int
+  property        Property @relation(fields: [propertyId], references: [id])
+  title           String
+  propertyAddress String
+  status          String   @default("scheduled") // scheduled, live, concluded, cancelled
+  scheduledDate   String
+  scheduledTime   String
+  hostAgentName   String
+  hostAgencyName  String
+  buyerName       String
+  buyerPhone      String
+  sellerName      String
+  sellerPhone     String
+  contractDraft   String?
+  createdAt       DateTime @default(now())
+}

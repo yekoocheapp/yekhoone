@@ -29,7 +29,7 @@ interface UserContextType {
   isFavorite: (propertyId: number) => boolean;
 
   // Classic sign-up & sign-in for everyone
-  signUpClassic: (data: { firstName: string; lastName: string; contact: string; password?: string }) => void;
+  signUpClassic: (data: { firstName: string; lastName: string; contact: string; password?: string; role?: UserRole }) => void;
   signInClassic: (data: { contact: string; password?: string }) => { success: boolean; error?: string; userName?: string };
 
   // Category completion in Profile
@@ -126,8 +126,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       // 1. Role
       const savedRole = localStorage.getItem("yekhoone_user_role") as UserRole;
-      if (savedRole && ["buyer", "seller", "agent", "agency", "member", "guest"].includes(savedRole)) {
+      if (savedRole && ["buyer", "seller", "agent", "agency", "guest"].includes(savedRole)) {
         setCurrentRole(savedRole);
+      } else if (savedRole === "member") {
+        // Automatically migrate legacy member state to buyer or stored category
+        const parsedBase = localStorage.getItem("yekhoone_base_user");
+        let migratedRole: UserRole = "buyer";
+        if (parsedBase) {
+          try {
+            const b = JSON.parse(parsedBase);
+            if (b.selectedCategory && ["buyer", "seller", "agent", "agency"].includes(b.selectedCategory)) {
+              migratedRole = b.selectedCategory;
+            }
+          } catch {}
+        }
+        setCurrentRole(migratedRole);
+        localStorage.setItem("yekhoone_user_role", migratedRole);
       } else {
         setCurrentRole("guest");
         localStorage.setItem("yekhoone_user_role", "guest");
@@ -175,9 +189,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Step 1: Classic Sign-Up for every user
-  const signUpClassic = (data: { firstName: string; lastName: string; contact: string; password?: string }) => {
+  // Step 1: Classic Sign-Up with immediate role selection
+  const signUpClassic = (data: { firstName: string; lastName: string; contact: string; password?: string; role?: UserRole }) => {
     const isEmail = data.contact.includes("@");
+    const chosenRole: UserRole = data.role && data.role !== "guest" ? data.role : "buyer";
     const newBase: BaseUserProfile = {
       id: `user-${Date.now()}`,
       firstName: data.firstName.trim(),
@@ -187,20 +202,76 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       email: isEmail ? data.contact.trim() : undefined,
       phone: !isEmail ? data.contact.trim() : undefined,
       registeredAt: "امروز",
-      isCategoryCompleted: false,
-      selectedCategory: undefined
+      isCategoryCompleted: chosenRole !== "member",
+      selectedCategory: chosenRole !== "member" ? chosenRole : undefined
     };
 
     setBaseUser(newBase);
-    handleSetRole("member");
+    handleSetRole(chosenRole);
     if (typeof window !== "undefined") {
       localStorage.setItem("yekhoone_base_user", JSON.stringify(newBase));
+    }
+
+    let buyerRec: BuyerProfile | undefined = undefined;
+    let sellerRec: SellerProfile | undefined = undefined;
+    let agentRec: AgentProfile | undefined = undefined;
+    let agencyRec: AgencyProfile | undefined = undefined;
+
+    if (chosenRole === "buyer") {
+      const b: BuyerProfile = {
+        ...INITIAL_BUYER_PROFILE,
+        name: newBase.fullName,
+        phone: newBase.phone || "۰۹۱۲۰۰۰۰۰۰۰"
+      };
+      setBuyerProfile(b);
+      buyerRec = b;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("yekhoone_buyer_profile", JSON.stringify(b));
+      }
+    } else if (chosenRole === "seller") {
+      const s: SellerProfile = {
+        ...INITIAL_SELLER_PROFILE,
+        name: newBase.fullName,
+        phone: newBase.phone || "۰۹۱۲۰۰۰۰۰۰۰"
+      };
+      setSellerProfile(s);
+      sellerRec = s;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("yekhoone_seller_profile", JSON.stringify(s));
+      }
+    } else if (chosenRole === "agent") {
+      const a: AgentProfile = {
+        ...INITIAL_AGENT_PROFILE,
+        name: newBase.fullName,
+        phone: newBase.phone || "۰۹۱۲۰۰۰۰۰۰۰"
+      };
+      setAgentProfile(a);
+      agentRec = a;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("yekhoone_agent_profile", JSON.stringify(a));
+      }
+    } else if (chosenRole === "agency") {
+      const ag: AgencyProfile = {
+        ...INITIAL_AGENCY_PROFILE,
+        name: `املاک سرمایه‌گذاری ${newBase.lastName}`,
+        managerName: newBase.fullName,
+        phone: newBase.phone || "۰۲۱۲۲۰۰۰۰۰۰"
+      };
+      setAgencyProfile(ag);
+      agencyRec = ag;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("yekhoone_agency_profile", JSON.stringify(ag));
+      }
     }
 
     // Persist to permanent accounts registry
     saveRegisteredUserRecord({
       baseUser: newBase,
-      password: data.password
+      password: data.password,
+      buyerProfile: buyerRec,
+      sellerProfile: sellerRec,
+      agentProfile: agentRec,
+      agencyProfile: agencyRec
     });
   };
 
@@ -264,7 +335,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const nextRole = account.baseUser.selectedCategory || "member";
+    const nextRole = account.baseUser.selectedCategory || "buyer";
     handleSetRole(nextRole);
 
     return {

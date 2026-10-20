@@ -188,8 +188,22 @@ export default function PropertyDetailPage() {
               {property.title}
             </h1>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="px-3 py-1 rounded-xl text-xs font-bold bg-amber-500 text-slate-950">
-                {property.type === "rent" ? "رهن و اجاره" : "فروش قطعی"}
+              <span className={`px-3 py-1 rounded-xl text-xs font-bold ${
+                property.type === "partnership" || property.isPartnership
+                  ? "bg-emerald-500 text-slate-950"
+                  : property.type === "barter" || property.isBarter
+                  ? "bg-sky-500 text-slate-950"
+                  : property.type === "rent"
+                  ? "bg-amber-500 text-slate-950"
+                  : "bg-amber-500 text-slate-950"
+              }`}>
+                {property.type === "partnership" || property.isPartnership
+                  ? "مشارکت در ساخت"
+                  : property.type === "barter" || property.isBarter
+                  ? "تهاتر ملکی"
+                  : property.type === "rent"
+                  ? "رهن و اجاره"
+                  : "فروش قطعی"}
               </span>
               <span className="px-3 py-1 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
@@ -577,7 +591,46 @@ export default function PropertyDetailPage() {
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl sticky top-20">
               <div className="mb-6 pb-6 border-b border-slate-800">
                 <span className="text-xs text-slate-400 block mb-1">شرایط مالی و حقوقی قرارداد</span>
-                {property.type === "rent" ? (
+                {property.type === "partnership" || property.isPartnership ? (
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-xs text-slate-400 block">نسبت سهم‌الشرکه:</span>
+                      <span className="text-2xl font-black text-emerald-400">
+                        {formatPersianNumber(property.partnershipTerms?.ownerSharePercent || 60)}٪ مالک / {formatPersianNumber(property.partnershipTerms?.builderSharePercent || 40)}٪ سازنده
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-400 block">مبلغ بلاعوض اسکان مالک:</span>
+                      <span className="text-2xl font-black text-amber-400">
+                        {property.partnershipTerms?.belaAvazTomans
+                          ? `${formatPersianNumber(property.partnershipTerms.belaAvazTomans)} تومان`
+                          : "بدون بلاعوض"}
+                      </span>
+                    </div>
+                    {property.partnershipTerms && (
+                      <div className="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 space-y-2 text-xs">
+                        {property.partnershipTerms.projectDurationMonths && (
+                          <div className="flex justify-between text-slate-300">
+                            <span>مدت زمان اجرا:</span>
+                            <span className="text-white font-bold">{formatPersianNumber(property.partnershipTerms.projectDurationMonths)} ماه</span>
+                          </div>
+                        )}
+                        {property.partnershipTerms.permitStatus && (
+                          <div className="text-[11px] text-slate-300 pt-1.5 border-t border-emerald-500/20">
+                            <span className="text-emerald-400 font-semibold block mb-0.5">وضعیت پروانه و مجوز:</span>
+                            <span>{property.partnershipTerms.permitStatus}</span>
+                          </div>
+                        )}
+                        {property.partnershipTerms.builderReputationNotes && (
+                          <div className="text-[11px] text-slate-300 pt-1.5 border-t border-emerald-500/20">
+                            <span className="text-amber-300 font-semibold block mb-0.5">شرط رزومه سازنده:</span>
+                            <span>{property.partnershipTerms.builderReputationNotes}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : property.type === "rent" ? (
                   <div className="space-y-3">
                     <div>
                       <span className="text-xs text-slate-400 block">مبلغ ودیعه (رهن):</span>

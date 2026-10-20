@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -50,7 +50,19 @@ export default function HomePage() {
     toggleFavorite
   } = useUser();
   const [properties, setProperties] = useState<Property[]>(initialProperties);
-  const [dealType, setDealType] = useState<"all" | "rent" | "sale" | "barter">("all");
+
+  // Sync with live Backend API & SQLite Database
+  useEffect(() => {
+    fetch("/api/properties")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.properties) && data.properties.length > 0) {
+          setProperties(data.properties);
+        }
+      })
+      .catch((err) => console.error("Properties API sync error:", err));
+  }, []);
+  const [dealType, setDealType] = useState<"all" | "rent" | "sale" | "barter" | "partnership">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("همه");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("همه");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -79,6 +91,8 @@ export default function HomePage() {
   const filteredProperties = properties.filter((item) => {
     if (dealType === "barter") {
       if (!item.isBarter && item.type !== "barter") return false;
+    } else if (dealType === "partnership") {
+      if (!item.isPartnership && item.type !== "partnership") return false;
     } else if (dealType !== "all" && item.type !== dealType) {
       return false;
     }
@@ -91,7 +105,9 @@ export default function HomePage() {
         item.title.toLowerCase().includes(q) ||
         item.district.toLowerCase().includes(q) ||
         item.address.toLowerCase().includes(q) ||
-        (item.barterTerms?.targetAssetLabel && item.barterTerms.targetAssetLabel.toLowerCase().includes(q))
+        (item.barterTerms?.targetAssetLabel && item.barterTerms.targetAssetLabel.toLowerCase().includes(q)) ||
+        (item.partnershipTerms?.builderReputationNotes && item.partnershipTerms.builderReputationNotes.toLowerCase().includes(q)) ||
+        (item.partnershipTerms?.permitStatus && item.partnershipTerms.permitStatus.toLowerCase().includes(q))
       );
     }
     return true;
@@ -118,20 +134,6 @@ export default function HomePage() {
                 <User className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
                 <span className="font-semibold">ورود / ثبت‌نام</span>
               </button>
-            ) : currentRole === "member" ? (
-              <Link
-                href="/profile"
-                className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 text-xs text-slate-200 hover:text-white transition-all shadow-sm group"
-                title="تکمیل رسته کاربری در پروفایل"
-              >
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                <span className="font-bold max-w-[120px] truncate text-white">
-                  {baseUser?.fullName || "کاربر گرامی"}
-                </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
-                  تکمیل رسته
-                </span>
-              </Link>
             ) : (
               <Link
                 href="/profile"
@@ -167,8 +169,7 @@ export default function HomePage() {
                 if (currentRole === "guest") {
                   setAuthNotice("برای ثبت فایل یا ملک جدید در سامانه یه خونه، لطفاً ابتدا ثبت‌نام فرمایید.");
                   setAuthModalOpen(true);
-                } else if (currentRole === "member") {
-                  window.location.href = "/profile";
+                
                 } else {
                   setSubmitModalOpen(true);
                 }
@@ -180,7 +181,7 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Middle: Brand Name [یه خونه] & Introduction of the App in One Single Line at Same Font Size */}
+          {/* Middle: Brand Name [یه خونه] & Introduction in One Single Line */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center whitespace-nowrap pointer-events-auto">
             <Link href="/" className="group inline-flex items-center gap-2 sm:gap-3 text-lg sm:text-xl md:text-2xl font-bold text-slate-100 select-none">
               <span className="text-amber-400 font-black inline-block drop-shadow-sm">
@@ -195,7 +196,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Left side in RTL: Standalone Logo Only (No text beside it) */}
+          {/* Left side in RTL: Standalone Logo Only */}
           <Link href="/" className="group shrink-0 z-10" title="صفحه اصلی یه خونه">
             <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl overflow-hidden shadow-lg shadow-amber-500/10 border border-amber-500/30 group-hover:scale-105 transition-transform">
               <Image
@@ -210,223 +211,288 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ==================== HERO SECTION ==================== */}
-      <section className="relative pt-12 pb-14 px-4 lg:px-8 overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900/40 to-slate-950">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_center,rgba(245,158,11,0.06),transparent_60%)] pointer-events-none" />
-
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          {/* Mission Tag - Professional, Authoritative */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-amber-500/25 text-amber-300 text-xs font-semibold mb-6 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span>سامانه هوشمند املاک و معاملات بدون واسطه مسکن در تهران</span>
-          </div>
-
-          {/* Main Title - Dignified, Prestigious */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white leading-tight mb-4">
-            جستجوی مطمئن مسکن،
-            <br className="hidden sm:inline" />{" "}
-            <span className="bg-gradient-to-l from-amber-400 via-orange-300 to-amber-200 bg-clip-text text-transparent">
-              روی نقشه هوشمند تهران
-            </span>
-          </h1>
-
-          <p className="text-slate-300/90 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed mb-8">
-            دسترسی مستقیم به فایل‌های معتبر ملکی با لوکیشن دقیق، تور ویدیویی ۳۶۰ درجه و اتاق نشست آنلاین قرارداد میان متقاضی مسکن، مالک و سرپرست آژانس.
-          </p>
-
-          {/* Search Capsule / Command Center */}
-          <div className="bg-slate-900/90 border border-slate-800/90 p-3 sm:p-4 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-xl">
-            {/* Top Row: Deal Type Selector + Virtual Tour Toggle */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-800/70 text-xs font-semibold">
-              <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/60 p-1 rounded-xl border border-slate-800/60">
-                <button
-                  onClick={() => setDealType("all")}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
-                    dealType === "all"
-                      ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  همه فایل‌ها
-                </button>
-                <button
-                  onClick={() => setDealType("sale")}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
-                    dealType === "sale"
-                      ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  خرید و فروش
-                </button>
-                <button
-                  onClick={() => setDealType("rent")}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${
-                    dealType === "rent"
-                      ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  رهن و اجاره
-                </button>
-                <button
-                  onClick={() => setDealType("barter")}
-                  className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                    dealType === "barter"
-                      ? "bg-sky-500 text-slate-950 font-extrabold shadow-md shadow-sky-500/20"
-                      : "text-sky-400 hover:text-sky-300 hover:bg-sky-950/30 border border-sky-500/30"
-                  }`}
-                >
-                  <ArrowRightLeft className="w-3.5 h-3.5" />
-                  <span>تهاتر و معاوضه</span>
-                </button>
-              </div>
-
-              {/* 360 Virtual Tour Filter Pill */}
-              <button
-                onClick={() => setOnlyVirtualTour(!onlyVirtualTour)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all text-xs ${
-                  onlyVirtualTour
-                    ? "bg-indigo-600/30 text-indigo-300 font-bold border border-indigo-500/50 shadow-sm"
-                    : "bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800"
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5 text-indigo-400" />
-                <span>فقط واحدهای با تور ویدیویی</span>
-                {onlyVirtualTour && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
-              </button>
-            </div>
-
-            {/* Second Row: Property Category Chips (Apartment, Villa, Land, Garden, Demolition) */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2.5 mb-2.5 border-b border-slate-800/50 scrollbar-none text-xs">
-              <span className="text-slate-400 font-semibold pl-1 whitespace-nowrap">دسته‌بندی:</span>
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap text-xs ${
-                    selectedCategory === cat
-                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold shadow-sm"
-                      : "bg-slate-950/50 text-slate-400 border border-slate-800/80 hover:text-white hover:border-slate-700"
-                  }`}
-                >
-                  {cat === "همه" ? "همه دسته‌ها" : cat === "باغ" ? "باغ و باغچه" : cat}
-                </button>
-              ))}
-            </div>
-
-            {/* Main Input Row: Neighborhood Selector + Keyword Search */}
-            <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
-              <div className="sm:w-48 shrink-0">
-                <select
-                  value={selectedDistrict}
-                  onChange={(e) => setSelectedDistrict(e.target.value)}
-                  className="w-full h-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
-                >
-                  <option value="همه">همه محله‌های تهران</option>
-                  {districts.filter(d => d !== "همه").map((d) => (
-                    <option key={d} value={d}>محله {d}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="relative flex-1">
-                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="جستجوی عنوان، خیابان یا مشخصات ملک..."
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pr-10 pl-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
-                />
-              </div>
-
-              <button
-                onClick={() => setCalculatorOpen(true)}
-                className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700/60 transition-colors shrink-0"
-              >
-                <ArrowRightLeft className="w-4 h-4 text-amber-400" />
-                <span>تبدیل رهن</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Value Pillars */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
-            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/70 flex items-center gap-2.5 text-right">
-              <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
-              <div>
-                <div className="text-xs font-bold text-white">نقشه هوشمند تهران</div>
-                <div className="text-[10px] text-slate-400">لوکیشن دقیق پلاک‌به‌پلاک</div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/70 flex items-center gap-2.5 text-right">
-              <Eye className="w-5 h-5 text-indigo-400 shrink-0" />
-              <div>
-                <div className="text-xs font-bold text-white">تور ویدیویی املاک</div>
-                <div className="text-[10px] text-slate-400">بازدید پیش از حضور</div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/70 flex items-center gap-2.5 text-right">
-              <Video className="w-5 h-5 text-red-400 shrink-0" />
-              <div>
-                <div className="text-xs font-bold text-white">نشست آنلاین قرارداد</div>
-                <div className="text-[10px] text-slate-400">مذاکره ۴ نفره مجازی</div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/70 flex items-center gap-2.5 text-right">
-              <Building2 className="w-5 h-5 text-emerald-400 shrink-0" />
-              <div>
-                <div className="text-xs font-bold text-white">مشاوران رسمی</div>
-                <div className="text-[10px] text-slate-400">ارتباط مستقیم و مطمئن</div>
-              </div>
-            </div>
-          </div>
+      {/* ==================== HERO SECTION (DUAL-COLUMN ARCHITECTURAL CONCEPT 01 & 02) ==================== */}
+      <section className="relative pt-8 pb-10 px-4 lg:px-8 overflow-hidden bg-slate-950 border-b border-slate-800/60">
+        {/* Vintage Tehran Night Hero Background Artwork */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <Image
+            src="/tehran-night-hero.jpg"
+            alt="نمای هنری شبانه تهران با برج میلاد و رشته‌کوه البرز"
+            fill
+            className="object-cover object-top md:object-center opacity-80 scale-100"
+            priority
+          />
+          {/* Subtle atmospheric vignette that keeps the artwork vivid and clearly visible */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-950/20 to-slate-950" />
+          <div className="absolute inset-0 bg-slate-950/30" />
         </div>
-      </section>
 
-      {/* ==================== SMART TEHRAN MAP HERO BANNER ==================== */}
-      <section className="px-4 lg:px-8 -mt-6 mb-4 relative z-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="rounded-3xl bg-gradient-to-r from-amber-500/10 via-indigo-950/40 to-slate-900 border border-amber-500/30 p-5 sm:p-6 backdrop-blur-xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-            <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 shrink-0">
-                <Layers className="w-7 h-7" />
+        <div className="absolute top-1/4 left-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+            {/* RIGHT COLUMN (7 cols on lg): Hero Headline, Unified Search Capsule & Trust Proof */}
+            <div className="lg:col-span-7 flex flex-col justify-center">
+              {/* Eyebrow Pill */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-3.5 w-fit shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>پلتفرم یکپارچه معاملات مسکن، تهاتر و مشارکت در ساخت پایتخت</span>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold border border-amber-500/30">
-                    سامانه نقشه یکپارچه
-                  </span>
-                  <span className="text-xs text-slate-400">جستجوی پلاک‌به‌پلاک</span>
+
+              {/* Main Headline */}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-3 drop-shadow-md">
+                فراتر از یک جست‌وجو،
+                <span className="block mt-1 bg-gradient-to-l from-amber-400 via-amber-200 to-orange-400 bg-clip-text text-transparent">
+                  یک نقشه از فرصت‌ها
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-slate-200 text-xs sm:text-sm leading-relaxed mb-5 max-w-2xl drop-shadow-sm font-medium">
+                دسترسی بی‌واسطه به فایل‌های کارشناسی‌شده تهران با قابلیت کاوش پلاک‌به‌پلاک روی نقشه سه‌بعدی، تور ویدیویی ۳۶۰ درجه، بازار تهاتر و قراردادهای مشارکت در ساخت.
+              </p>
+
+              {/* Unified Search Capsule */}
+              <div className="bg-slate-900/95 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-2xl shadow-black/80 backdrop-blur-xl">
+                {/* Deal Tabs: All, Sale, Rent, Barter, Partnership */}
+                <div className="flex flex-wrap items-center gap-1.5 mb-3 pb-3 border-b border-slate-800/80 text-xs font-semibold">
+                  <button
+                    onClick={() => setDealType("all")}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      dealType === "all"
+                        ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
+                        : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                    }`}
+                  >
+                    همه فایل‌ها
+                  </button>
+                  <button
+                    onClick={() => setDealType("sale")}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      dealType === "sale"
+                        ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
+                        : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                    }`}
+                  >
+                    خرید و فروش
+                  </button>
+                  <button
+                    onClick={() => setDealType("rent")}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      dealType === "rent"
+                        ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
+                        : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                    }`}
+                  >
+                    رهن و اجاره
+                  </button>
+                  <button
+                    onClick={() => setDealType("barter")}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                      dealType === "barter"
+                        ? "bg-sky-500 text-slate-950 font-extrabold shadow-md shadow-sky-500/20"
+                        : "text-sky-400 hover:text-sky-300 hover:bg-sky-950/30 border border-sky-500/30"
+                    }`}
+                  >
+                    <ArrowRightLeft className="w-3.5 h-3.5" />
+                    <span>تهاتر و معاوضه</span>
+                  </button>
+                  <button
+                    onClick={() => setDealType("partnership")}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                      dealType === "partnership"
+                        ? "bg-emerald-500 text-slate-950 font-extrabold shadow-md shadow-emerald-500/20"
+                        : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30 border border-emerald-500/30"
+                    }`}
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>مشارکت در ساخت</span>
+                  </button>
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-white mt-1">
-                  نقشه هوشمند تهران (پلاک‌به‌پلاک)
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
-                  روی هر کوچه یا ساختمانی در تهران کلیک کنید؛ واحدهای آماده برای رهن، اجاره و خرید، متراژ، قیمت و تور ویدیویی را در لحظه مشاهده کنید.
-                </p>
+
+                {/* Category Chips */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-3 border-b border-slate-800/60 scrollbar-none text-xs">
+                  <span className="text-slate-400 font-semibold pl-1 whitespace-nowrap">نوع ملک:</span>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-2.5 py-1 rounded-lg transition-all whitespace-nowrap text-xs ${
+                        selectedCategory === cat
+                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold shadow-sm"
+                          : "bg-slate-950/50 text-slate-400 border border-slate-800 hover:text-white hover:border-slate-700"
+                      }`}
+                    >
+                      {cat === "همه" ? "همه دسته‌ها" : cat === "باغ" ? "باغ و باغچه" : cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Inputs Row: District select + Keyword search + Action buttons */}
+                <div className="flex flex-col sm:flex-row items-stretch gap-2">
+                  <div className="sm:w-44 shrink-0">
+                    <select
+                      value={selectedDistrict}
+                      onChange={(e) => setSelectedDistrict(e.target.value)}
+                      className="w-full h-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
+                    >
+                      <option value="همه">همه محله‌های تهران</option>
+                      {districts.filter(d => d !== "همه").map((d) => (
+                        <option key={d} value={d}>محله {d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="relative flex-1">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="نام خیابان، پلاک، محله، شرایط تهاتر یا مشارکت..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pr-9 pl-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => setCalculatorOpen(true)}
+                      title="محاسبه‌گر تبدیل رهن و اجاره"
+                      className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-colors"
+                    >
+                      <Calculator className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="hidden sm:inline">تبدیل رهن</span>
+                    </button>
+
+                    <button
+                      onClick={() => setOnlyVirtualTour(!onlyVirtualTour)}
+                      title="فیلتر فقط فایل‌های دارای تور ۳۶۰ درجه"
+                      className={`flex items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all text-xs font-semibold ${
+                        onlyVirtualTour
+                          ? "bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 shadow-sm"
+                          : "bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                      }`}
+                    >
+                      <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                      <span className="hidden sm:inline">تور ۳۶۰°</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trust Stats Row Under Search Capsule */}
+              <div className="grid grid-cols-3 gap-3 mt-4 pt-3 border-t border-slate-800/50 text-center">
+                <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/40">
+                  <div className="text-sm sm:text-base font-extrabold text-white">+۵,۲۰۰</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">فایل کارشناسی‌شده فعال</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/40">
+                  <div className="text-sm sm:text-base font-extrabold text-amber-400">+۳,۴۰۰</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">سرمایه‌گذار و متقاضی مسکن</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/40">
+                  <div className="text-sm sm:text-base font-extrabold text-emerald-400">+۱,۲۵۰</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400">نشست و معامله موفق ملکی</div>
+                </div>
               </div>
             </div>
 
-            <Link
-              href="/map"
-              className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-l from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all hover:scale-105 flex items-center justify-center gap-2 shrink-0 group"
-            >
-              <span>ورود به نقشه هوشمند تهران</span>
-              <Compass className="w-5 h-5 group-hover:rotate-45 transition-transform" />
-            </Link>
+            {/* LEFT COLUMN (5 cols on lg): Interactive 3D Atlas Map Widget */}
+            <div className="lg:col-span-5">
+              <div className="relative rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 border border-amber-500/30 p-4 sm:p-5 shadow-2xl backdrop-blur-xl overflow-hidden group">
+                {/* Subtle Ambient Glow */}
+                <div className="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Card Header */}
+                <div className="flex items-center justify-between mb-3 relative z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs font-bold text-white">اطلس زنده املاک تهران</span>
+                  </div>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-extrabold border border-amber-500/30">
+                    کاوش پلاک‌به‌پلاک
+                  </span>
+                </div>
+
+                {/* Simulated Map Viewport */}
+                <div className="relative h-64 sm:h-72 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/90 flex flex-col justify-between p-3">
+                  {/* Grid Lines Pattern */}
+                  <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent pointer-events-none" />
+
+                  {/* Top Badges in Viewport */}
+                  <div className="relative z-10 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-700/80 text-[10px] text-slate-300 backdrop-blur-md">
+                      <Compass className="w-3 h-3 text-amber-400" />
+                      <span>موقعیت جغرافیایی زنده تهران</span>
+                    </div>
+                    <div className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                      پوشش ۲۲ منطقه
+                    </div>
+                  </div>
+
+                  {/* Interactive-looking Hotspot Pins */}
+                  <div className="relative z-10 space-y-2">
+                    {/* Pin 1: Saadat Abad Partnership highlight */}
+                    <div className="flex items-center gap-2 bg-slate-900/95 border border-emerald-500/40 p-2 rounded-xl shadow-lg backdrop-blur-md">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-xs">
+                        🏗️
+                      </div>
+                      <div className="flex-1 min-w-0 text-right">
+                        <div className="text-[11px] font-bold text-white truncate">سعادت‌آباد • کلنگی ۶۰۰ متری آماده مشارکت</div>
+                        <div className="text-[10px] text-emerald-400 font-semibold">سهم ۶۰٪ مالک / ۱۵ میلیارد بلاعوض</div>
+                      </div>
+                    </div>
+
+                    {/* Pin 2: Niavaran Luxury Villa */}
+                    <div className="flex items-center gap-2 bg-slate-900/90 border border-amber-500/30 p-2 rounded-xl shadow-lg backdrop-blur-md">
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 font-bold text-xs">
+                        🏡
+                      </div>
+                      <div className="flex-1 min-w-0 text-right">
+                        <div className="text-[11px] font-bold text-white truncate">نیاوران • ویلای تریپلکس ۸۵۰ متری</div>
+                        <div className="text-[10px] text-amber-300">قیمت کارشناسی: ۱۷۰ میلیارد تومان</div>
+                      </div>
+                    </div>
+
+                    {/* Pin 3: Shahrak Gharb Barter */}
+                    <div className="flex items-center gap-2 bg-slate-900/80 border border-sky-500/30 p-2 rounded-xl shadow-lg backdrop-blur-md">
+                      <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 font-bold text-xs">
+                        🔄
+                      </div>
+                      <div className="flex-1 min-w-0 text-right">
+                        <div className="text-[11px] font-bold text-white truncate">شهرک غرب • آپارتمان ۱۶۵ متری</div>
+                        <div className="text-[10px] text-sky-300">آماده معاوضه با ویلایی یا کلنگی</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Viewport Footer */}
+                  <div className="relative z-10 flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
+                    <span>دید هوایی و لایه‌های نقشه</span>
+                    <span className="text-amber-400 font-semibold">پلاک‌های آماده معامله</span>
+                  </div>
+                </div>
+
+                {/* Direct CTA into /map */}
+                <Link
+                  href="/map"
+                  className="mt-3.5 w-full py-3 rounded-2xl bg-gradient-to-l from-amber-500 via-amber-400 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-500/25 transition-all hover:scale-[1.02] flex items-center justify-center gap-2 group"
+                >
+                  <Compass className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
+                  <span>ورود به اطلس نقشه هوشمند تهران</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ==================== DISTRICT QUICK TABS ==================== */}
-      <section className="px-4 lg:px-8 py-4 border-y border-slate-800/80 bg-slate-950/60">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      <section className="px-4 lg:px-8 py-3.5 border-b border-slate-800/80 bg-slate-950/60">
+        <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           <span className="text-xs font-bold text-slate-400 whitespace-nowrap pl-2 flex items-center gap-1">
             <Compass className="w-3.5 h-3.5 text-amber-400" />
             محله‌های پرتقاضا:
@@ -483,15 +549,22 @@ export default function HomePage() {
 
                 {/* Deal Tag & Virtual Tour Badge */}
                 <div className="absolute top-3 right-3 flex items-center gap-1.5 flex-wrap">
-                  {prop.isBarter && (
+                  {prop.isPartnership || prop.type === "partnership" ? (
+                    <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 shadow flex items-center gap-1">
+                      <Building2 className="w-3 h-3" />
+                      <span>مشارکت در ساخت</span>
+                    </span>
+                  ) : prop.isBarter || prop.type === "barter" ? (
                     <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-500 text-slate-950 shadow flex items-center gap-1">
                       <ArrowRightLeft className="w-3 h-3" />
                       <span>تهاتر</span>
                     </span>
+                  ) : (
+                    <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow">
+                      {prop.type === "rent" ? "رهن و اجاره" : "فروش"}
+                    </span>
                   )}
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 shadow">
-                    {prop.type === "rent" ? "رهن و اجاره" : prop.type === "barter" ? "تهاتر ملکی" : "فروش"}
-                  </span>
+
                   <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-slate-950/70 backdrop-blur-md text-white border border-white/10">
                     {prop.propertyType}
                   </span>
@@ -581,6 +654,34 @@ export default function HomePage() {
                     )}
                   </div>
 
+                  {/* Structured Partnership Terms Box */}
+                  {(prop.isPartnership || prop.type === "partnership") && prop.partnershipTerms && (
+                    <div className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 mb-3 text-xs">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-emerald-400 mb-1">
+                        <span className="flex items-center gap-1">
+                          <Building2 className="w-3 h-3" />
+                          <span>شرایط مشارکت در ساخت:</span>
+                        </span>
+                        <span className="text-amber-300 font-extrabold">
+                          {formatPersianNumber(prop.partnershipTerms.ownerSharePercent)}٪ مالک / {formatPersianNumber(prop.partnershipTerms.builderSharePercent)}٪ سازنده
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-300">
+                        <span>مبلغ بلاعوض پیشنهادی:</span>
+                        <span className="text-white font-bold">
+                          {prop.partnershipTerms.belaAvazTomans && prop.partnershipTerms.belaAvazTomans > 0
+                            ? `${formatPersianNumber(prop.partnershipTerms.belaAvazTomans)} تومان`
+                            : "بدون بلاعوض"}
+                        </span>
+                      </div>
+                      {prop.partnershipTerms.builderReputationNotes && (
+                        <p className="text-[10px] text-slate-400 mt-1 line-clamp-1">
+                          شرط سازنده: {prop.partnershipTerms.builderReputationNotes}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Structured Barter Terms Box */}
                   {prop.isBarter && prop.barterTerms && (
                     <div className="p-2.5 rounded-xl bg-sky-950/30 border border-sky-500/30 mb-3 text-xs">
@@ -629,6 +730,23 @@ export default function HomePage() {
                           <span className="text-amber-300 font-semibold">تا {formatPersianNumber(prop.barterTerms.cashDeltaTomans)} تومان</span>
                         </div>
                       ) : null}
+                    </div>
+                  ) : prop.type === "partnership" || prop.isPartnership ? (
+                    <div className="space-y-1 mb-4">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400">سهم طرفین مشارکت:</span>
+                        <span className="font-extrabold text-emerald-400 text-sm">
+                          {formatPersianNumber(prop.partnershipTerms?.ownerSharePercent || 60)}٪ مالک / {formatPersianNumber(prop.partnershipTerms?.builderSharePercent || 40)}٪ سازنده
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400">بلاعوض پیشنهادی:</span>
+                        <span className="font-bold text-amber-400 text-sm">
+                          {prop.partnershipTerms?.belaAvazTomans
+                            ? `${formatPersianNumber(prop.partnershipTerms.belaAvazTomans)} تومان`
+                            : "بدون بلاعوض"}
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between mb-4">
@@ -781,8 +899,8 @@ export default function HomePage() {
                 </div>
                 <input
                   type="range"
-                  min="0"
-                  max="100"
+                  min="1"
+                  max="150"
                   step="1"
                   value={calcRent}
                   onChange={(e) => setCalcRent(Number(e.target.value))}
@@ -790,13 +908,6 @@ export default function HomePage() {
                 />
               </div>
 
-              {/* Conversion rate */}
-              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                <span className="text-slate-400">نرخ تبدیل ماهانه:</span>
-                <span className="font-bold text-white">{calcRate} درصد (هر ۱۰۰ میلیون رهن = ۳ میلیون اجاره)</span>
-              </div>
-
-              {/* Results Cards */}
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-right">
                   <span className="text-xs text-amber-400 font-semibold block mb-1">معادل رهن کامل:</span>
@@ -880,6 +991,8 @@ export default function HomePage() {
                   <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-amber-500">
                     <option value="rent">رهن و اجاره</option>
                     <option value="sale">خرید و فروش</option>
+                    <option value="barter">تهاتر و معاوضه</option>
+                    <option value="partnership">مشارکت در ساخت</option>
                   </select>
                 </div>
               </div>
@@ -907,7 +1020,7 @@ export default function HomePage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1.5">مبلغ ودیعه (تومان)</label>
+                  <label className="block text-slate-300 font-semibold mb-1.5">مبلغ ودیعه / ارزش کل (تومان)</label>
                   <input
                     type="text"
                     placeholder="مثال: ۵۰۰,۰۰۰,۰۰۰"
@@ -915,7 +1028,7 @@ export default function HomePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1.5">اجاره ماهانه (تومان)</label>
+                  <label className="block text-slate-300 font-semibold mb-1.5">اجاره ماهانه / بلاعوض (تومان)</label>
                   <input
                     type="text"
                     placeholder="مثال: ۲۰,۰۰۰,۰۰۰"
@@ -929,7 +1042,7 @@ export default function HomePage() {
                 <input
                   required
                   type="text"
-                  placeholder="مثال: دفتر معاملات سعادت‌آباد - مشاور رسمی"
+                  placeholder="مثال: دپارتمان املاک سرمایه‌گذاری سعادت‌آباد - مشاور رسمی"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
                 />
               </div>

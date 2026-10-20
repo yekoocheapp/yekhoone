@@ -9,7 +9,7 @@ export type PropertyCategory =
   | "مستغلات"
   | "اداری و تجاری";
 
-export type DealType = "rent" | "sale" | "barter";
+export type DealType = "rent" | "sale" | "barter" | "partnership";
 
 export interface BarterTerms {
   targetAsset: "apartment" | "land" | "villa" | "car" | "demolition" | "other" | "any";
@@ -17,6 +17,15 @@ export interface BarterTerms {
   cashDeltaTomans?: number; // سقف دریافت سرک نقدی (به تومان)
   isDirectSwap?: boolean;   // تهاتر سر به سر
   notes?: string;
+}
+
+export interface PartnershipTerms {
+  ownerSharePercent: number;      // درصد سهم مالک (مثلاً ۶۰٪)
+  builderSharePercent: number;    // درصد سهم سازنده (مثلاً ۴۰٪)
+  belaAvazTomans?: number;        // مبلغ بلاعوض به تومان
+  projectDurationMonths?: number; // مدت زمان ساخت به ماه
+  permitStatus?: string;          // وضعیت دستور نقشه یا پروانه
+  builderReputationNotes?: string;// شرایط رزومه و متریال
 }
 
 export interface Property {
@@ -68,6 +77,9 @@ export interface Property {
   // فیلدهای تخصصی تهاتر و معاوضه
   isBarter?: boolean;
   barterTerms?: BarterTerms;
+  // فیلدهای تخصصی مشارکت در ساخت
+  isPartnership?: boolean;
+  partnershipTerms?: PartnershipTerms;
   // فیلدهای تخصصی زمین، باغ و کلنگی
   frontageMeters?: number; // طول بر زمین / گذر
   streetWidth?: number;    // عرض کوچه یا خیابان (گذر)
@@ -788,6 +800,65 @@ export const initialProperties: Property[] = [
     lastAlgorithmicBump: "۵ ساعت پیش",
     nextAlgorithmicBump: "۱ ساعت دیگر",
     bumpIntervalHours: 6
+  },
+  {
+    id: 12,
+    title: "ملک کلنگی ۶۰۰ متری تجمیع شده، آماده مشارکت در ساخت با سازنده برند، سعادت‌آباد",
+    slug: "demolition-600m-saadat-abad-partnership",
+    district: "سعادت‌آباد",
+    address: "سعادت‌آباد، خیابان صرافهای شمالی، کوچه نوزدهم",
+    type: "partnership",
+    propertyType: "کلنگی",
+    meters: 600,
+    bedrooms: 0,
+    floor: 0,
+    totalFloors: 6,
+    unitsPerFloor: 2,
+    age: 42,
+    orientation: "جنوبی",
+    hasParking: true,
+    hasElevator: false,
+    hasStorage: true,
+    hasBalcony: false,
+    coolingSystem: "ندارد (موقعیت تخریب و نوسازی)",
+    heatingSystem: "ندارد (موقعیت تخریب و نوسازی)",
+    flooring: "موزاییک قدیمی",
+    deedStatus: "سند تک‌برگ ۶ دانگ ملکی بدون ریشه",
+    deposit: 0,
+    rent: 0,
+    totalPrice: 150000000000,
+    pricePerMeter: 250000000,
+    isPartnership: true,
+    partnershipTerms: {
+      ownerSharePercent: 60,
+      builderSharePercent: 40,
+      belaAvazTomans: 15000000000,
+      projectDurationMonths: 24,
+      permitStatus: "دستور نقشه ۶ طبقه مسکونی اخذ شده با تاییدیه نظام مهندسی",
+      builderReputationNotes: "سازنده الزاما دارای حداقل ۳ نمونه کار شاخص در منطقه ۲ و توان ارائه ضمانت‌نامه بانکی."
+    },
+    frontageMeters: 20,
+    streetWidth: 16,
+    densityPermit: "دستور نقشه ۶ طبقه مسکونی روی لابی و ۲ طبقه منفی",
+    agencyName: "دپارتمان املاک سرمایه‌گذاری سعادت‌آباد",
+    agencyPhone: "۰۲۱۲۲۱۱۴۴۰۰",
+    agentName: "مهندس فرهمند",
+    agentRole: "کارشناس ارشد پروژه‌های مشارکتی و تهاتر",
+    agentPhone: "۰۹۱۲۱۱۱۴۴۰۰",
+    agentRating: 4.9,
+    agentDealsCount: 74,
+    isVerified: true,
+    images: [
+      "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80"
+    ],
+    tags: ["مشارکت در ساخت", "۶۰ به ۴۰ با بلاعوض", "دستور نقشه ۶ طبقه", "بر ۲۰ متر گذر ۱۶"],
+    description: "فرصتی استثنایی برای سازندگان برند منطقه ۲. ملک ۶۰۰ متری تجمیع شده با بر ۲۰ متر مستطیل و گذر ۱۶ متری مشجر. دستور نقشه قطعی با سطح اشغال ۶۰٪ + ۲ متر مازاد. شرایط قرارداد ۶۰٪ به ۴۰٪ با پرداخت ۱۵ میلیارد تومان بلاعوض اسکان مالک.",
+    coordinates: { lat: 35.7934, lng: 51.3745 },
+    createdAt: "امروز",
+    lastAlgorithmicBump: "۳۰ دقیقه پیش",
+    nextAlgorithmicBump: "۳ ساعت و ۳۰ دقیقه دیگر",
+    bumpIntervalHours: 4
   }
 ];
 
