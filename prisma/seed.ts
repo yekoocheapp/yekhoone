@@ -94,6 +94,26 @@ async function main() {
     }
   });
 
+  const mehranUser = await prisma.user.create({
+    data: {
+      firstName: "مهران",
+      lastName: "حیدری",
+      fullName: "مهران حیدری",
+      contact: "09123456789",
+      phone: "09123456789",
+      passwordHash,
+      role: "buyer",
+      isVerified: true,
+      buyerProfile: {
+        create: {
+          demandType: "buy",
+          budgetLabel: "تا ۲۵ میلیارد تومان",
+          desiredDistricts: JSON.stringify(["سعادت‌آباد", "نیاوران"])
+        }
+      }
+    }
+  });
+
   // 4. Seed Properties
   for (const p of initialProperties) {
     const createdProp = await prisma.property.create({

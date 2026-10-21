@@ -34,50 +34,79 @@ model User {
 }
 
 model BuyerProfile {
-  id               String  @id @default(cuid())
-  userId           String  @unique
-  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  demandType       String? // buy, rent, barter
-  budgetLabel      String?
-  desiredDistricts String? // JSON string array
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  demandType        String?  // buy, rent, barter
+  budgetLabel       String?
+  minBudgetTomans   String?
+  maxBudgetTomans   String?
+  desiredDistricts  String?  // JSON string array
+  minMeters         Float?
+  minBedrooms       Int?
+  propertyTypes     String?  // JSON string array
+  amenities         String?  // JSON string array
+  urgency           String?  // immediate, 1month, 3months, flexible
+  barterAssetsJson  String?  // JSON string array
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
 }
 
 model SellerProfile {
-  id                      String  @id @default(cuid())
-  userId                  String  @unique
-  user                    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sellerType              String   @default("owner") // owner, builder
+  companyName             String?
   nationalId              String?
-  nationalIdVerified      Boolean @default(false)
+  nationalIdVerified      Boolean  @default(false)
+  deedVerified            Boolean  @default(false)
   propertyType            String?
   district                String?
-  isBarterAccepted        Boolean @default(false)
+  isBarterAccepted        Boolean  @default(false)
   barterTargetDescription String?
+  builderResumeJson       String?  // JSON array of past completed projects
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @default(now()) @updatedAt
 }
 
 model AgentProfile {
-  id                String  @id @default(cuid())
-  userId            String  @unique
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  licenseCode       String?
-  agencyName        String?
-  agencyId          String?
-  agency            Agency? @relation(fields: [agencyId], references: [id])
-  specialtyDistrict String?
-  rating            Float   @default(4.8)
-  dealsCount        Int     @default(0)
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  licenseCode        String?
+  nationalCode       String?
+  agencyName         String?
+  agencyId           String?
+  agency             Agency?  @relation(fields: [agencyId], references: [id])
+  specialtyDistrict  String?
+  specialtyDistricts String?  // JSON string array
+  dealTypesSpecialty String?  // JSON string array
+  bio                String?
+  officePhone        String?
+  rating             Float    @default(5.0)
+  dealsCount         Int      @default(0)
+  isVerifiedByAgency Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
 }
 
 model Agency {
-  id             String         @id @default(cuid())
-  name           String
-  managerName    String
-  supervisorName String?
-  licenseNumber  String?
-  phone          String
-  officePhone    String?
-  address        String?
-  isVerified     Boolean        @default(true)
-  createdAt      DateTime       @default(now())
+  id               String         @id @default(cuid())
+  name             String
+  managerName      String
+  supervisorName   String?
+  licenseNumber    String?
+  phone            String
+  officePhone      String?
+  address          String?
+  logo             String?        @default("/logo.jpg")
+  description      String?
+  city             String         @default("تهران")
+  districtsCovered String?        // JSON string array
+  isVerified       Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
 
   agents     AgentProfile[]
   users      User[]

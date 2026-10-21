@@ -33,7 +33,8 @@ import {
   Video,
   Layers,
   User,
-  Heart
+  Heart,
+  LogOut
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import AuthModal from "@/components/AuthModal";
@@ -47,7 +48,8 @@ export default function HomePage() {
     agentProfile,
     agencyProfile,
     isFavorite,
-    toggleFavorite
+    toggleFavorite,
+    logout
   } = useUser();
   const [properties, setProperties] = useState<Property[]>(initialProperties);
 
@@ -135,32 +137,35 @@ export default function HomePage() {
                 <span className="font-semibold">ورود / ثبت‌نام</span>
               </button>
             ) : (
-              <Link
-                href="/profile"
-                className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-emerald-500/40 text-xs text-slate-200 hover:text-white transition-all shadow-sm group"
-                title="مشاهده پروفایل کاربری"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-bold max-w-[120px] truncate text-white">
-                  {baseUser?.fullName ||
-                    (currentRole === "buyer"
-                      ? buyerProfile.name
+              <div className="flex items-center gap-1.5">
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-emerald-500/40 text-xs text-slate-200 hover:text-white transition-all shadow-sm group"
+                  title="مشاهده پروفایل کاربری"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-bold max-w-[120px] truncate text-white">
+                    {baseUser?.fullName || "کاربر گرامی"}
+                  </span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-amber-400 font-bold">
+                    {currentRole === "buyer"
+                      ? "متقاضی"
                       : currentRole === "seller"
-                      ? sellerProfile.name
+                      ? "مالک"
                       : currentRole === "agent"
-                      ? agentProfile.name
-                      : agencyProfile.name) || "کاربر گرامی"}
-                </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-amber-400 font-bold">
-                  {currentRole === "buyer"
-                    ? "متقاضی"
-                    : currentRole === "seller"
-                    ? "مالک"
-                    : currentRole === "agent"
-                    ? "مشاور"
-                    : "آژانس"}
-                </span>
-              </Link>
+                      ? "مشاور"
+                      : "آژانس"}
+                  </span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  className="p-2 rounded-xl bg-slate-900/80 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-800/60 text-slate-400 hover:text-rose-400 transition-all shadow-sm"
+                  title="خروج از حساب کاربری"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
 
             {/* Register Property Button */}

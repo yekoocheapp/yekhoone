@@ -96,7 +96,7 @@ export default function ClassicSignUpForm({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setCaptchaError(false);
@@ -134,7 +134,7 @@ export default function ClassicSignUpForm({
         return;
       }
 
-      signUpClassic({
+      const res = await signUpClassic({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         contact: contact.trim(),
@@ -142,11 +142,16 @@ export default function ClassicSignUpForm({
         role: selectedRole
       });
 
+      if (!res.success) {
+        setErrorMsg(res.error || "ثبت‌نام ناموفق بود. لطفاً مجدداً تلاش فرمایید.");
+        return;
+      }
+
       const roleTitle = ROLE_OPTIONS.find(r => r.role === selectedRole)?.title || "کاربر گرامی";
       setSuccessMsg(`حساب کاربری شما با عنوان «${roleTitle}» با موفقیت ایجاد شد! خوش آمدید.`);
     } else {
       // Sign-in
-      const res = signInClassic({
+      const res = await signInClassic({
         contact: contact.trim(),
         password
       });
@@ -245,34 +250,51 @@ export default function ClassicSignUpForm({
                   const Icon = opt.icon;
                   const isSelected = selectedRole === opt.role;
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={opt.role}
                       onClick={() => setSelectedRole(opt.role)}
-                      className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 select-none ${
+                      className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 text-right w-full select-none ${
                         isSelected
-                          ? "bg-amber-500/15 border-amber-500 text-white shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/60"
+                          ? "bg-amber-500/20 border-amber-500 text-white shadow-lg shadow-amber-500/20 ring-2 ring-amber-500/80 scale-[1.01]"
                           : "bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60"
                       }`}
                     >
                       <div className={`p-2 rounded-xl shrink-0 transition-colors ${
-                        isSelected ? "bg-amber-500 text-slate-950 font-bold" : "bg-slate-900 text-amber-400"
+                        isSelected ? "bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30" : "bg-slate-900 text-amber-400"
                       }`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1 mb-0.5">
-                          <span className={`text-xs font-bold ${isSelected ? "text-amber-300" : "text-white"}`}>
+                          <span className={`text-xs font-black ${isSelected ? "text-amber-300" : "text-white"}`}>
                             {opt.title}
                           </span>
-                          {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />}
+                          {isSelected ? (
+                            <span className="flex items-center gap-1 text-[10px] font-black text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded-full border border-amber-500/40">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                              انتخاب شد
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-500 font-medium">{opt.tag}</span>
+                          )}
                         </div>
                         <p className="text-[10px] text-slate-400 leading-relaxed line-clamp-2">
                           {opt.subtitle}
                         </p>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
+              </div>
+
+              {/* Active Role Confirmation Banner */}
+              <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950 border border-amber-500/40 text-xs">
+                <span className="text-slate-400 font-medium">نقش ثبت‌نامی شما:</span>
+                <span className="font-black text-amber-400 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  {ROLE_OPTIONS.find(r => r.role === selectedRole)?.title}
+                </span>
               </div>
             </div>
 

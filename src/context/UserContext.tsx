@@ -29,8 +29,8 @@ interface UserContextType {
   isFavorite: (propertyId: number) => boolean;
 
   // Classic sign-up & sign-in for everyone
-  signUpClassic: (data: { firstName: string; lastName: string; contact: string; password?: string; role?: UserRole }) => void;
-  signInClassic: (data: { contact: string; password?: string }) => { success: boolean; error?: string; userName?: string };
+  signUpClassic: (data: { firstName: string; lastName: string; contact: string; password?: string; role?: UserRole }) => Promise<{ success: boolean; error?: string; userName?: string }>;
+  signInClassic: (data: { contact: string; password?: string }) => Promise<{ success: boolean; error?: string; userName?: string }>;
 
   // Category completion in Profile
   completeBuyerCategory: (data: { demandType?: "buy" | "rent" | "barter"; budgetLabel?: string; desiredDistricts?: string[] }) => void;
@@ -44,7 +44,7 @@ interface UserContextType {
   signUpSeller: (data: { name: string; phone: string; nationalId?: string; propertyType?: string; district?: string }) => void;
   signUpAgent: (data: { name: string; phone: string; licenseCode?: string; agencyName?: string; specialtyDistrict?: string }) => void;
   signUpAgency: (data: { name: string; managerName: string; supervisorName: string; phone: string; officePhone?: string; licenseNumber?: string; address?: string }) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export interface RegisteredAccountRecord {
@@ -111,65 +111,64 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [agencyProfile, setAgencyProfile] = useState<AgencyProfile>(INITIAL_AGENCY_PROFILE);
   const [currentNeshasst, setCurrentNeshasst] = useState<NeshasstSession>(INITIAL_NESHASST);
 
-  // Sync role and saved profiles from localStorage
+  // Sync session with SQLite backend database & local cache
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // 0. Base User & Auto-migration
+      // 1. Initial quick load from localStorage so UI does not flicker
       try {
         const savedBase = localStorage.getItem("yekhoone_base_user");
         if (savedBase) {
           const parsed = JSON.parse(savedBase);
           setBaseUser(parsed);
-          saveRegisteredUserRecord({ baseUser: parsed });
+        }
+        const savedRole = localStorage.getItem("yekhoone_user_role") as UserRole;
+        if (savedRole && ["buyer", "seller", "agent", "agency", "guest"].includes(savedRole)) {
+          setCurrentRole(savedRole);
         }
       } catch (e) {}
 
-      // 1. Role
-      const savedRole = localStorage.getItem("yekhoone_user_role") as UserRole;
-      if (savedRole && ["buyer", "seller", "agent", "agency", "guest"].includes(savedRole)) {
-        setCurrentRole(savedRole);
-      } else if (savedRole === "member") {
-        // Automatically migrate legacy member state to buyer or stored category
-        const parsedBase = localStorage.getItem("yekhoone_base_user");
-        let migratedRole: UserRole = "buyer";
-        if (parsedBase) {
-          try {
-            const b = JSON.parse(parsedBase);
-            if (b.selectedCategory && ["buyer", "seller", "agent", "agency"].includes(b.selectedCategory)) {
-              migratedRole = b.selectedCategory;
-            }
-          } catch {}
-        }
-        setCurrentRole(migratedRole);
-        localStorage.setItem("yekhoone_user_role", migratedRole);
-      } else {
-        setCurrentRole("guest");
-        localStorage.setItem("yekhoone_user_role", "guest");
-      }
-
-      // 2. Buyer Profile
-      try {
-        const savedBuyer = localStorage.getItem("yekhoone_buyer_profile");
-        if (savedBuyer) setBuyerProfile(JSON.parse(savedBuyer));
-      } catch (e) {}
-
-      // 3. Seller Profile
-      try {
-        const savedSeller = localStorage.getItem("yekhoone_seller_profile");
-        if (savedSeller) setSellerProfile(JSON.parse(savedSeller));
-      } catch (e) {}
-
-      // 4. Agent Profile
-      try {
-        const savedAgent = localStorage.getItem("yekhoone_agent_profile");
-        if (savedAgent) setAgentProfile(JSON.parse(savedAgent));
-      } catch (e) {}
-
-      // 5. Agency Profile
-      try {
-        const savedAgency = localStorage.getItem("yekhoone_agency_profile");
-        if (savedAgency) setAgencyProfile(JSON.parse(savedAgency));
-      } catch (e) {}
+      // 2. Authoritative check with SQLite Backend via /api/auth/me
+      fetch("/api/auth/me")
+        .then((res) => {
+          if (!res.ok) throw new Error("Unauthenticated");
+          return res.json();
+        })
+        .then((data) => {
+          if (data.authenticated && data.user) {
+            const dbUser = data.user;
+            const uRole = (dbUser.role as UserRole) || "buyer";
+            const names = (dbUser.fullName || "").trim().split(" ");
+            const updatedBase: BaseUserProfile = {
+              id: dbUser.id,
+              firstName: dbUser.firstName || names[0] || "",
+              lastName: dbUser.lastName || names.slice(1).join(" ") || "",
+              fullName: dbUser.fullName,
+              contact: dbUser.contact,
+              email: dbUser.contact.includes("@") ? dbUser.contact : undefined,
+              phone: !dbUser.contact.includes("@") ? dbUser.contact : undefined,
+              registeredAt: "پایگاه داده",
+              isCategoryCompleted: true,
+              selectedCategory: (uRole === "buyer" || uRole === "seller" || uRole === "agent" || uRole === "agency") ? uRole : undefined
+            };
+            setBaseUser(updatedBase);
+            setCurrentRole(uRole);
+            localStorage.setItem("yekhoone_base_user", JSON.stringify(updatedBase));
+            localStorage.setItem("yekhoone_user_role", uRole);
+          } else {
+            // Deleted in database or unauthenticated: wipe stale session
+            setBaseUser(null);
+            setCurrentRole("guest");
+            localStorage.removeItem("yekhoone_base_user");
+            localStorage.setItem("yekhoone_user_role", "guest");
+          }
+        })
+        .catch(() => {
+          // If deleted in Prisma Studio or session missing
+          setBaseUser(null);
+          setCurrentRole("guest");
+          localStorage.removeItem("yekhoone_base_user");
+          localStorage.setItem("yekhoone_user_role", "guest");
+        });
     }
   }, []);
 
@@ -180,168 +179,114 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
     setBaseUser(null);
     handleSetRole("guest");
     if (typeof window !== "undefined") {
       localStorage.removeItem("yekhoone_base_user");
       localStorage.setItem("yekhoone_user_role", "guest");
+      localStorage.removeItem("yekhoone_buyer_profile");
+      localStorage.removeItem("yekhoone_seller_profile");
+      localStorage.removeItem("yekhoone_agent_profile");
+      localStorage.removeItem("yekhoone_agency_profile");
     }
   };
 
-  // Step 1: Classic Sign-Up with immediate role selection
-  const signUpClassic = (data: { firstName: string; lastName: string; contact: string; password?: string; role?: UserRole }) => {
-    const isEmail = data.contact.includes("@");
+  // Step 1: Real Database Sign-Up via Backend API
+  const signUpClassic = async (data: { firstName: string; lastName: string; contact: string; password?: string; role?: UserRole }): Promise<{ success: boolean; error?: string; userName?: string }> => {
     const chosenRole: UserRole = data.role && data.role !== "guest" ? data.role : "buyer";
-    const newBase: BaseUserProfile = {
-      id: `user-${Date.now()}`,
-      firstName: data.firstName.trim(),
-      lastName: data.lastName.trim(),
-      fullName: `${data.firstName.trim()} ${data.lastName.trim()}`,
-      contact: data.contact.trim(),
-      email: isEmail ? data.contact.trim() : undefined,
-      phone: !isEmail ? data.contact.trim() : undefined,
-      registeredAt: "امروز",
-      isCategoryCompleted: chosenRole !== "member",
-      selectedCategory: chosenRole !== "member" ? chosenRole : undefined
-    };
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: data.firstName.trim(),
+          lastName: data.lastName.trim(),
+          contact: data.contact.trim(),
+          password: data.password || "123456",
+          role: chosenRole
+        })
+      });
 
-    setBaseUser(newBase);
-    handleSetRole(chosenRole);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("yekhoone_base_user", JSON.stringify(newBase));
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, error: json.error || "خطا در ثبت‌نام در پایگاه داده." };
+      }
+
+      const u = json.user;
+      const newBase: BaseUserProfile = {
+        id: u.id,
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        fullName: u.fullName,
+        contact: u.contact,
+        email: u.contact.includes("@") ? u.contact : undefined,
+        phone: !u.contact.includes("@") ? u.contact : undefined,
+        registeredAt: "پایگاه داده",
+        isCategoryCompleted: true,
+        selectedCategory: (chosenRole === "buyer" || chosenRole === "seller" || chosenRole === "agent" || chosenRole === "agency") ? chosenRole : undefined
+      };
+
+      setBaseUser(newBase);
+      handleSetRole(chosenRole);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("yekhoone_base_user", JSON.stringify(newBase));
+        localStorage.setItem("yekhoone_user_role", chosenRole);
+      }
+
+      return { success: true, userName: u.fullName };
+    } catch (err: any) {
+      return { success: false, error: "خطا در برقراری ارتباط با پایگاه داده." };
     }
-
-    let buyerRec: BuyerProfile | undefined = undefined;
-    let sellerRec: SellerProfile | undefined = undefined;
-    let agentRec: AgentProfile | undefined = undefined;
-    let agencyRec: AgencyProfile | undefined = undefined;
-
-    if (chosenRole === "buyer") {
-      const b: BuyerProfile = {
-        ...INITIAL_BUYER_PROFILE,
-        name: newBase.fullName,
-        phone: newBase.phone || "۰۹۱۲۰۰۰۰۰۰۰"
-      };
-      setBuyerProfile(b);
-      buyerRec = b;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("yekhoone_buyer_profile", JSON.stringify(b));
-      }
-    } else if (chosenRole === "seller") {
-      const s: SellerProfile = {
-        ...INITIAL_SELLER_PROFILE,
-        name: newBase.fullName,
-        phone: newBase.phone || "۰۹۱۲۰۰۰۰۰۰۰"
-      };
-      setSellerProfile(s);
-      sellerRec = s;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("yekhoone_seller_profile", JSON.stringify(s));
-      }
-    } else if (chosenRole === "agent") {
-      const a: AgentProfile = {
-        ...INITIAL_AGENT_PROFILE,
-        name: newBase.fullName,
-        phone: newBase.phone || "۰۹۱۲۰۰۰۰۰۰۰"
-      };
-      setAgentProfile(a);
-      agentRec = a;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("yekhoone_agent_profile", JSON.stringify(a));
-      }
-    } else if (chosenRole === "agency") {
-      const ag: AgencyProfile = {
-        ...INITIAL_AGENCY_PROFILE,
-        name: `املاک سرمایه‌گذاری ${newBase.lastName}`,
-        managerName: newBase.fullName,
-        phone: newBase.phone || "۰۲۱۲۲۰۰۰۰۰۰"
-      };
-      setAgencyProfile(ag);
-      agencyRec = ag;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("yekhoone_agency_profile", JSON.stringify(ag));
-      }
-    }
-
-    // Persist to permanent accounts registry
-    saveRegisteredUserRecord({
-      baseUser: newBase,
-      password: data.password,
-      buyerProfile: buyerRec,
-      sellerProfile: sellerRec,
-      agentProfile: agentRec,
-      agencyProfile: agencyRec
-    });
   };
 
-  // Step 1 Alternative: Classic Sign-In
-  const signInClassic = (data: { contact: string; password?: string }): { success: boolean; error?: string; userName?: string } => {
-    const norm = normalizeContactString(data.contact);
-    const all = loadRegisteredUsers();
-    let account = all.find(
-      (u) => normalizeContactString(u.baseUser.contact) === norm
-    );
+  // Step 1 Alternative: Real Database Sign-In via Backend API
+  const signInClassic = async (data: { contact: string; password?: string }): Promise<{ success: boolean; error?: string; userName?: string }> => {
+    try {
+      const res = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contact: data.contact.trim(),
+          password: data.password || ""
+        })
+      });
 
-    // Fallback: check if active baseUser matches
-    if (!account && baseUser && normalizeContactString(baseUser.contact) === norm) {
-      account = { baseUser };
-    }
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, error: json.error || "ورود ناموفق بود." };
+      }
 
-    if (!account) {
-      return {
-        success: false,
-        error: "حسابی با این شماره یا ایمیل یافت نشد. لطفاً از سربرگ «ثبت‌نام کاربر جدید» ابتدا ثبت‌نام فرمایید."
+      const u = json.user;
+      const chosenRole: UserRole = (u.role as UserRole) || "buyer";
+      const names = (u.fullName || "").trim().split(" ");
+      const newBase: BaseUserProfile = {
+        id: u.id,
+        firstName: names[0] || "",
+        lastName: names.slice(1).join(" ") || "",
+        fullName: u.fullName,
+        contact: u.contact,
+        email: u.contact.includes("@") ? u.contact : undefined,
+        phone: !u.contact.includes("@") ? u.contact : undefined,
+        registeredAt: "پایگاه داده",
+        isCategoryCompleted: true,
+        selectedCategory: (chosenRole === "buyer" || chosenRole === "seller" || chosenRole === "agent" || chosenRole === "agency") ? chosenRole : undefined
       };
-    }
 
-    // Verify password if account has a registered password
-    if (account.password && data.password && account.password !== data.password) {
-      return {
-        success: false,
-        error: "کلمه عبور وارد شده نادرست است. لطفاً دوباره بررسی فرمایید."
-      };
-    }
-
-    // Restore real user identity
-    setBaseUser(account.baseUser);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("yekhoone_base_user", JSON.stringify(account.baseUser));
-    }
-
-    // Restore category profiles if previously completed
-    if (account.buyerProfile) {
-      setBuyerProfile(account.buyerProfile);
+      setBaseUser(newBase);
+      handleSetRole(chosenRole);
       if (typeof window !== "undefined") {
-        localStorage.setItem("yekhoone_buyer_profile", JSON.stringify(account.buyerProfile));
+        localStorage.setItem("yekhoone_base_user", JSON.stringify(newBase));
+        localStorage.setItem("yekhoone_user_role", chosenRole);
       }
-    }
-    if (account.sellerProfile) {
-      setSellerProfile(account.sellerProfile);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("yekhoone_seller_profile", JSON.stringify(account.sellerProfile));
-      }
-    }
-    if (account.agentProfile) {
-      setAgentProfile(account.agentProfile);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("yekhoone_agent_profile", JSON.stringify(account.agentProfile));
-      }
-    }
-    if (account.agencyProfile) {
-      setAgencyProfile(account.agencyProfile);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("yekhoone_agency_profile", JSON.stringify(account.agencyProfile));
-      }
-    }
 
-    const nextRole = account.baseUser.selectedCategory || "buyer";
-    handleSetRole(nextRole);
-
-    return {
-      success: true,
-      userName: account.baseUser.fullName
-    };
+      return { success: true, userName: u.fullName };
+    } catch (err: any) {
+      return { success: false, error: "خطا در برقراری ارتباط با پایگاه داده." };
+    }
   };
 
   // Step 2: In Profile, fill category: متقاضی مسکن
